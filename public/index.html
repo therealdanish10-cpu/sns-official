@@ -1,0 +1,567 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SNS Official</title>
+  <meta name="description" content="SNS Official — Stitch n Style. Premium ladies wear for every occasion. Luxury sarees, dupattas, short kurtis and maxis crafted with timeless elegance.">
+  <meta name="theme-color" content="#0A0A0A">
+
+  <!-- Favicons -->
+  <link rel="icon" href="favicon.ico" sizes="any">
+  <link rel="icon" type="image/png" sizes="32x32" href="favicon-32x32.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="favicon-16x16.png">
+  <link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png">
+
+  <!-- Typography: Playfair Display (Serif), Poppins (Sans-Serif) & Great Vibes (Script) -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Great+Vibes&family=Playfair+Display:ital,wght@0,400;0,500;0,600;0,700;1,400&family=Poppins:wght@300;400;500;600&display=swap" rel="stylesheet">
+
+  <!-- Stylesheet -->
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+  <!-- =========================================================================
+       Navbar (Fully transparent over hero, no border/shadow, gold hover only)
+       ========================================================================= -->
+  <header class="nav" role="banner">
+    <div class="container nav__inner">
+      <!-- Monogram Logo (~40px, reloads page on click) -->
+      <a href="index.html" class="nav__logo" aria-label="SNS Official Home">
+        <img src="images/logo-mark.png" alt="SNS Official" width="90" height="40">
+      </a>
+
+      <!-- Desktop Navigation Links -->
+      <nav class="nav__links" aria-label="Main Navigation">
+        <a href="index.html" class="nav__link is-active">Home</a>
+        <a href="shop.html" class="nav__link">Shop</a>
+        <a href="#about" class="nav__link">About</a>
+        <a href="#reviews" class="nav__link">Reviews</a>
+        <a href="#contact" class="nav__link">Contact</a>
+      </nav>
+
+      <!-- Actions: Cart Button & Mobile Hamburger -->
+      <div class="nav__actions">
+        <button type="button" class="icon-btn cart-toggle" aria-label="View shopping bag">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+            <path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/>
+            <line x1="3" y1="6" x2="21" y2="6"/>
+            <path d="M16 10a4 4 0 0 1-8 0"/>
+          </svg>
+          <span class="cart-count is-empty" aria-label="Items in bag">0</span>
+        </button>
+
+        <button type="button" class="icon-btn nav__toggle" aria-label="Toggle navigation menu" aria-expanded="false">
+          <span class="burger">
+            <span></span>
+            <span></span>
+            <span></span>
+          </span>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Mobile Fullscreen Overlay Menu -->
+  <div class="mobile-menu" role="dialog" aria-modal="true" aria-label="Mobile Navigation">
+    <ul class="mobile-menu__links">
+      <li><a href="index.html" class="is-active">Home</a></li>
+      <li><a href="shop.html">Shop</a></li>
+      <li><a href="#about">About</a></li>
+      <li><a href="#reviews">Reviews</a></li>
+      <li><a href="#contact">Contact</a></li>
+    </ul>
+    <div class="mobile-menu__contact">
+      <p>WhatsApp: <a href="https://wa.me/923085220513" target="_blank" rel="noopener">0308 5220513</a></p>
+      <p>Direct Call: <a href="tel:03098593900">0309 8593900</a></p>
+    </div>
+  </div>
+
+  <main>
+    <!-- =======================================================================
+         Hero Section (Full-screen background video, 30% overlay, gentle bottom fade)
+         ======================================================================= -->
+    <section class="hero" aria-label="Hero">
+      <video class="hero__video" autoplay muted loop playsinline preload="auto" poster="images/hero-poster.jpg">
+        <source src="video/video.mp4" type="video/mp4">
+      </video>
+      <div class="hero__overlay" aria-hidden="true"></div>
+      <div class="hero__fade" aria-hidden="true"></div>
+
+      <div class="container hero__content">
+        <!-- a) Small gold line-art ornamental flourish (~80px wide, symmetrical) -->
+        <svg class="hero__flourish" width="80" height="18" viewBox="0 0 80 18" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+          <path d="M40 4L43.5 9L40 14L36.5 9L40 4Z" stroke="#D4AF37" stroke-width="1" stroke-linejoin="round"/>
+          <path d="M36.5 9C31 9 28 4.5 22 4.5C17.5 4.5 15 7 15 9.5C15 11.5 17 12.8 19 12C20.5 11.4 20.5 9.5 19 9" stroke="#D4AF37" stroke-width="1" stroke-linecap="round"/>
+          <path d="M43.5 9C49 9 52 4.5 58 4.5C62.5 4.5 65 7 65 9.5C65 11.5 63 12.8 61 12C59.5 11.4 59.5 9.5 61 9" stroke="#D4AF37" stroke-width="1" stroke-linecap="round"/>
+          <path d="M36.5 9C32 9 29 13.5 24 13.5C21 13.5 19.5 12 19.5 10.5" stroke="#D4AF37" stroke-width="0.9" stroke-linecap="round"/>
+          <path d="M43.5 9C48 9 51 13.5 56 13.5C59 13.5 60.5 12 60.5 10.5" stroke="#D4AF37" stroke-width="0.9" stroke-linecap="round"/>
+          <path d="M15 9H2" stroke="#D4AF37" stroke-width="0.9" stroke-linecap="round"/>
+          <path d="M65 9H78" stroke="#D4AF37" stroke-width="0.9" stroke-linecap="round"/>
+          <circle cx="40" cy="9" r="1" fill="#D4AF37"/>
+        </svg>
+
+        <!-- b) Headline in Playfair Display, warm ivory #F5EFE0 -->
+        <h1 class="hero__title">Stitch n Style</h1>
+
+        <!-- c) Small uppercase gold subtitle -->
+        <p class="hero__subtitle">PREMIUM LADIES WEAR</p>
+
+        <!-- d) Tiny gold diamond divider (~8px rotated square) -->
+        <span class="hero__diamond" aria-hidden="true"></span>
+
+        <!-- e) Calligraphic script tagline in curly quotes -->
+        <p class="hero__tagline">&ldquo;Elegance stitched for every occasion&rdquo;</p>
+
+        <!-- f) Outlined rectangular SHOP NOW button -->
+        <a href="shop.html" class="hero__btn">SHOP NOW</a>
+      </div>
+    </section>
+
+    <!-- =======================================================================
+         1. Shop by Category (Saree, Dupatta, Short, Maxi with gold ring borders)
+         ======================================================================= -->
+    <section class="section" id="categories">
+      <div class="container">
+        <div class="section__head reveal">
+          <span class="eyebrow">Curated Collections</span>
+          <h2 class="section__title">Shop by Category</h2>
+          <p class="section__lead">Discover our signature craftsmanship across four timeless silhouettes.</p>
+        </div>
+
+        <div class="categories">
+          <!-- Category 1: Saree -->
+          <a href="shop.html?category=saree" class="cat-tile reveal" style="transition-delay: 150ms;">
+            <div class="cat-tile__ring">
+              <div class="cat-tile__circle">
+                <!-- Saree draped motif SVG -->
+                <svg viewBox="0 0 64 64" fill="none" stroke="currentColor">
+                  <path d="M32 10c-6 8-12 20-14 36 6-2 14-2 28 0-2-16-8-28-14-36z"/>
+                  <path d="M22 28c8-1 14 3 20 6"/>
+                  <path d="M20 38c7-1 16 2 24 6"/>
+                  <path d="M32 6v6"/>
+                </svg>
+              </div>
+            </div>
+            <h3 class="cat-tile__name">Saree</h3>
+            <span class="cat-tile__meta">Explore Styles</span>
+          </a>
+
+          <!-- Category 2: Dupatta -->
+          <a href="shop.html?category=dupatta" class="cat-tile reveal" style="transition-delay: 300ms;">
+            <div class="cat-tile__ring">
+              <div class="cat-tile__circle">
+                <!-- Dupatta flowing motif SVG -->
+                <svg viewBox="0 0 64 64" fill="none" stroke="currentColor">
+                  <path d="M16 16c8 2 16 12 24 10s8-12 16-10v32c-8-2-16 10-24 10s-8-12-16-10V16z"/>
+                  <path d="M28 22c4 3 8 7 12 6"/>
+                  <path d="M24 36c6 3 12 7 18 6"/>
+                </svg>
+              </div>
+            </div>
+            <h3 class="cat-tile__name">Dupatta</h3>
+            <span class="cat-tile__meta">Explore Styles</span>
+          </a>
+
+          <!-- Category 3: Short -->
+          <a href="shop.html?category=short" class="cat-tile reveal" style="transition-delay: 450ms;">
+            <div class="cat-tile__ring">
+              <div class="cat-tile__circle">
+                <!-- Short Kurti motif SVG -->
+                <svg viewBox="0 0 64 64" fill="none" stroke="currentColor">
+                  <path d="M24 12h16l8 12-4 6-6-4v24H26V26l-6 4-4-6 8-12z"/>
+                  <path d="M28 12c1 4 3 6 4 6s3-2 4-6"/>
+                </svg>
+              </div>
+            </div>
+            <h3 class="cat-tile__name">Short</h3>
+            <span class="cat-tile__meta">Explore Styles</span>
+          </a>
+
+          <!-- Category 4: Maxi -->
+          <a href="shop.html?category=maxi" class="cat-tile reveal" style="transition-delay: 600ms;">
+            <div class="cat-tile__ring">
+              <div class="cat-tile__circle">
+                <!-- Maxi Anarkali gown motif SVG -->
+                <svg viewBox="0 0 64 64" fill="none" stroke="currentColor">
+                  <path d="M26 12h12l4 8-2 4-4-2v6l12 24H16l12-24v-6l-4 2-2-4 4-8z"/>
+                  <path d="M29 12c1 3 2 4 3 4s2-1 3-4"/>
+                  <path d="M32 28v24"/>
+                </svg>
+              </div>
+            </div>
+            <h3 class="cat-tile__name">Maxi</h3>
+            <span class="cat-tile__meta">Explore Styles</span>
+          </a>
+        </div>
+      </div>
+    </section>
+
+    <!-- =======================================================================
+         2. Featured Products (Desktop Grid, Mobile Carousel with Dots)
+         ======================================================================= -->
+    <section class="section section--alt" id="featured">
+      <div class="container">
+        <div class="section__head reveal">
+          <span class="eyebrow">Handpicked Masterpieces</span>
+          <h2 class="section__title">Featured Products</h2>
+          <p class="section__lead">A glimpse into our finest gold zari embroideries and royal fabrics.</p>
+        </div>
+
+        <!-- Populated dynamically via products.js (Desktop grid, Mobile carousel) -->
+        <div class="featured-track" id="featuredTrack"></div>
+
+        <!-- Mobile-only Carousel Dots -->
+        <div class="dots featured-dots" id="featuredDots" aria-hidden="true"></div>
+
+        <div class="section__cta reveal">
+          <a href="shop.html" class="btn btn--outline">View All Products</a>
+        </div>
+      </div>
+    </section>
+
+    <!-- =======================================================================
+         3. About Section (Brand Story & Stats Row)
+         ======================================================================= -->
+    <section class="section" id="about">
+      <div class="container">
+        <div class="about">
+          <div class="about__visual reveal">
+            <!-- Full Logo Display in Arch -->
+            <img src="images/logo-full.png" alt="SNS Official — Stitch n Style" width="340" height="358" loading="lazy">
+          </div>
+
+          <div class="about__copy reveal">
+            <span class="eyebrow">The Heritage of Stitch n Style</span>
+            <h2 class="section__title">Crafted for Royal Grace</h2>
+            <p>At SNS Official, we believe that true elegance lies in the details. Founded on the timeless tradition of master craftsmanship, our creations harmoniously blend traditional Eastern artistry with contemporary regal aesthetics.</p>
+            <p>From the rich fall of micro-velvet sarees to the delicate movement of hand-embellished chiffon maxis, every garment is meticulously tailored to celebrate womanhood on life's most unforgettable occasions.</p>
+
+            <div class="stats">
+              <div class="stat">
+                <span class="stat__value">Est. 2026</span>
+                <span class="stat__label">Heritage</span>
+              </div>
+              <div class="stat">
+                <span class="stat__value">100% Pure</span>
+                <span class="stat__label">Premium Fabrics</span>
+              </div>
+              <div class="stat">
+                <span class="stat__value">Handmade</span>
+                <span class="stat__label">Made with Care</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- =======================================================================
+         4. Reviews Section (Horizontal Swipeable Carousel with Live Star Ratings)
+         ======================================================================= -->
+    <section class="section section--alt" id="reviews">
+      <div class="container">
+        <div class="section__head reveal">
+          <span class="eyebrow">Customer Testimonials</span>
+          <h2 class="section__title">Cherished by Our Patrons</h2>
+          <p class="section__lead">Real experiences from women who chose Stitch n Style for their grand moments.</p>
+        </div>
+
+        <div class="carousel reveal">
+          <div class="reviews-track" id="reviewsTrack">
+            <!-- Review 1 -->
+            <div class="review-card">
+              <div class="review-card__inner">
+                <div class="stars" aria-label="5 out of 5 stars">
+                  <svg viewBox="0 0 24 24" fill="currentColor"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+                  <svg viewBox="0 0 24 24" fill="currentColor"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+                  <svg viewBox="0 0 24 24" fill="currentColor"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+                  <svg viewBox="0 0 24 24" fill="currentColor"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+                  <svg viewBox="0 0 24 24" fill="currentColor"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+                </div>
+                <p class="review-card__quote">"The Zari Tissue Organza Saree is breathtaking in person. The golden embroidery has such a regal sheen without feeling heavy. I received compliments all evening!"</p>
+                <div class="review-card__author">
+                  <div class="avatar" aria-hidden="true">A</div>
+                  <div>
+                    <strong class="review-card__name">Ayesha Khan</strong>
+                    <span class="review-card__city">Lahore</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Review 2 -->
+            <div class="review-card">
+              <div class="review-card__inner">
+                <div class="stars" aria-label="5 out of 5 stars">
+                  <svg viewBox="0 0 24 24" fill="currentColor"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+                  <svg viewBox="0 0 24 24" fill="currentColor"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+                  <svg viewBox="0 0 24 24" fill="currentColor"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+                  <svg viewBox="0 0 24 24" fill="currentColor"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+                  <svg viewBox="0 0 24 24" fill="currentColor"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+                </div>
+                <p class="review-card__quote">"Ordering through WhatsApp was so fast and smooth. The team helped me choose the exact size for the Anarkali Maxi and delivery was prompt."</p>
+                <div class="review-card__author">
+                  <div class="avatar" aria-hidden="true">F</div>
+                  <div>
+                    <strong class="review-card__name">Fatima Zahra</strong>
+                    <span class="review-card__city">Karachi</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Review 3 -->
+            <div class="review-card">
+              <div class="review-card__inner">
+                <div class="stars" aria-label="5 out of 5 stars">
+                  <svg viewBox="0 0 24 24" fill="currentColor"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+                  <svg viewBox="0 0 24 24" fill="currentColor"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+                  <svg viewBox="0 0 24 24" fill="currentColor"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+                  <svg viewBox="0 0 24 24" fill="currentColor"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+                  <svg viewBox="0 0 24 24" fill="currentColor"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+                </div>
+                <p class="review-card__quote">"The stitching on the velvet short kurti is flawless. High quality lining, exquisite kora work, and truly premium fabric. Stitch n Style has a customer for life."</p>
+                <div class="review-card__author">
+                  <div class="avatar" aria-hidden="true">M</div>
+                  <div>
+                    <strong class="review-card__name">Maryam Tariq</strong>
+                    <span class="review-card__city">Islamabad</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Review 4 -->
+            <div class="review-card">
+              <div class="review-card__inner">
+                <div class="stars" aria-label="5 out of 5 stars">
+                  <svg viewBox="0 0 24 24" fill="currentColor"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+                  <svg viewBox="0 0 24 24" fill="currentColor"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+                  <svg viewBox="0 0 24 24" fill="currentColor"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+                  <svg viewBox="0 0 24 24" fill="currentColor"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+                  <svg viewBox="0 0 24 24" fill="currentColor"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+                </div>
+                <p class="review-card__quote">"Their organza cutwork dupatta transformed my plain ensemble into couture wedding wear. Pure luxury craftsmanship!"</p>
+                <div class="review-card__author">
+                  <div class="avatar" aria-hidden="true">Z</div>
+                  <div>
+                    <strong class="review-card__name">Zainab Siddiqui</strong>
+                    <span class="review-card__city">Faisalabad</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Carousel Controls -->
+          <div class="dots reviews-dots" id="reviewsDots" aria-hidden="true"></div>
+          <div class="carousel__arrows">
+            <button type="button" class="icon-btn" id="reviewsPrev" aria-label="Previous review">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg>
+            </button>
+            <button type="button" class="icon-btn" id="reviewsNext" aria-label="Next review">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
+            </button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- =======================================================================
+         5. Contact Section (WhatsApp, Call, Instagram buttons)
+         ======================================================================= -->
+    <section class="section" id="contact">
+      <div class="container">
+        <div class="section__head reveal">
+          <span class="eyebrow">Connect With Us</span>
+          <h2 class="section__title">We Are Here to Assist You</h2>
+          <p class="section__lead">Have inquiries regarding custom sizing, orders, or fabric details? Speak directly with our team.</p>
+        </div>
+
+        <div class="contact-grid">
+          <!-- WhatsApp Card -->
+          <div class="contact-card reveal" style="transition-delay: 150ms;">
+            <div class="contact-card__inner">
+              <div class="contact-card__icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                  <path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/>
+                </svg>
+              </div>
+              <h3 class="contact-card__title">WhatsApp Order Desk</h3>
+              <p class="contact-card__value">0308 5220513</p>
+              <a href="https://wa.me/923085220513" target="_blank" rel="noopener" class="btn btn--primary">Chat on WhatsApp</a>
+            </div>
+          </div>
+
+          <!-- Direct Call Card -->
+          <div class="contact-card reveal" style="transition-delay: 300ms;">
+            <div class="contact-card__inner">
+              <div class="contact-card__icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                  <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/>
+                </svg>
+              </div>
+              <h3 class="contact-card__title">Direct Phone Line</h3>
+              <p class="contact-card__value">0309 8593900</p>
+              <a href="tel:03098593900" class="btn btn--outline">Call Us Now</a>
+            </div>
+          </div>
+
+          <!-- Instagram Card -->
+          <div class="contact-card reveal" style="transition-delay: 450ms;">
+            <div class="contact-card__inner">
+              <div class="contact-card__icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                  <rect x="2" y="2" width="20" height="20" rx="5" ry="5"/>
+                  <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"/>
+                  <line x1="17.5" y1="6.5" x2="17.51" y2="6.5"/>
+                </svg>
+              </div>
+              <h3 class="contact-card__title">Instagram</h3>
+              <p class="contact-card__value">@snsofficial</p>
+              <a href="#" class="btn btn--outline" aria-label="Follow us on Instagram">Follow Us</a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- =========================================================================
+       6. Footer (logo-full.png, quick links, contact numbers, copyright)
+       ========================================================================= -->
+  <footer class="footer" role="contentinfo">
+    <div class="container">
+      <div class="footer__grid">
+        <!-- Brand Info -->
+        <div class="footer__brand">
+          <img src="images/logo-full.png" alt="SNS Official — Stitch n Style" width="170" height="178" loading="lazy">
+          <p>Premium ladies wear for every occasion. Handcrafted perfection, opulent fabrics, and royal designs.</p>
+        </div>
+
+        <!-- Quick Links -->
+        <div>
+          <h4 class="footer__title">Explore</h4>
+          <ul class="footer__list">
+            <li><a href="index.html">Home</a></li>
+            <li><a href="shop.html">Shop All</a></li>
+            <li><a href="shop.html?category=saree">Sarees</a></li>
+            <li><a href="shop.html?category=dupatta">Dupattas</a></li>
+            <li><a href="shop.html?category=short">Short Kurtis</a></li>
+            <li><a href="shop.html?category=maxi">Maxis</a></li>
+          </ul>
+        </div>
+
+        <!-- Contact Info -->
+        <div>
+          <h4 class="footer__title">Order & Inquiries</h4>
+          <ul class="footer__list">
+            <li>WhatsApp: <a href="https://wa.me/923085220513" target="_blank" rel="noopener">0308 5220513</a></li>
+            <li>Direct Call: <a href="tel:03098593900">0309 8593900</a></li>
+            <li>Hours: Mon – Sat, 10 AM – 9 PM</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="footer__bottom">
+        <p>© 2026 SNS Official - Stitch n Style. All Rights Reserved.</p>
+      </div>
+    </div>
+  </footer>
+
+  <!-- =========================================================================
+       Cart Slide-in Drawer
+       ========================================================================= -->
+  <div class="cart-backdrop backdrop" aria-hidden="true"></div>
+  <aside class="cart" id="cartDrawer" role="dialog" aria-modal="true" aria-labelledby="cartHeading" aria-hidden="true">
+    <div class="cart__head">
+      <h2 id="cartHeading">Your Bag</h2>
+      <button type="button" class="icon-btn cart__close" aria-label="Close bag">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+
+    <div class="cart__items" role="region" aria-label="Items in bag"></div>
+
+    <div class="cart__foot">
+      <div class="cart__subtotal">
+        <span>Subtotal</span>
+        <strong>Rs. 0</strong>
+      </div>
+      <p class="cart__note">Taxes & shipping calculated at checkout via WhatsApp.</p>
+      <button type="button" class="btn btn--primary btn--block cart__checkout-btn">Proceed to Checkout</button>
+    </div>
+  </aside>
+
+  <!-- =========================================================================
+       Checkout Modal
+       ========================================================================= -->
+  <div class="modal" id="checkoutModal" role="dialog" aria-modal="true" aria-labelledby="checkoutHeading" aria-hidden="true">
+    <div class="modal__backdrop" aria-hidden="true"></div>
+    <div class="modal__dialog">
+      <button type="button" class="icon-btn modal__close" aria-label="Close checkout">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+
+      <h2 class="modal__title" id="checkoutHeading">Checkout</h2>
+      <p class="modal__text">Provide your delivery details. Your order will be transmitted directly to our WhatsApp support for payment confirmation.</p>
+
+      <div class="order-summary" id="checkoutSummary"></div>
+
+      <form id="checkoutForm" novalidate>
+        <div class="field">
+          <label for="custName">Full Name *</label>
+          <input type="text" id="custName" required placeholder="e.g. Ayesha Khan" autocomplete="name">
+          <span class="field__error">Please enter your full name.</span>
+        </div>
+
+        <div class="field">
+          <label for="custPhone">Contact Number *</label>
+          <input type="tel" id="custPhone" required placeholder="e.g. 0308 1234567" autocomplete="tel">
+          <span class="field__error">Please provide a valid contact number.</span>
+        </div>
+
+        <div class="field">
+          <label for="custAddress">Delivery Address *</label>
+          <textarea id="custAddress" required placeholder="Complete home address, area, city" autocomplete="street-address"></textarea>
+          <span class="field__error">Please enter your full delivery address.</span>
+        </div>
+
+        <div class="field">
+          <label for="custAltPhone">Alternate Number <span class="opt">(Optional)</span></label>
+          <input type="tel" id="custAltPhone" placeholder="e.g. 0300 7654321">
+        </div>
+
+        <button type="submit" class="btn btn--primary btn--block">Complete Order on WhatsApp</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- =========================================================================
+       Fullscreen Lightbox (Multi-Image Viewer)
+       ========================================================================= -->
+  <div class="lightbox" id="lightbox" role="dialog" aria-modal="true" aria-hidden="true" aria-label="Image gallery">
+    <button type="button" class="icon-btn lightbox__close" aria-label="Close gallery">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+    </button>
+    <div class="lightbox__caption" aria-live="polite"></div>
+    <div class="lightbox__stage">
+      <div class="lightbox__track"></div>
+    </div>
+    <button type="button" class="icon-btn lightbox__arrow lightbox__arrow--prev" aria-label="Previous photo">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg>
+    </button>
+    <button type="button" class="icon-btn lightbox__arrow lightbox__arrow--next" aria-label="Next photo">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
+    </button>
+    <div class="lightbox__counter" aria-live="polite"></div>
+  </div>
+
+  <!-- Scripts -->
+  <script src="js/products.js"></script>
+  <script src="js/main.js"></script>
+</body>
+</html>

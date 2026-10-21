@@ -1,0 +1,317 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SNS Official</title>
+  <meta name="description" content="Explore the full collection of luxury ladies wear by SNS Official — Stitch n Style. Sarees, dupattas, short kurtis and maxis crafted with pure fabrics.">
+  <meta name="theme-color" content="#0A0A0A">
+
+  <!-- Favicons -->
+  <link rel="icon" href="favicon.ico" sizes="any">
+  <link rel="icon" type="image/png" sizes="32x32" href="favicon-32x32.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="favicon-16x16.png">
+  <link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png">
+
+  <!-- Typography: Playfair Display (Serif) & Poppins (Sans-Serif) -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;0,600;1,400&family=Poppins:wght@300;400;500;600&display=swap" rel="stylesheet">
+
+  <!-- Stylesheet -->
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+  <!-- =========================================================================
+       Navbar (No border/shadow/lines, soft gold hover only)
+       ========================================================================= -->
+  <header class="nav is-scrolled" role="banner">
+    <div class="container nav__inner">
+      <!-- Monogram Logo (~40px, reloads page on click) -->
+      <a href="index.html" class="nav__logo" aria-label="SNS Official Home">
+        <img src="images/logo-mark.png" alt="SNS Official" width="90" height="40">
+      </a>
+
+      <!-- Desktop Navigation Links -->
+      <nav class="nav__links" aria-label="Main Navigation">
+        <a href="index.html" class="nav__link">Home</a>
+        <a href="shop.html" class="nav__link is-active">Shop</a>
+        <a href="index.html#about" class="nav__link">About</a>
+        <a href="index.html#reviews" class="nav__link">Reviews</a>
+        <a href="index.html#contact" class="nav__link">Contact</a>
+      </nav>
+
+      <!-- Actions: Cart Button & Mobile Hamburger -->
+      <div class="nav__actions">
+        <button type="button" class="icon-btn cart-toggle" aria-label="View shopping bag">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+            <path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/>
+            <line x1="3" y1="6" x2="21" y2="6"/>
+            <path d="M16 10a4 4 0 0 1-8 0"/>
+          </svg>
+          <span class="cart-count is-empty" aria-label="Items in bag">0</span>
+        </button>
+
+        <button type="button" class="icon-btn nav__toggle" aria-label="Toggle navigation menu" aria-expanded="false">
+          <span class="burger">
+            <span></span>
+            <span></span>
+            <span></span>
+          </span>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Mobile Fullscreen Overlay Menu -->
+  <div class="mobile-menu" role="dialog" aria-modal="true" aria-label="Mobile Navigation">
+    <ul class="mobile-menu__links">
+      <li><a href="index.html">Home</a></li>
+      <li><a href="shop.html" class="is-active">Shop</a></li>
+      <li><a href="index.html#about">About</a></li>
+      <li><a href="index.html#reviews">Reviews</a></li>
+      <li><a href="index.html#contact">Contact</a></li>
+    </ul>
+    <div class="mobile-menu__contact">
+      <p>WhatsApp: <a href="https://wa.me/923085220513" target="_blank" rel="noopener">0308 5220513</a></p>
+      <p>Direct Call: <a href="tel:03098593900">0309 8593900</a></p>
+    </div>
+  </div>
+
+  <main>
+    <!-- =======================================================================
+         Shop Page Header
+         ======================================================================= -->
+    <header class="page-header">
+      <div class="container">
+        <span class="eyebrow">Stitch n Style Collection</span>
+        <h1 class="page-header__title text-metal">The Collection</h1>
+        <p class="page-header__text">Explore handcrafted heirlooms, contemporary silhouettes, and timeless festive ensembles.</p>
+      </div>
+    </header>
+
+    <!-- =======================================================================
+         Shop Layout (Left Filter Drawer on Mobile, Sticky Sidebar on Desktop)
+         ======================================================================= -->
+    <section class="section shop">
+      <div class="container">
+        <!-- Toolbar (Mobile filter button + item count) -->
+        <div class="shop__toolbar">
+          <button type="button" class="btn btn--outline filter-toggle" aria-label="Open filters">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <line x1="4" y1="21" x2="4" y2="14"/>
+              <line x1="4" y1="10" x2="4" y2="3"/>
+              <line x1="12" y1="21" x2="12" y2="12"/>
+              <line x1="12" y1="8" x2="12" y2="3"/>
+              <line x1="20" y1="21" x2="20" y2="16"/>
+              <line x1="20" y1="12" x2="20" y2="3"/>
+              <line x1="1" y1="14" x2="7" y2="14"/>
+              <line x1="9" y1="8" x2="15" y2="8"/>
+              <line x1="17" y1="16" x2="23" y2="16"/>
+            </svg>
+            Filter & Sort
+          </button>
+          <span class="shop__count" aria-live="polite">Showing pieces...</span>
+        </div>
+
+        <div class="shop__layout">
+          <!-- Filter Backdrop for Mobile Drawer -->
+          <div class="filters-backdrop backdrop" aria-hidden="true"></div>
+
+          <!-- Filter Drawer / Sidebar -->
+          <aside class="filters" id="filterDrawer" role="region" aria-label="Product Filters">
+            <div class="filters__head">
+              <h2>Filters</h2>
+              <button type="button" class="icon-btn filters__close" aria-label="Close filters">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+              </button>
+            </div>
+
+            <!-- Categories -->
+            <div class="filter-group">
+              <h3 class="filter-group__title">Categories</h3>
+              <div class="filter-options" role="group" aria-label="Filter by Category">
+                <button type="button" class="filter-option" data-filter-cat="all" aria-pressed="true">
+                  <span>All Pieces</span>
+                </button>
+                <button type="button" class="filter-option" data-filter-cat="saree" aria-pressed="false">
+                  <span>Saree</span>
+                </button>
+                <button type="button" class="filter-option" data-filter-cat="dupatta" aria-pressed="false">
+                  <span>Dupatta</span>
+                </button>
+                <button type="button" class="filter-option" data-filter-cat="short" aria-pressed="false">
+                  <span>Short Kurti</span>
+                </button>
+                <button type="button" class="filter-option" data-filter-cat="maxi" aria-pressed="false">
+                  <span>Maxi</span>
+                </button>
+              </div>
+            </div>
+
+            <!-- Sort By -->
+            <div class="filter-group">
+              <h3 class="filter-group__title">Sort By</h3>
+              <div class="filter-options" role="group" aria-label="Sort products">
+                <button type="button" class="filter-option" data-sort-opt="featured" aria-pressed="true">
+                  <span>Featured</span>
+                </button>
+                <button type="button" class="filter-option" data-sort-opt="price-asc" aria-pressed="false">
+                  <span>Price: Low to High</span>
+                </button>
+                <button type="button" class="filter-option" data-sort-opt="price-desc" aria-pressed="false">
+                  <span>Price: High to Low</span>
+                </button>
+                <button type="button" class="filter-option" data-sort-opt="newest" aria-pressed="false">
+                  <span>Newest Arrivals</span>
+                </button>
+                <button type="button" class="filter-option" data-sort-opt="alpha" aria-pressed="false">
+                  <span>Alphabetical (A – Z)</span>
+                </button>
+              </div>
+            </div>
+          </aside>
+
+          <!-- Product Grid (Populated dynamically) -->
+          <div class="product-grid" id="shopGrid" aria-label="Product listings"></div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- =========================================================================
+       Footer (logo-full.png, quick links, contact numbers, copyright)
+       ========================================================================= -->
+  <footer class="footer" role="contentinfo">
+    <div class="container">
+      <div class="footer__grid">
+        <!-- Brand Info -->
+        <div class="footer__brand">
+          <img src="images/logo-full.png" alt="SNS Official — Stitch n Style" width="170" height="178" loading="lazy">
+          <p>Premium ladies wear for every occasion. Handcrafted perfection, opulent fabrics, and royal designs.</p>
+        </div>
+
+        <!-- Quick Links -->
+        <div>
+          <h4 class="footer__title">Explore</h4>
+          <ul class="footer__list">
+            <li><a href="index.html">Home</a></li>
+            <li><a href="shop.html">Shop All</a></li>
+            <li><a href="shop.html?category=saree">Sarees</a></li>
+            <li><a href="shop.html?category=dupatta">Dupattas</a></li>
+            <li><a href="shop.html?category=short">Short Kurtis</a></li>
+            <li><a href="shop.html?category=maxi">Maxis</a></li>
+          </ul>
+        </div>
+
+        <!-- Contact Info -->
+        <div>
+          <h4 class="footer__title">Order & Inquiries</h4>
+          <ul class="footer__list">
+            <li>WhatsApp: <a href="https://wa.me/923085220513" target="_blank" rel="noopener">0308 5220513</a></li>
+            <li>Direct Call: <a href="tel:03098593900">0309 8593900</a></li>
+            <li>Hours: Mon – Sat, 10 AM – 9 PM</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="footer__bottom">
+        <p>© 2026 SNS Official - Stitch n Style. All Rights Reserved.</p>
+      </div>
+    </div>
+  </footer>
+
+  <!-- =========================================================================
+       Cart Slide-in Drawer
+       ========================================================================= -->
+  <div class="cart-backdrop backdrop" aria-hidden="true"></div>
+  <aside class="cart" id="cartDrawer" role="dialog" aria-modal="true" aria-labelledby="cartHeading" aria-hidden="true">
+    <div class="cart__head">
+      <h2 id="cartHeading">Your Bag</h2>
+      <button type="button" class="icon-btn cart__close" aria-label="Close bag">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+
+    <div class="cart__items" role="region" aria-label="Items in bag"></div>
+
+    <div class="cart__foot">
+      <div class="cart__subtotal">
+        <span>Subtotal</span>
+        <strong>Rs. 0</strong>
+      </div>
+      <p class="cart__note">Taxes & shipping calculated at checkout via WhatsApp.</p>
+      <button type="button" class="btn btn--primary btn--block cart__checkout-btn">Proceed to Checkout</button>
+    </div>
+  </aside>
+
+  <!-- =========================================================================
+       Checkout Modal
+       ========================================================================= -->
+  <div class="modal" id="checkoutModal" role="dialog" aria-modal="true" aria-labelledby="checkoutHeading" aria-hidden="true">
+    <div class="modal__backdrop" aria-hidden="true"></div>
+    <div class="modal__dialog">
+      <button type="button" class="icon-btn modal__close" aria-label="Close checkout">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+
+      <h2 class="modal__title" id="checkoutHeading">Checkout</h2>
+      <p class="modal__text">Provide your delivery details. Your order will be transmitted directly to our WhatsApp support for payment confirmation.</p>
+
+      <div class="order-summary" id="checkoutSummary"></div>
+
+      <form id="checkoutForm" novalidate>
+        <div class="field">
+          <label for="custName">Full Name *</label>
+          <input type="text" id="custName" required placeholder="e.g. Ayesha Khan" autocomplete="name">
+          <span class="field__error">Please enter your full name.</span>
+        </div>
+
+        <div class="field">
+          <label for="custPhone">Contact Number *</label>
+          <input type="tel" id="custPhone" required placeholder="e.g. 0308 1234567" autocomplete="tel">
+          <span class="field__error">Please provide a valid contact number.</span>
+        </div>
+
+        <div class="field">
+          <label for="custAddress">Delivery Address *</label>
+          <textarea id="custAddress" required placeholder="Complete home address, area, city" autocomplete="street-address"></textarea>
+          <span class="field__error">Please enter your full delivery address.</span>
+        </div>
+
+        <div class="field">
+          <label for="custAltPhone">Alternate Number <span class="opt">(Optional)</span></label>
+          <input type="tel" id="custAltPhone" placeholder="e.g. 0300 7654321">
+        </div>
+
+        <button type="submit" class="btn btn--primary btn--block">Complete Order on WhatsApp</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- =========================================================================
+       Fullscreen Lightbox (Multi-Image Viewer)
+       ========================================================================= -->
+  <div class="lightbox" id="lightbox" role="dialog" aria-modal="true" aria-hidden="true" aria-label="Image gallery">
+    <button type="button" class="icon-btn lightbox__close" aria-label="Close gallery">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+    </button>
+    <div class="lightbox__caption" aria-live="polite"></div>
+    <div class="lightbox__stage">
+      <div class="lightbox__track"></div>
+    </div>
+    <button type="button" class="icon-btn lightbox__arrow lightbox__arrow--prev" aria-label="Previous photo">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg>
+    </button>
+    <button type="button" class="icon-btn lightbox__arrow lightbox__arrow--next" aria-label="Next photo">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
+    </button>
+    <div class="lightbox__counter" aria-live="polite"></div>
+  </div>
+
+  <!-- Scripts -->
+  <script src="js/products.js"></script>
+  <script src="js/main.js"></script>
+</body>
+</html>
