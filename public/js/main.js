@@ -25,6 +25,7 @@
    * ----------------------------------------------------------------------- */
   const STORAGE_KEY = "sns_cart_v1";
   const WHATSAPP_NUMBER = "923085220513"; // +92 308 5220513
+  const INSTAGRAM_URL = "#"; // Change Instagram profile URL in this one place
 
   let cart = [];
   try {
@@ -891,33 +892,192 @@ _Thank you! I would like to proceed with payment and order confirmation via What
   }
 
   /* -------------------------------------------------------------------------
-   * 10. Page Specific Initializers
+   * 10. Supabase Data Loaders & Page Specific Initializers
    * ----------------------------------------------------------------------- */
+  function escapeHTML(str) {
+    return String(str || "")
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;")
+      .replace(/'/g, "&#39;");
+  }
+
+  function normalizeDbProduct(row) {
+    const rawCat = String(row.category || "Collection").trim() || "Collection";
+    const cleanImages = Array.isArray(row.images) ? row.images.filter(Boolean) : [];
+    const cleanSizes = Array.isArray(row.sizes)
+      ? row.sizes.map(s => String(s).trim()).filter(Boolean)
+      : [];
+
+    return {
+      id: String(row.id),
+      name: row.name || "Untitled Piece",
+      category: rawCat.toLowerCase(),
+      categoryLabel: rawCat,
+      price: Number(row.price) || 0,
+      originalPrice: null,
+      badge: row.badge ? String(row.badge).trim() : null,
+      inStock: row.in_stock !== false,
+      hasSizes: cleanSizes.length > 0,
+      sizes: cleanSizes,
+      images: cleanImages.length > 0 ? cleanImages : [null],
+      date: row.created_at || new Date().toISOString()
+    };
+  }
+
+  // Load products from Supabase; fall back to /public/js/products.js if Supabase fails
+  async function loadProductsFromSupabase() {
+    const sb = window.supabaseClient;
+    if (!sb) {
+      window.PRODUCTS = window.FALLBACK_PRODUCTS || window.PRODUCTS || [];
+      return;
+    }
+
+    try {
+      const { data, error } = await sb
+        .from("products")
+        .select("*")
+        .order("created_at", { ascending: false });
+
+      if (error || !Array.isArray(data)) {
+        throw error || new Error("Invalid products response");
+      }
+
+      window.PRODUCTS = data.map(normalizeDbProduct);
+    } catch (err) {
+      console.warn("Could not load products from Supabase; using fallback catalog:", err);
+      window.PRODUCTS = window.FALLBACK_PRODUCTS || window.PRODUCTS || [];
+    }
+  }
+
+  // Load approved reviews from Supabase; keep existing placeholder reviews if none exist yet
+  async function loadApprovedReviews() {
+    const reviewsTrack = document.getElementById("reviewsTrack");
+    const sb = window.supabaseClient;
+    if (!reviewsTrack || !sb) return;
+
+    try {
+      const { data, error } = await sb
+        .from("reviews")
+        .select("*")
+        .eq("status", "approved")
+        .order("created_at", { ascending: false });
+
+      if (error || !Array.isArray(data) || data.length === 0) {
+        // Keep existing placeholder reviews if none approved yet or on error
+        return;
+      }
+
+      reviewsTrack.innerHTML = "";
+      const starSVG = `<svg viewBox="0 0 24 24" fill="currentColor"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>`;
+
+      data.forEach(rev => {
+        const rating = Math.min(5, Math.max(1, Number(rev.rating) || 5));
+        let starsHTML = "";
+        for (let i = 1; i <= 5; i++) {
+          starsHTML += `<span class="${i <= rating ? '' : 'is-off'}">${starSVG}</span>`;
+        }
+
+        const authorName = String(rev.name || "Patron").trim();
+        const initial = (authorName.charAt(0) || "S").toUpperCase();
+        const subline = rev.product_name ? escapeHTML(rev.product_name) : "";
+
+        const card = document.createElement("div");
+        card.className = "review-card";
+        card.innerHTML = `
+          <div class="review-card__inner">
+            <div class="stars" aria-label="${rating} out of 5 stars">
+              ${starsHTML}
+            </div>
+            <p class="review-card__quote">&ldquo;${escapeHTML(rev.text)}&rdquo;</p>
+            ${rev.photo_url ? `
+              <div class="review-card__photo" role="button" tabindex="0" aria-label="View customer photo by ${escapeHTML(authorName)}">
+                <img src="${escapeHTML(rev.photo_url)}" alt="Photo shared by ${escapeHTML(authorName)}" loading="lazy">
+              </div>
+            ` : ""}
+            <div class="review-card__author">
+              <div class="avatar" aria-hidden="true">${escapeHTML(initial)}</div>
+              <div>
+                <strong class="review-card__name">${escapeHTML(authorName)}</strong>
+                ${subline ? `<span class="review-card__city">${subline}</span>` : ""}
+              </div>
+            </div>
+          </div>
+        `;
+
+        if (rev.photo_url) {
+          const photoEl = card.querySelector(".review-card__photo");
+          if (photoEl) {
+            photoEl.addEventListener("click", () => {
+              openLightbox({ name: authorName + (rev.product_name ? ` — ${rev.product_name}` : ""), images: [rev.photo_url] }, 0);
+            });
+          }
+        }
+
+        reviewsTrack.appendChild(card);
+      });
+
+      // Re-sync reviews carousel dots and arrows
+      setupCarousel("#reviewsTrack", "#reviewsDots", "#reviewsPrev", "#reviewsNext");
+    } catch (err) {
+      console.warn("Could not load reviews from Supabase; keeping placeholder reviews:", err);
+    }
+  }
+
+  // Apply single INSTAGRAM_URL constant to Instagram button(s)
+  function initInstagramLinks() {
+    const igLinks = document.querySelectorAll('#instagramLink, a[aria-label="Follow us on Instagram"]');
+    igLinks.forEach(link => {
+      link.setAttribute("href", INSTAGRAM_URL);
+      if (INSTAGRAM_URL && INSTAGRAM_URL !== "#") {
+        link.setAttribute("target", "_blank");
+        link.setAttribute("rel", "noopener");
+      }
+    });
+  }
 
   // --- HOMEPAGE INITIALIZER ---
   function initHomePage() {
     const featuredTrack = document.getElementById("featuredTrack");
     if (featuredTrack && window.PRODUCTS) {
-      // Pick 4 items from products data
+      // Pick up to 4 items from products data
       const featuredItems = window.PRODUCTS.slice(0, 4);
       featuredTrack.innerHTML = "";
 
-      featuredItems.forEach((product, idx) => {
-        const delay = (idx + 1) * 160; // 160ms staggered delay
-        const cardHTML = createProductCardHTML(product, delay);
-        const temp = document.createElement("div");
-        temp.innerHTML = cardHTML;
-        const cardEl = temp.firstElementChild;
-        featuredTrack.appendChild(cardEl);
-        bindProductCardEvents(cardEl, product);
-      });
+      if (featuredItems.length === 0) {
+        featuredTrack.innerHTML = `<div class="empty-state"><p>New collection pieces arriving soon.</p></div>`;
+      } else {
+        featuredItems.forEach((product, idx) => {
+          const delay = (idx + 1) * 160; // 160ms staggered delay
+          const cardHTML = createProductCardHTML(product, delay);
+          const temp = document.createElement("div");
+          temp.innerHTML = cardHTML;
+          const cardEl = temp.firstElementChild;
+          featuredTrack.appendChild(cardEl);
+          bindProductCardEvents(cardEl, product);
+        });
+      }
 
       // Mobile carousel dots for featured
       setupCarousel("#featuredTrack", "#featuredDots");
+      initScrollReveals();
     }
 
-    // Reviews carousel
+    // Initialize reviews carousel (placeholder first, then updated if approved reviews exist)
     setupCarousel("#reviewsTrack", "#reviewsDots", "#reviewsPrev", "#reviewsNext");
+  }
+
+  // Helper to match free-text categories & homepage category tile slugs
+  function matchesCategory(itemCategory, activeCategory) {
+    if (!activeCategory || activeCategory === "all") return true;
+    const itemCat = String(itemCategory || "").trim().toLowerCase();
+    const targetCat = String(activeCategory || "").trim().toLowerCase();
+    if (!itemCat) return false;
+    if (itemCat === targetCat) return true;
+    // Allow homepage tile slugs like "short" to match "short kurti" or "saree" to match "sarees"
+    if (itemCat.startsWith(targetCat) || targetCat.startsWith(itemCat)) return true;
+    return false;
   }
 
   // --- SHOP PAGE INITIALIZER ---
@@ -929,7 +1089,7 @@ _Thank you! I would like to proceed with payment and order confirmation via What
     const filterToggleBtn = document.querySelector(".filter-toggle");
     const filterCloseBtn = document.querySelector(".filters__close");
     const filterBackdrop = document.querySelector(".filters-backdrop");
-    const categoryFilterBtns = document.querySelectorAll("[data-filter-cat]");
+    const categoryContainer = document.querySelector('.filter-options[aria-label="Filter by Category"]');
     const sortSelectBtns = document.querySelectorAll("[data-sort-opt]");
     const shopCountEl = document.querySelector(".shop__count");
 
@@ -949,18 +1109,81 @@ _Thank you! I would like to proceed with payment and order confirmation via What
       document.body.classList.remove("is-locked");
     }
 
-    if (filterToggleBtn) filterToggleBtn.addEventListener("click", openFilters);
-    if (filterCloseBtn) filterCloseBtn.addEventListener("click", closeFilters);
-    if (filterBackdrop) filterBackdrop.addEventListener("click", closeFilters);
+    if (filterToggleBtn && !filterToggleBtn.dataset.bound) {
+      filterToggleBtn.dataset.bound = "true";
+      filterToggleBtn.addEventListener("click", openFilters);
+    }
+    if (filterCloseBtn && !filterCloseBtn.dataset.bound) {
+      filterCloseBtn.dataset.bound = "true";
+      filterCloseBtn.addEventListener("click", closeFilters);
+    }
+    if (filterBackdrop && !filterBackdrop.dataset.bound) {
+      filterBackdrop.dataset.bound = "true";
+      filterBackdrop.addEventListener("click", closeFilters);
+    }
+
+    // Build dynamic category list from database products
+    const categoryMap = new Map(); // lowercase key -> display label
+    window.PRODUCTS.forEach(item => {
+      const key = String(item.category || "").trim().toLowerCase();
+      const label = String(item.categoryLabel || item.category || "").trim();
+      if (key && !categoryMap.has(key)) {
+        categoryMap.set(key, label);
+      }
+    });
 
     // Initial state from URL param
     const urlParams = new URLSearchParams(window.location.search);
-    let activeCategory = (urlParams.get("category") || "all").toLowerCase();
+    let rawParamCat = (urlParams.get("category") || "all").trim().toLowerCase();
+    let activeCategory = "all";
+
+    if (rawParamCat !== "all") {
+      if (categoryMap.has(rawParamCat)) {
+        activeCategory = rawParamCat;
+      } else {
+        // Check if URL slug matches a free-text category (e.g. "short" -> "short kurti")
+        let matchedKey = null;
+        categoryMap.forEach((_label, key) => {
+          if (!matchedKey && matchesCategory(key, rawParamCat)) {
+            matchedKey = key;
+          }
+        });
+        if (matchedKey) {
+          activeCategory = matchedKey;
+        } else {
+          // Preserve requested category in filter list even if 0 products currently exist in it
+          activeCategory = rawParamCat;
+          const fallbackLabel = rawParamCat.charAt(0).toUpperCase() + rawParamCat.slice(1);
+          categoryMap.set(rawParamCat, fallbackLabel);
+        }
+      }
+    }
+
     let activeSort = "featured";
+
+    // Render dynamic category filter buttons
+    if (categoryContainer) {
+      let buttonsHTML = `
+        <button type="button" class="filter-option" data-filter-cat="all" aria-pressed="${activeCategory === 'all' ? 'true' : 'false'}">
+          <span>All Pieces</span>
+        </button>
+      `;
+      categoryMap.forEach((label, key) => {
+        const isPressed = activeCategory === key;
+        buttonsHTML += `
+          <button type="button" class="filter-option" data-filter-cat="${escapeHTML(key)}" aria-pressed="${isPressed ? 'true' : 'false'}">
+            <span>${escapeHTML(label)}</span>
+          </button>
+        `;
+      });
+      categoryContainer.innerHTML = buttonsHTML;
+    }
+
+    const categoryFilterBtns = document.querySelectorAll("[data-filter-cat]");
 
     function updateCategoryUI() {
       categoryFilterBtns.forEach(btn => {
-        const cat = btn.getAttribute("data-filter-cat").toLowerCase();
+        const cat = (btn.getAttribute("data-filter-cat") || "").toLowerCase();
         const isSelected = (cat === activeCategory);
         btn.setAttribute("aria-pressed", isSelected ? "true" : "false");
       });
@@ -978,7 +1201,7 @@ _Thank you! I would like to proceed with payment and order confirmation via What
       // 1. Filter
       let list = window.PRODUCTS.filter(item => {
         if (activeCategory === "all") return true;
-        return item.category.toLowerCase() === activeCategory;
+        return matchesCategory(item.category, activeCategory);
       });
 
       // 2. Sort
@@ -1025,7 +1248,7 @@ _Thank you! I would like to proceed with payment and order confirmation via What
     // Category button events
     categoryFilterBtns.forEach(btn => {
       btn.addEventListener("click", () => {
-        activeCategory = btn.getAttribute("data-filter-cat").toLowerCase();
+        activeCategory = (btn.getAttribute("data-filter-cat") || "all").toLowerCase();
         updateCategoryUI();
         renderFilteredProducts();
         closeFilters();
@@ -1043,6 +1266,8 @@ _Thank you! I would like to proceed with payment and order confirmation via What
 
     // Sort button events
     sortSelectBtns.forEach(btn => {
+      if (btn.dataset.bound) return;
+      btn.dataset.bound = "true";
       btn.addEventListener("click", () => {
         activeSort = btn.getAttribute("data-sort-opt");
         updateSortUI();
@@ -1060,11 +1285,22 @@ _Thank you! I would like to proceed with payment and order confirmation via What
   /* -------------------------------------------------------------------------
    * 11. Global Initialization
    * ----------------------------------------------------------------------- */
-  document.addEventListener("DOMContentLoaded", function () {
+  document.addEventListener("DOMContentLoaded", async function () {
+    initInstagramLinks();
+    updateCartUI();
+    initScrollReveals();
+
+    // Load products from Supabase (with automatic fallback to products.js)
+    await loadProductsFromSupabase();
+
+    // Re-sync cart UI with loaded products & initialize storefront views
     updateCartUI();
     initHomePage();
     initShopPage();
     initScrollReveals();
+
+    // Load approved customer reviews on homepage
+    await loadApprovedReviews();
   });
 
   // Expose minimal API for inline calls

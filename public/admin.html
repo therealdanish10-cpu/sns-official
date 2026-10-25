@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="robots" content="noindex, nofollow">
+  <title>Admin Portal — SNS Official</title>
+  <meta name="theme-color" content="#0A0A0A">
+
+  <!-- Favicons -->
+  <link rel="icon" href="favicon.ico" sizes="any">
+  <link rel="icon" type="image/png" sizes="32x32" href="favicon-32x32.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="favicon-16x16.png">
+  <link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png">
+
+  <!-- Typography: Playfair Display (Serif) & Poppins (Sans-Serif) -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;0,600;0,700;1,400&family=Poppins:wght@300;400;500;600&display=swap" rel="stylesheet">
+
+  <!-- Stylesheets -->
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="css/admin.css">
+</head>
+<body class="admin-body">
+
+  <!-- =========================================================================
+       1. LOGIN VIEW (Shown only when not authenticated)
+       ========================================================================= -->
+  <main id="authView" class="admin-auth">
+    <div class="admin-auth__card">
+      <img src="images/logo-mark.png" alt="SNS Official" class="admin-auth__logo" width="90" height="40">
+      <span class="eyebrow">Management Portal</span>
+      <h1 class="admin-auth__title">Admin Sign In</h1>
+      <p class="admin-auth__sub">Sign in with your administrator credentials to manage products and customer reviews.</p>
+
+      <div id="authAlert" class="admin-alert" role="alert" hidden></div>
+
+      <form id="loginForm" novalidate>
+        <div class="field">
+          <label for="loginEmail">Email Address</label>
+          <input type="email" id="loginEmail" required placeholder="admin@snsofficial.com" autocomplete="email">
+        </div>
+
+        <div class="field">
+          <label for="loginPassword">Password</label>
+          <input type="password" id="loginPassword" required placeholder="••••••••" autocomplete="current-password">
+        </div>
+
+        <button type="submit" id="loginSubmitBtn" class="btn btn--primary btn--block">
+          Sign In
+        </button>
+      </form>
+    </div>
+  </main>
+
+  <!-- =========================================================================
+       2. DASHBOARD VIEW (Shown only when authenticated)
+       ========================================================================= -->
+  <div id="dashboardView" class="admin-dashboard" hidden>
+    <!-- Top Header -->
+    <header class="admin-header">
+      <div class="container admin-header__inner">
+        <div class="admin-header__brand">
+          <img src="images/logo-mark.png" alt="SNS Official" width="76" height="34">
+          <div>
+            <strong class="admin-header__title">SNS Official Admin</strong>
+            <span id="adminUserEmail" class="admin-header__email"></span>
+          </div>
+        </div>
+
+        <div class="admin-header__actions">
+          <a href="index.html" target="_blank" rel="noopener" class="btn btn--outline admin-btn--sm">View Store</a>
+          <button type="button" id="logoutBtn" class="btn btn--outline admin-btn--sm">Logout</button>
+        </div>
+      </div>
+    </header>
+
+    <main class="container admin-main">
+      <!-- Navigation Tabs -->
+      <nav class="admin-tabs" role="tablist" aria-label="Admin Sections">
+        <button type="button" class="admin-tab is-active" role="tab" aria-selected="true" data-tab="products">
+          Products
+          <span id="productsCountBadge" class="admin-tab__badge">0</span>
+        </button>
+        <button type="button" class="admin-tab" role="tab" aria-selected="false" data-tab="reviews">
+          Reviews
+          <span id="approvedCountBadge" class="admin-tab__badge">0</span>
+        </button>
+        <button type="button" class="admin-tab" role="tab" aria-selected="false" data-tab="pending">
+          Pending Reviews
+          <span id="pendingCountBadge" class="admin-tab__badge admin-tab__badge--gold">0</span>
+        </button>
+      </nav>
+
+      <!-- Global Status Banner -->
+      <div id="dashboardAlert" class="admin-alert" role="status" aria-live="polite" hidden></div>
+
+      <!-- =====================================================================
+           TAB 1: PRODUCTS
+           ===================================================================== -->
+      <section id="tab-products" class="admin-panel is-active" role="tabpanel">
+        <div class="admin-grid">
+          <!-- Left / Top Column: Add or Edit Product Form -->
+          <div class="admin-card">
+            <div class="admin-card__head">
+              <h2 id="productFormTitle">Add New Product</h2>
+              <button type="button" id="cancelProductEditBtn" class="admin-link-btn" hidden>Cancel Edit</button>
+            </div>
+
+            <form id="productForm" novalidate>
+              <input type="hidden" id="productId" value="">
+
+              <div class="field">
+                <label for="prodName">Product Name *</label>
+                <input type="text" id="prodName" required placeholder="e.g. Zari Tissue Organza Saree">
+              </div>
+
+              <div class="admin-form-row">
+                <div class="field">
+                  <label for="prodPrice">Price (PKR) *</label>
+                  <input type="number" id="prodPrice" required min="0" step="1" placeholder="e.g. 18500">
+                </div>
+
+                <div class="field">
+                  <label for="prodCategory">Category *</label>
+                  <input type="text" id="prodCategory" required placeholder="e.g. Saree, Dupatta, Short, Maxi">
+                </div>
+              </div>
+
+              <div class="admin-form-row">
+                <div class="field">
+                  <label for="prodBadge">Badge <span class="opt">(Optional)</span></label>
+                  <input type="text" id="prodBadge" placeholder="e.g. New or Sale">
+                </div>
+
+                <div class="field admin-toggle-field">
+                  <label for="prodInStock">Availability</label>
+                  <label class="admin-switch">
+                    <input type="checkbox" id="prodInStock" checked>
+                    <span class="admin-switch__slider"></span>
+                    <span class="admin-switch__label" id="prodInStockLabel">In Stock</span>
+                  </label>
+                </div>
+              </div>
+
+              <!-- Optional Tag-style Sizes Input -->
+              <div class="field">
+                <div class="admin-label-row">
+                  <label for="prodSizeInput">Sizes <span class="opt">(Optional — leave empty if no sizes)</span></label>
+                  <button type="button" id="quickSizesBtn" class="admin-link-btn">+ Standard (S, M, L, XL)</button>
+                </div>
+                <div class="tag-input" id="sizeTagContainer">
+                  <div id="sizeTagsList" class="tag-input__tags"></div>
+                  <div class="tag-input__controls">
+                    <input type="text" id="prodSizeInput" placeholder="Type size (e.g. S, M, L, XL) and press Enter or Add">
+                    <button type="button" id="addSizeTagBtn" class="btn btn--outline admin-btn--sm">Add</button>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Multiple Image Upload & Reordering -->
+              <div class="field">
+                <label for="prodImagesInput">Product Images <span class="opt">(First image is main photo)</span></label>
+                <div class="upload-zone">
+                  <input type="file" id="prodImagesInput" accept="image/jpeg,image/png,image/webp,image/gif" multiple class="upload-zone__input">
+                  <div class="upload-zone__content">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6">
+                      <rect x="3" y="3" width="18" height="18" rx="2"/>
+                      <circle cx="8.5" cy="8.5" r="1.5"/>
+                      <polyline points="21 15 16 10 5 21"/>
+                    </svg>
+                    <span>Click or tap to select one or more images</span>
+                    <small>JPG, PNG, WEBP up to 10 MB each. Use arrows below to reorder.</small>
+                  </div>
+                </div>
+
+                <div id="prodImagePreviews" class="image-manager" aria-live="polite"></div>
+              </div>
+
+              <div class="admin-form-actions">
+                <button type="submit" id="productSubmitBtn" class="btn btn--primary btn--block">
+                  Save Product
+                </button>
+              </div>
+            </form>
+          </div>
+
+          <!-- Right / Bottom Column: Existing Products List -->
+          <div class="admin-card">
+            <div class="admin-card__head">
+              <h2>Catalog Products</h2>
+              <button type="button" id="refreshProductsBtn" class="admin-link-btn">Refresh</button>
+            </div>
+
+            <div id="productsList" class="admin-list" aria-live="polite">
+              <div class="admin-loading">Loading products…</div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- =====================================================================
+           TAB 2: APPROVED REVIEWS
+           ===================================================================== -->
+      <section id="tab-reviews" class="admin-panel" role="tabpanel" hidden>
+        <div class="admin-grid">
+          <!-- Left Column: Add / Edit Approved Review Form -->
+          <div class="admin-card">
+            <div class="admin-card__head">
+              <h2 id="reviewFormTitle">Add Approved Review</h2>
+              <button type="button" id="cancelReviewEditBtn" class="admin-link-btn" hidden>Cancel Edit</button>
+            </div>
+
+            <form id="reviewForm" novalidate>
+              <input type="hidden" id="reviewId" value="">
+
+              <div class="field">
+                <label for="revName">Customer Name *</label>
+                <input type="text" id="revName" required placeholder="e.g. Ayesha Khan">
+              </div>
+
+              <div class="admin-form-row">
+                <div class="field">
+                  <label>Star Rating *</label>
+                  <div class="star-picker" id="adminStarPicker" role="radiogroup" aria-label="Star Rating">
+                    <button type="button" class="star-picker__btn is-active" data-rating="1" aria-label="1 Star">★</button>
+                    <button type="button" class="star-picker__btn is-active" data-rating="2" aria-label="2 Stars">★</button>
+                    <button type="button" class="star-picker__btn is-active" data-rating="3" aria-label="3 Stars">★</button>
+                    <button type="button" class="star-picker__btn is-active" data-rating="4" aria-label="4 Stars">★</button>
+                    <button type="button" class="star-picker__btn is-active" data-rating="5" aria-label="5 Stars">★</button>
+                  </div>
+                  <input type="hidden" id="revRating" value="5">
+                </div>
+
+                <div class="field">
+                  <label for="revProduct">Product Name <span class="opt">(Optional)</span></label>
+                  <input type="text" id="revProduct" placeholder="e.g. Zari Tissue Organza Saree">
+                </div>
+              </div>
+
+              <div class="field">
+                <label for="revText">Review Text *</label>
+                <textarea id="revText" required placeholder="Write the customer review here..."></textarea>
+              </div>
+
+              <div class="field">
+                <label for="revPhotoInput">Customer Photo <span class="opt">(Optional)</span></label>
+                <input type="file" id="revPhotoInput" accept="image/jpeg,image/png,image/webp,image/gif" class="admin-file-input">
+                <div id="revPhotoPreviewWrap" class="single-photo-preview" hidden>
+                  <img id="revPhotoPreviewImg" src="" alt="Review photo preview">
+                  <button type="button" id="removeRevPhotoBtn" class="admin-link-btn admin-link-btn--danger">Remove Photo</button>
+                </div>
+              </div>
+
+              <div class="admin-form-actions">
+                <button type="submit" id="reviewSubmitBtn" class="btn btn--primary btn--block">
+                  Save Review
+                </button>
+              </div>
+            </form>
+          </div>
+
+          <!-- Right Column: Approved Reviews List -->
+          <div class="admin-card">
+            <div class="admin-card__head">
+              <h2>Approved Reviews</h2>
+              <button type="button" id="refreshReviewsBtn" class="admin-link-btn">Refresh</button>
+            </div>
+
+            <div id="approvedReviewsList" class="admin-list" aria-live="polite">
+              <div class="admin-loading">Loading approved reviews…</div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- =====================================================================
+           TAB 3: PENDING REVIEWS (Customer Submissions)
+           ===================================================================== -->
+      <section id="tab-pending" class="admin-panel" role="tabpanel" hidden>
+        <div class="admin-card">
+          <div class="admin-card__head">
+            <div>
+              <h2>Pending Customer Reviews</h2>
+              <p class="admin-card__sub">Reviews submitted via the private customer review link appear here until approved.</p>
+            </div>
+            <button type="button" id="refreshPendingBtn" class="admin-link-btn">Refresh</button>
+          </div>
+
+          <div id="pendingReviewsList" class="admin-list admin-list--wide" aria-live="polite">
+            <div class="admin-loading">Loading pending reviews…</div>
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <!-- Supabase SDK & Admin Application -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.49.1/dist/umd/supabase.min.js"></script>
+  <script src="js/supabase-client.js"></script>
+  <script src="js/admin.js"></script>
+</body>
+</html>

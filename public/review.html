@@ -1,0 +1,463 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="robots" content="noindex, nofollow">
+  <title>Share Your Experience — SNS Official</title>
+  <meta name="description" content="Share your experience with SNS Official — Stitch n Style.">
+  <meta name="theme-color" content="#0A0A0A">
+
+  <!-- Favicons -->
+  <link rel="icon" href="favicon.ico" sizes="any">
+  <link rel="icon" type="image/png" sizes="32x32" href="favicon-32x32.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="favicon-16x16.png">
+  <link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png">
+
+  <!-- Typography: Playfair Display (Serif) & Poppins (Sans-Serif) -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;0,600;0,700;1,400&family=Poppins:wght@300;400;500;600&display=swap" rel="stylesheet">
+
+  <!-- Stylesheet -->
+  <link rel="stylesheet" href="css/style.css">
+  <style>
+    .review-page {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      padding: 3rem var(--gutter);
+      background:
+        radial-gradient(ellipse at 50% 0%, rgba(212, 175, 55, 0.08), transparent 65%),
+        var(--bg);
+    }
+    .review-box {
+      width: 100%;
+      max-width: 540px;
+      margin: 0 auto;
+      padding: 2.5rem 1.75rem;
+      background: var(--panel);
+      border: 1px solid rgba(212, 175, 55, 0.18);
+      border-radius: var(--radius);
+    }
+    .review-box__head {
+      text-align: center;
+      margin-bottom: 2rem;
+    }
+    .review-box__logo {
+      display: inline-block;
+      margin-bottom: 1.25rem;
+    }
+    .review-box__logo img {
+      height: 42px;
+      width: auto;
+      margin: 0 auto;
+    }
+    .review-box__title {
+      font-size: clamp(1.85rem, 5vw, 2.35rem);
+      margin: 0.4rem 0 0.65rem;
+    }
+    .review-box__lead {
+      font-size: 0.88rem;
+      color: var(--muted);
+    }
+    .rating-stars {
+      display: inline-flex;
+      gap: 0.45rem;
+      padding: 0.25rem 0;
+    }
+    .rating-stars__btn {
+      font-size: 2rem;
+      line-height: 1;
+      color: rgba(212, 175, 55, 0.22);
+      transition: color 0.2s, transform 0.2s;
+    }
+    .rating-stars__btn.is-active,
+    .rating-stars__btn:hover {
+      color: var(--gold);
+    }
+    .rating-stars__btn:hover {
+      transform: scale(1.12);
+    }
+    .photo-upload {
+      position: relative;
+      border: 1px dashed var(--gold-35);
+      border-radius: var(--radius-sm);
+      background: var(--bg-alt);
+      padding: 1.2rem 1rem;
+      text-align: center;
+      transition: border-color 0.3s, background-color 0.3s;
+    }
+    .photo-upload:hover {
+      border-color: var(--gold);
+      background: rgba(212, 175, 55, 0.04);
+    }
+    .photo-upload input[type="file"] {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      opacity: 0;
+      cursor: pointer;
+    }
+    .photo-upload__label {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0.25rem;
+      pointer-events: none;
+      font-size: 0.84rem;
+      color: var(--text);
+    }
+    .photo-upload__label small {
+      font-size: 0.72rem;
+      color: var(--muted);
+    }
+    .photo-preview {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      margin-top: 0.75rem;
+      padding: 0.6rem;
+      border-radius: var(--radius-sm);
+      background: var(--bg-alt);
+    }
+    .photo-preview[hidden] {
+      display: none !important;
+    }
+    .photo-preview img {
+      width: 64px;
+      height: 64px;
+      object-fit: cover;
+      border-radius: 6px;
+      border: 1px solid var(--gold-35);
+    }
+    .photo-preview button {
+      font-size: 0.74rem;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: #D99B88;
+    }
+    .review-alert {
+      padding: 0.85rem 1rem;
+      border-radius: var(--radius-sm);
+      font-size: 0.84rem;
+      margin-bottom: 1.25rem;
+      border: 1px solid rgba(201, 130, 107, 0.5);
+      background: rgba(201, 130, 107, 0.12);
+      color: #E8B4A2;
+    }
+    .review-alert[hidden] {
+      display: none !important;
+    }
+    .thank-you {
+      text-align: center;
+      padding: 1.5rem 0.5rem;
+    }
+    .thank-you[hidden] {
+      display: none !important;
+    }
+    .thank-you__icon {
+      width: 64px;
+      height: 64px;
+      margin: 0 auto 1.25rem;
+      border-radius: 50%;
+      border: 1px solid var(--gold);
+      background: var(--gold-08);
+      color: var(--gold);
+      display: grid;
+      place-items: center;
+    }
+    .thank-you__icon svg {
+      width: 28px;
+      height: 28px;
+    }
+    .thank-you h2 {
+      font-size: 1.8rem;
+      margin-bottom: 0.65rem;
+    }
+    .thank-you p {
+      color: var(--muted);
+      font-size: 0.92rem;
+      margin-bottom: 1.75rem;
+    }
+    @media (min-width: 640px) {
+      .review-box {
+        padding: 3rem 2.5rem;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <main class="review-page">
+    <div class="review-box">
+      <div class="review-box__head">
+        <a href="index.html" class="review-box__logo" aria-label="SNS Official Home">
+          <img src="images/logo-mark.png" alt="SNS Official" width="90" height="40">
+        </a>
+        <div>
+          <span class="eyebrow">Customer Appreciation</span>
+          <h1 class="review-box__title">Share Your Experience</h1>
+          <p class="review-box__lead">Thank you for choosing Stitch n Style. We would be honored to hear your thoughts on your ensemble.</p>
+        </div>
+      </div>
+
+      <div id="reviewError" class="review-alert" role="alert" hidden></div>
+
+      <!-- Review Submission Form -->
+      <form id="customerReviewForm" novalidate>
+        <div class="field">
+          <label for="custRevName">Your Name *</label>
+          <input type="text" id="custRevName" required placeholder="e.g. Ayesha Khan" autocomplete="name">
+          <span class="field__error">Please enter your name.</span>
+        </div>
+
+        <div class="field" id="productFieldWrap">
+          <label for="custRevProduct">Outfit / Product <span class="opt">(Optional)</span></label>
+          <input type="text" id="custRevProduct" placeholder="e.g. Zari Tissue Organza Saree">
+        </div>
+
+        <div class="field">
+          <label>Your Rating *</label>
+          <div class="rating-stars" id="starSelector" role="radiogroup" aria-label="Select Star Rating">
+            <button type="button" class="rating-stars__btn is-active" data-star="1" aria-label="1 out of 5 stars">★</button>
+            <button type="button" class="rating-stars__btn is-active" data-star="2" aria-label="2 out of 5 stars">★</button>
+            <button type="button" class="rating-stars__btn is-active" data-star="3" aria-label="3 out of 5 stars">★</button>
+            <button type="button" class="rating-stars__btn is-active" data-star="4" aria-label="4 out of 5 stars">★</button>
+            <button type="button" class="rating-stars__btn is-active" data-star="5" aria-label="5 out of 5 stars">★</button>
+          </div>
+          <span class="field__error" id="ratingError">Please select a star rating.</span>
+        </div>
+
+        <div class="field">
+          <label for="custRevText">Your Review *</label>
+          <textarea id="custRevText" required placeholder="Tell us about the fabric, fitting, embroidery, or how it felt wearing it..."></textarea>
+          <span class="field__error">Please write a short review.</span>
+        </div>
+
+        <div class="field">
+          <label for="custRevPhoto">Add a Photo <span class="opt">(Optional — Max 3 MB)</span></label>
+          <div class="photo-upload">
+            <input type="file" id="custRevPhoto" accept="image/jpeg,image/png,image/webp,image/gif">
+            <div class="photo-upload__label">
+              <span>Tap to upload a photo of your outfit</span>
+              <small>JPG, PNG or WEBP up to 3 MB</small>
+            </div>
+          </div>
+          <div id="custPhotoPreview" class="photo-preview" hidden>
+            <img id="custPhotoImg" src="" alt="Selected photo preview">
+            <button type="button" id="custRemovePhotoBtn">Remove Photo</button>
+          </div>
+        </div>
+
+        <button type="submit" id="custSubmitBtn" class="btn btn--primary btn--block">
+          Submit Review
+        </button>
+      </form>
+
+      <!-- Polite Thank-You State -->
+      <div id="thankYouBox" class="thank-you" hidden>
+        <div class="thank-you__icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polyline points="20 6 9 17 4 12"/>
+          </svg>
+        </div>
+        <h2>Thank You for Your Kind Words</h2>
+        <p>We truly appreciate you taking the time to share your experience with Stitch n Style. Your review has been received and will appear on our website after approval.</p>
+        <a href="index.html" class="btn btn--outline">Return to SNS Official</a>
+      </div>
+    </div>
+  </main>
+
+  <!-- Supabase SDK & Review Form Script -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.49.1/dist/umd/supabase.min.js"></script>
+  <script src="js/supabase-client.js"></script>
+  <script>
+    (function () {
+      "use strict";
+
+      const sb = window.supabaseClient;
+      const MAX_PHOTO_BYTES = 3 * 1024 * 1024; // 3 MB
+
+      const form = document.getElementById("customerReviewForm");
+      const nameInput = document.getElementById("custRevName");
+      const productInput = document.getElementById("custRevProduct");
+      const textInput = document.getElementById("custRevText");
+      const photoInput = document.getElementById("custRevPhoto");
+      const photoPreview = document.getElementById("custPhotoPreview");
+      const photoImg = document.getElementById("custPhotoImg");
+      const removePhotoBtn = document.getElementById("custRemovePhotoBtn");
+      const starSelector = document.getElementById("starSelector");
+      const submitBtn = document.getElementById("custSubmitBtn");
+      const errorBox = document.getElementById("reviewError");
+      const thankYouBox = document.getElementById("thankYouBox");
+
+      let selectedRating = 5;
+      let selectedPhotoFile = null;
+
+      // 1. Pre-fill optional ?product=Name URL parameter
+      const params = new URLSearchParams(window.location.search);
+      const productParam = (params.get("product") || "").trim();
+      if (productParam && productInput) {
+        productInput.value = productParam;
+      }
+
+      // 2. Interactive Star Rating Selector
+      const starBtns = starSelector ? starSelector.querySelectorAll(".rating-stars__btn") : [];
+      function updateStarsUI(rating) {
+        selectedRating = rating;
+        starBtns.forEach(btn => {
+          const val = parseInt(btn.getAttribute("data-star"), 10);
+          btn.classList.toggle("is-active", val <= selectedRating);
+        });
+      }
+
+      starBtns.forEach(btn => {
+        btn.addEventListener("click", () => {
+          const val = parseInt(btn.getAttribute("data-star"), 10);
+          updateStarsUI(val);
+        });
+      });
+
+      // 3. Optional Photo Validation & Preview
+      function showError(msg) {
+        if (!errorBox) return;
+        errorBox.textContent = msg;
+        errorBox.hidden = false;
+      }
+
+      function clearError() {
+        if (errorBox) errorBox.hidden = true;
+      }
+
+      if (photoInput) {
+        photoInput.addEventListener("change", (e) => {
+          clearError();
+          const file = (e.target.files || [])[0];
+          if (!file) return;
+
+          if (!file.type.startsWith("image/")) {
+            showError("Please select a valid image file (JPG, PNG, WEBP).");
+            photoInput.value = "";
+            return;
+          }
+
+          if (file.size > MAX_PHOTO_BYTES) {
+            showError("Your photo is larger than 3 MB. Please choose a smaller image.");
+            photoInput.value = "";
+            return;
+          }
+
+          selectedPhotoFile = file;
+          photoImg.src = URL.createObjectURL(file);
+          photoPreview.hidden = false;
+        });
+      }
+
+      if (removePhotoBtn) {
+        removePhotoBtn.addEventListener("click", () => {
+          selectedPhotoFile = null;
+          if (photoInput) photoInput.value = "";
+          photoImg.src = "";
+          photoPreview.hidden = true;
+        });
+      }
+
+      // 4. Form Submission -> Upload optional photo & insert pending review
+      if (form) {
+        form.addEventListener("submit", async function (e) {
+          e.preventDefault();
+          clearError();
+
+          const name = (nameInput.value || "").trim();
+          const product_name = (productInput.value || "").trim() || null;
+          const text = (textInput.value || "").trim();
+
+          let hasErr = false;
+          const nameField = nameInput.closest(".field");
+          const textField = textInput.closest(".field");
+
+          if (name.length < 2) {
+            nameField.classList.add("has-error");
+            hasErr = true;
+          } else {
+            nameField.classList.remove("has-error");
+          }
+
+          if (text.length < 4) {
+            textField.classList.add("has-error");
+            hasErr = true;
+          } else {
+            textField.classList.remove("has-error");
+          }
+
+          if (selectedRating < 1 || selectedRating > 5) {
+            hasErr = true;
+          }
+
+          if (hasErr) return;
+
+          if (!sb) {
+            showError("Unable to connect to our review service right now. Please try again in a moment.");
+            return;
+          }
+
+          submitBtn.disabled = true;
+          submitBtn.textContent = "Submitting Review…";
+
+          try {
+            let photo_url = null;
+
+            if (selectedPhotoFile) {
+              const ext = (selectedPhotoFile.name.split(".").pop() || "jpg")
+                .toLowerCase()
+                .replace(/[^a-z0-9]/g, "") || "jpg";
+              const filePath = `${Date.now()}-${Math.random().toString(36).slice(2, 10)}.${ext}`;
+
+              const { error: uploadError } = await sb.storage
+                .from("review-photos")
+                .upload(filePath, selectedPhotoFile, {
+                  cacheControl: "3600",
+                  upsert: false,
+                  contentType: selectedPhotoFile.type || "image/jpeg"
+                });
+
+              if (uploadError) {
+                throw new Error("Photo upload failed: " + uploadError.message);
+              }
+
+              const { data: urlData } = sb.storage.from("review-photos").getPublicUrl(filePath);
+              photo_url = urlData ? urlData.publicUrl : null;
+            }
+
+            const { error: insertError } = await sb.from("reviews").insert([
+              {
+                name,
+                rating: selectedRating,
+                text,
+                photo_url,
+                product_name,
+                status: "pending"
+              }
+            ]);
+
+            if (insertError) {
+              throw new Error(insertError.message || "Could not submit your review.");
+            }
+
+            form.hidden = true;
+            thankYouBox.hidden = false;
+          } catch (err) {
+            showError(err.message || "Something went wrong while submitting your review. Please try again.");
+          } finally {
+            submitBtn.disabled = false;
+            submitBtn.textContent = "Submit Review";
+          }
+        });
+      }
+    })();
+  </script>
+</body>
+</html>

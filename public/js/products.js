@@ -199,5 +199,6 @@ const PRODUCTS = [
 ];
 
 if (typeof window !== "undefined") {
+  window.FALLBACK_PRODUCTS = PRODUCTS;
   window.PRODUCTS = PRODUCTS;
 }
