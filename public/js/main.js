@@ -24,6 +24,7 @@
    * 1. State & Storage
    * ----------------------------------------------------------------------- */
   const STORAGE_KEY = "sns_cart_v1";
+  const SITE_BASE_URL = "https://sns-official-three.vercel.app";
   const WHATSAPP_NUMBER = "923085220513"; // +92 308 5220513
   const INSTAGRAM_URL = "#"; // Change Instagram profile URL in this one place
 
@@ -587,15 +588,16 @@
     if (!lightboxTrack) return;
     lightboxTrack.innerHTML = "";
 
+    const safeName = escapeHTML(product.name || "SNS Official Piece");
     activeLightboxGallery.forEach((imgSrc) => {
       const slide = document.createElement("div");
       slide.className = "lightbox__slide";
       if (imgSrc) {
-        slide.innerHTML = `<img src="${imgSrc}" class="product-photo" alt="${product.name}">`;
+        slide.innerHTML = `<img src="${escapeHTML(imgSrc)}" class="product-photo" alt="${safeName}" width="600" height="800" loading="lazy" decoding="async">`;
       } else {
         slide.innerHTML = `
           <div class="placeholder">
-            <img src="images/logo-mark.png" alt="SNS Official">
+            <img src="images/logo-mark.png" alt="" width="90" height="40" loading="lazy" decoding="async">
           </div>
         `;
       }
@@ -682,6 +684,8 @@
   function createProductCardHTML(product, staggerDelay = 0) {
     const isMultiImage = product.images && product.images.length > 1;
     const isSoldOut = !product.inStock;
+    const safeName = escapeHTML(product.name || "Untitled Piece");
+    const safeCat = escapeHTML(product.categoryLabel || "Collection");
 
     // Badges
     let badgeHTML = "";
@@ -689,7 +693,7 @@
       badgeHTML = `<span class="badge badge--soldout">Sold Out</span>`;
     } else if (product.badge) {
       const isSale = product.badge.toLowerCase() === "sale";
-      badgeHTML = `<span class="badge ${isSale ? 'badge--sale' : ''}">${product.badge}</span>`;
+      badgeHTML = `<span class="badge ${isSale ? 'badge--sale' : ''}">${escapeHTML(product.badge)}</span>`;
     }
 
     // Gallery hint icon (small icon only, no text, no dots)
@@ -706,14 +710,14 @@
     // Image/Placeholder
     const primaryImg = (product.images && product.images[0]) ? product.images[0] : null;
     const mediaInner = primaryImg
-      ? `<img src="${primaryImg}" class="product-photo" alt="${product.name}" loading="lazy">`
-      : `<div class="placeholder"><img src="images/logo-mark.png" alt="SNS Official"></div>`;
+      ? `<img src="${escapeHTML(primaryImg)}" class="product-photo" alt="${safeName}" width="600" height="800" loading="lazy" decoding="async">`
+      : `<div class="placeholder"><img src="images/logo-mark.png" alt="" width="90" height="40" loading="lazy" decoding="async"></div>`;
 
     // Sizes
     let sizesHTML = "";
     if (product.hasSizes && product.sizes && product.sizes.length > 0) {
       const sizeBtns = product.sizes.map(size => `
-        <button type="button" class="size-btn" data-size="${size}" aria-pressed="false" ${isSoldOut ? 'disabled' : ''}>${size}</button>
+        <button type="button" class="size-btn" data-size="${escapeHTML(size)}" aria-pressed="false" ${isSoldOut ? 'disabled' : ''}>${escapeHTML(size)}</button>
       `).join("");
       sizesHTML = `
         <div class="sizes" role="group" aria-label="Select Size">
@@ -732,16 +736,16 @@
     const delayStyle = staggerDelay > 0 ? `style="transition-delay: ${staggerDelay}ms;"` : "";
 
     return `
-      <article class="product-card reveal ${isSoldOut ? 'is-soldout' : ''}" data-product-id="${product.id}" ${delayStyle}>
+      <article class="product-card reveal ${isSoldOut ? 'is-soldout' : ''}" data-product-id="${escapeHTML(product.id)}" ${delayStyle}>
         <div class="product-card__inner">
-          <div class="product-card__media ${isMultiImage ? 'is-gallery' : ''}" role="${isMultiImage ? 'button' : 'region'}" aria-label="${product.name}">
+          <div class="product-card__media ${isMultiImage ? 'is-gallery' : ''}" role="${isMultiImage ? 'button' : 'region'}" aria-label="${safeName}">
             ${badgeHTML}
             ${galleryHintHTML}
             ${mediaInner}
           </div>
           <div class="product-card__body">
-            <span class="product-card__cat">${product.categoryLabel}</span>
-            <h3 class="product-card__name">${product.name}</h3>
+            <span class="product-card__cat">${safeCat}</span>
+            <h3 class="product-card__name">${safeName}</h3>
             <div class="product-card__price">
               <span>${formatPKR(product.price)}</span>
               ${product.originalPrice ? `<s>${formatPKR(product.originalPrice)}</s>` : ""}
@@ -883,7 +887,7 @@
     if (cart.length === 0) {
       cartItemsContainer.innerHTML = `
         <div class="cart__empty">
-          <img src="images/logo-mark.png" alt="SNS Official">
+          <img src="images/logo-mark.png" alt="" width="70" height="31" loading="lazy" decoding="async">
           <p>Your bag is currently empty.</p>
           <a href="shop.html" class="btn btn--outline" onclick="SNS.closeCart()">Shop the Collection</a>
         </div>
@@ -908,15 +912,16 @@
       const itemEl = document.createElement("div");
       itemEl.className = "cart-item";
 
+      const safeName = escapeHTML(product.name || "Piece");
       const thumbHTML = (product.images && product.images[0])
-        ? `<img src="${product.images[0]}" class="product-photo" alt="${product.name}">`
-        : `<div class="placeholder"><img src="images/logo-mark.png" alt="SNS Official"></div>`;
+        ? `<img src="${escapeHTML(product.images[0])}" class="product-photo" alt="${safeName}" width="72" height="96" loading="lazy" decoding="async">`
+        : `<div class="placeholder"><img src="images/logo-mark.png" alt="" width="72" height="32" loading="lazy" decoding="async"></div>`;
 
       itemEl.innerHTML = `
         <div class="cart-item__thumb">${thumbHTML}</div>
         <div class="cart-item__info">
-          <h4 class="cart-item__name">${product.name}</h4>
-          <div class="cart-item__meta">${product.categoryLabel}${item.size ? ` • Size: ${item.size}` : ""}</div>
+          <h3 class="cart-item__name">${safeName}</h3>
+          <div class="cart-item__meta">${escapeHTML(product.categoryLabel)}${item.size ? ` • Size: ${escapeHTML(item.size)}` : ""}</div>
           <div class="cart-item__price">${formatPKR(product.price)}</div>
           <div class="qty" role="group" aria-label="Quantity">
             <button type="button" class="qty-minus" aria-label="Decrease quantity">−</button>
@@ -924,7 +929,7 @@
             <button type="button" class="qty-plus" aria-label="Increase quantity">+</button>
           </div>
         </div>
-        <button type="button" class="cart-item__remove" aria-label="Remove ${product.name}">Remove</button>
+        <button type="button" class="cart-item__remove" aria-label="Remove ${safeName}">Remove</button>
       `;
 
       itemEl.querySelector(".qty-minus").addEventListener("click", () => updateItemQty(item.id, item.size, -1));
@@ -1089,7 +1094,7 @@ _Thank you! I would like to proceed with payment and order confirmation via What
         </div>
         <h3 class="modal__title">Order Initiated</h3>
         <p>Your order details have been prepared and WhatsApp opened. If WhatsApp did not open automatically, click the button below:</p>
-        <a href="${whatsappURL}" target="_blank" class="btn btn--primary btn--block">Continue on WhatsApp</a>
+        <a href="${whatsappURL}" target="_blank" rel="noopener noreferrer" class="btn btn--primary btn--block">Continue on WhatsApp</a>
       `;
       successBox.style.display = "block";
     });
@@ -1134,6 +1139,60 @@ _Thank you! I would like to proceed with payment and order confirmation via What
       .replace(/>/g, "&gt;")
       .replace(/"/g, "&quot;")
       .replace(/'/g, "&#39;");
+  }
+
+  function toAbsoluteUrl(urlOrPath) {
+    const raw = String(urlOrPath || "").trim();
+    if (!raw) return null;
+    if (/^https?:\/\//i.test(raw)) return raw;
+    return SITE_BASE_URL.replace(/\/+$/, "") + "/" + raw.replace(/^\/+/, "");
+  }
+
+  // Dynamically generate ItemList / Product JSON-LD on shop.html when products load
+  function updateShopJsonLd(products) {
+    const ldScript = document.getElementById("shopProductJsonLd");
+    if (!ldScript) return;
+
+    const validProducts = (Array.isArray(products) ? products : []).filter(function (p) {
+      return p && Number(p.price) > 0;
+    });
+
+    const itemListElements = validProducts.map(function (p, index) {
+      const firstImg = (Array.isArray(p.images) && p.images[0]) ? toAbsoluteUrl(p.images[0]) : null;
+      const productObj = {
+        "@type": "Product",
+        "name": String(p.name || "Untitled Piece"),
+        "category": String(p.categoryLabel || p.category || "Ladies Wear"),
+        "offers": {
+          "@type": "Offer",
+          "price": Number(p.price),
+          "priceCurrency": "PKR",
+          "availability": p.inStock !== false
+            ? "https://schema.org/InStock"
+            : "https://schema.org/OutOfStock",
+          "url": SITE_BASE_URL + "/shop.html"
+        }
+      };
+      if (firstImg) {
+        productObj.image = firstImg;
+      }
+      return {
+        "@type": "ListItem",
+        "position": index + 1,
+        "item": productObj
+      };
+    });
+
+    const jsonLd = {
+      "@context": "https://schema.org",
+      "@type": "ItemList",
+      "name": "SNS Official Ladies Wear Collection",
+      "url": SITE_BASE_URL + "/shop.html",
+      "numberOfItems": itemListElements.length,
+      "itemListElement": itemListElements
+    };
+
+    ldScript.textContent = JSON.stringify(jsonLd, null, 2);
   }
 
   function normalizeDbProduct(row) {
@@ -1255,6 +1314,7 @@ _Thank you! I would like to proceed with payment and order confirmation via What
     const sb = window.supabaseClient;
     if (!sb) {
       window.PRODUCTS = window.FALLBACK_PRODUCTS || window.PRODUCTS || [];
+      updateShopJsonLd(window.PRODUCTS);
       return;
     }
 
@@ -1273,6 +1333,8 @@ _Thank you! I would like to proceed with payment and order confirmation via What
       console.warn("Could not load products from Supabase; using fallback catalog:", err);
       window.PRODUCTS = window.FALLBACK_PRODUCTS || window.PRODUCTS || [];
     }
+
+    updateShopJsonLd(window.PRODUCTS);
   }
 
   // Load approved reviews from Supabase; keep existing placeholder reviews if none exist yet
@@ -1306,6 +1368,9 @@ _Thank you! I would like to proceed with payment and order confirmation via What
         const authorName = String(rev.name || "Patron").trim();
         const initial = (authorName.charAt(0) || "S").toUpperCase();
         const subline = rev.product_name ? escapeHTML(rev.product_name) : "";
+        const photoAlt = rev.product_name
+          ? `Review photo by ${escapeHTML(authorName)} wearing ${escapeHTML(rev.product_name)}`
+          : `Review photo by ${escapeHTML(authorName)}`;
 
         const card = document.createElement("div");
         card.className = "review-card";
@@ -1317,7 +1382,7 @@ _Thank you! I would like to proceed with payment and order confirmation via What
             <p class="review-card__quote">&ldquo;${escapeHTML(rev.text)}&rdquo;</p>
             ${rev.photo_url ? `
               <div class="review-card__photo" role="button" tabindex="0" aria-label="View customer photo by ${escapeHTML(authorName)}">
-                <img src="${escapeHTML(rev.photo_url)}" alt="Photo shared by ${escapeHTML(authorName)}" loading="lazy">
+                <img src="${escapeHTML(rev.photo_url)}" alt="${photoAlt}" width="56" height="56" loading="lazy" decoding="async">
               </div>
             ` : ""}
             <div class="review-card__author">
@@ -1349,16 +1414,30 @@ _Thank you! I would like to proceed with payment and order confirmation via What
     }
   }
 
-  // Apply single INSTAGRAM_URL constant to Instagram button(s)
+  // Apply single INSTAGRAM_URL constant to Instagram button(s) and ClothingStore JSON-LD (if real URL)
   function initInstagramLinks() {
     const igLinks = document.querySelectorAll('#instagramLink, a[aria-label="Follow us on Instagram"]');
+    const isRealIgUrl = Boolean(INSTAGRAM_URL && INSTAGRAM_URL !== "#" && /^https?:\/\//i.test(INSTAGRAM_URL));
     igLinks.forEach(link => {
       link.setAttribute("href", INSTAGRAM_URL);
-      if (INSTAGRAM_URL && INSTAGRAM_URL !== "#") {
+      if (isRealIgUrl) {
         link.setAttribute("target", "_blank");
-        link.setAttribute("rel", "noopener");
+        link.setAttribute("rel", "noopener noreferrer");
       }
     });
+
+    if (isRealIgUrl) {
+      const ldStoreEl = document.getElementById("ldClothingStore");
+      if (ldStoreEl) {
+        try {
+          const storeData = JSON.parse(ldStoreEl.textContent);
+          storeData.sameAs = [INSTAGRAM_URL];
+          ldStoreEl.textContent = JSON.stringify(storeData, null, 2);
+        } catch (_e) {
+          // Ignore JSON parse errors
+        }
+      }
+    }
   }
 
   // --- HOMEPAGE INITIALIZER ---

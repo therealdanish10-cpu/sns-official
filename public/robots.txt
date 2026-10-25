@@ -1,0 +1,6 @@
+User-agent: *
+Allow: /
+Disallow: /admin.html
+Disallow: /review.html
+
+Sitemap: https://sns-official-three.vercel.app/sitemap.xml
