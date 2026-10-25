@@ -47,6 +47,10 @@
   const productIdInput = document.getElementById("productId");
   const prodNameInput = document.getElementById("prodName");
   const prodPriceInput = document.getElementById("prodPrice");
+  const prodTypeStitchedInput = document.getElementById("prodTypeStitched");
+  const prodTypeUnstitchedInput = document.getElementById("prodTypeUnstitched");
+  const unstitchedPriceField = document.getElementById("unstitchedPriceField");
+  const prodUnstitchedPriceInput = document.getElementById("prodUnstitchedPrice");
   const prodSectionInput = document.getElementById("prodSection");
   const prodCategoryInput = document.getElementById("prodCategory");
   const prodSubcategoryInput = document.getElementById("prodSubcategory");
@@ -322,6 +326,26 @@
   /* -------------------------------------------------------------------------
    * 3. Products Management (CRUD, Section, Subcategory, Sizes, Images)
    * ----------------------------------------------------------------------- */
+  function normalizeAvailableTypes(raw) {
+    if (!Array.isArray(raw)) return ["stitched", "unstitched"];
+    const valid = raw
+      .map(t => String(t || "").trim().toLowerCase())
+      .filter(t => t === "stitched" || t === "unstitched");
+    const unique = [];
+    if (valid.includes("stitched")) unique.push("stitched");
+    if (valid.includes("unstitched")) unique.push("unstitched");
+    return unique.length > 0 ? unique : ["stitched", "unstitched"];
+  }
+
+  function updateUnstitchedPriceVisibility() {
+    if (!unstitchedPriceField || !prodTypeUnstitchedInput) return;
+    unstitchedPriceField.hidden = !prodTypeUnstitchedInput.checked;
+  }
+
+  if (prodTypeUnstitchedInput) {
+    prodTypeUnstitchedInput.addEventListener("change", updateUnstitchedPriceVisibility);
+  }
+
   function updateInStockSwitchLabel() {
     if (!prodInStockInput || !prodInStockLabel) return;
     prodInStockLabel.textContent = prodInStockInput.checked ? "In Stock" : "Out of Stock";
@@ -462,6 +486,10 @@
     productIdInput.value = "";
     if (prodSectionInput) prodSectionInput.value = "women";
     if (prodSubcategoryInput) prodSubcategoryInput.value = "";
+    if (prodTypeStitchedInput) prodTypeStitchedInput.checked = true;
+    if (prodTypeUnstitchedInput) prodTypeUnstitchedInput.checked = true;
+    if (prodUnstitchedPriceInput) prodUnstitchedPriceInput.value = "";
+    updateUnstitchedPriceVisibility();
     prodInStockInput.checked = true;
     updateInStockSwitchLabel();
 
@@ -491,6 +519,15 @@
     if (prodSectionInput) {
       prodSectionInput.value = (product.section && product.section.toLowerCase() === "brides") ? "brides" : "women";
     }
+    const availTypes = normalizeAvailableTypes(product.available_types);
+    if (prodTypeStitchedInput) prodTypeStitchedInput.checked = availTypes.includes("stitched");
+    if (prodTypeUnstitchedInput) prodTypeUnstitchedInput.checked = availTypes.includes("unstitched");
+    if (prodUnstitchedPriceInput) {
+      prodUnstitchedPriceInput.value = (product.unstitched_price !== null && product.unstitched_price !== undefined)
+        ? product.unstitched_price
+        : "";
+    }
+    updateUnstitchedPriceVisibility();
     prodCategoryInput.value = product.category || "";
     if (prodSubcategoryInput) {
       prodSubcategoryInput.value = product.subcategory || "";
@@ -547,6 +584,14 @@
       const sizes = Array.isArray(product.sizes) ? product.sizes.filter(Boolean) : [];
       const inStock = product.in_stock !== false;
       const sectionLabel = formatSectionLabel(product.section);
+      const availTypes = normalizeAvailableTypes(product.available_types);
+      const hasUnstitchedPrice = availTypes.includes("unstitched")
+        && product.unstitched_price !== null
+        && product.unstitched_price !== undefined
+        && !isNaN(Number(product.unstitched_price));
+      const typeBadgesHTML = availTypes
+        .map(t => `<span class="admin-pill admin-pill--type">${t === "stitched" ? "Stitched" : "Unstitched"}</span>`)
+        .join(" ");
 
       const row = document.createElement("div");
       row.className = "admin-item";
@@ -563,6 +608,8 @@
             <span class="admin-item__price">${formatPKR(product.price)}</span>
           </div>
           <div class="admin-item__meta">
+            ${typeBadgesHTML}
+            ${hasUnstitchedPrice ? `<span>Unstitched: <strong>${formatPKR(product.unstitched_price)}</strong></span>` : ""}
             <span>Section: <strong>${escapeHTML(sectionLabel)}</strong></span>
             <span>Category: <strong>${escapeHTML(product.category)}</strong></span>
             ${product.subcategory ? `<span>Subcategory: <strong>${escapeHTML(product.subcategory)}</strong></span>` : ""}
@@ -621,6 +668,17 @@
       const in_stock = Boolean(prodInStockInput.checked);
       const editingId = productIdInput.value || null;
 
+      const available_types = [];
+      if (!prodTypeStitchedInput || prodTypeStitchedInput.checked) {
+        available_types.push("stitched");
+      }
+      if (!prodTypeUnstitchedInput || prodTypeUnstitchedInput.checked) {
+        available_types.push("unstitched");
+      }
+
+      let unstitched_price = null;
+      const rawUnstitchedPrice = prodUnstitchedPriceInput ? (prodUnstitchedPriceInput.value || "").trim() : "";
+
       if (!name) {
         showAlert(dashboardAlert, "Please enter a product name.", "error");
         prodNameInput.focus();
@@ -630,6 +688,20 @@
         showAlert(dashboardAlert, "Please enter a valid price in PKR.", "error");
         prodPriceInput.focus();
         return;
+      }
+      if (available_types.length === 0) {
+        showAlert(dashboardAlert, "Please select at least one option under 'Available as' (Stitched or Unstitched).", "error");
+        if (prodTypeStitchedInput) prodTypeStitchedInput.focus();
+        return;
+      }
+      if (available_types.includes("unstitched") && rawUnstitchedPrice !== "") {
+        const parsedUnstitched = parseInt(rawUnstitchedPrice, 10);
+        if (isNaN(parsedUnstitched) || parsedUnstitched < 0) {
+          showAlert(dashboardAlert, "Please enter a valid Unstitched price in PKR (or leave it empty).", "error");
+          if (prodUnstitchedPriceInput) prodUnstitchedPriceInput.focus();
+          return;
+        }
+        unstitched_price = parsedUnstitched;
       }
       if (!category) {
         showAlert(dashboardAlert, "Please enter a category (e.g. Saree, Dupatta, Short, Maxi).", "error");
@@ -654,6 +726,8 @@
         const payload = {
           name,
           price: priceVal,
+          available_types,
+          unstitched_price,
           section,
           category,
           subcategory,

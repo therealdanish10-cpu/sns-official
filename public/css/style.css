@@ -979,6 +979,84 @@ p { margin: 0; }
 }
 .product-card__price s { color: var(--muted); font-size: 0.82rem; }
 
+/* Stitched / Unstitched selector & plain label */
+.stitch-option {
+  margin-top: 0.45rem;
+}
+
+.stitch-toggle {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  width: 100%;
+  padding: 2px;
+  gap: 2px;
+  background: var(--bg-alt);
+  border: 1px solid var(--gold-35);
+  border-radius: var(--radius-sm);
+}
+
+.stitch-toggle__btn {
+  height: 32px;
+  padding: 0 0.5rem;
+  border-radius: calc(var(--radius-sm) - 2px);
+  font-family: var(--font-sans);
+  font-size: 0.68rem;
+  font-weight: 500;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--muted);
+  background: transparent;
+  white-space: nowrap;
+  transition: background-color 0.35s var(--ease-soft),
+              color 0.35s var(--ease-soft);
+}
+
+.stitch-toggle__btn:hover:not(:disabled):not([aria-pressed="true"]) {
+  color: var(--text);
+}
+
+.stitch-toggle__btn[aria-pressed="true"] {
+  background: var(--gold);
+  color: var(--bg);
+  font-weight: 600;
+}
+
+.stitch-toggle__btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.stitch-label {
+  display: inline-block;
+  font-family: var(--font-sans);
+  font-size: 0.68rem;
+  font-weight: 400;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--muted);
+  padding: 0.15rem 0;
+}
+
+/* Soft, slow show/hide wrapper for size selector (Stitched only) */
+.sizes-collapse {
+  display: grid;
+  grid-template-rows: 1fr;
+  opacity: 1;
+  transition: grid-template-rows 0.5s var(--ease-soft),
+              opacity 0.45s var(--ease-soft);
+}
+
+.sizes-collapse.is-hidden {
+  grid-template-rows: 0fr;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.sizes-collapse__inner {
+  overflow: hidden;
+  min-height: 0;
+}
+
 /* Size selector */
 .sizes {
   display: flex;

@@ -679,13 +679,55 @@
   }
 
   /* -------------------------------------------------------------------------
-   * 6. Product Card Component & Size Selector
+   * 6. Product Card Component, Stitch Type Toggle & Size Selector
    * ----------------------------------------------------------------------- */
+  function normalizeAvailableTypes(raw) {
+    if (!Array.isArray(raw)) return ["stitched", "unstitched"];
+    const valid = raw
+      .map(t => String(t || "").trim().toLowerCase())
+      .filter(t => t === "stitched" || t === "unstitched");
+    const unique = [];
+    if (valid.includes("stitched")) unique.push("stitched");
+    if (valid.includes("unstitched")) unique.push("unstitched");
+    return unique.length > 0 ? unique : ["stitched", "unstitched"];
+  }
+
+  function getDefaultStitchType(product) {
+    const avail = normalizeAvailableTypes(product && (product.availableTypes || product.available_types));
+    return avail.includes("stitched") ? "stitched" : "unstitched";
+  }
+
+  function getProductPriceForType(product, type) {
+    if (!product) return 0;
+    const rawUnstitched = product.unstitchedPrice !== undefined ? product.unstitchedPrice : product.unstitched_price;
+    if (
+      String(type || "").toLowerCase() === "unstitched" &&
+      rawUnstitched !== null &&
+      rawUnstitched !== undefined &&
+      rawUnstitched !== "" &&
+      !isNaN(Number(rawUnstitched))
+    ) {
+      return Number(rawUnstitched);
+    }
+    return Number(product.price) || 0;
+  }
+
+  function formatStitchTypeLabel(type) {
+    const clean = String(type || "").trim().toLowerCase();
+    if (clean === "stitched") return "Stitched";
+    if (clean === "unstitched") return "Unstitched";
+    return null;
+  }
+
   function createProductCardHTML(product, staggerDelay = 0) {
     const isMultiImage = product.images && product.images.length > 1;
     const isSoldOut = !product.inStock;
     const safeName = escapeHTML(product.name || "Untitled Piece");
     const safeCat = escapeHTML(product.categoryLabel || "Collection");
+
+    const availTypes = normalizeAvailableTypes(product.availableTypes || product.available_types);
+    const defaultType = getDefaultStitchType(product);
+    const initialPrice = getProductPriceForType(product, defaultType);
 
     // Badges
     let badgeHTML = "";
@@ -713,17 +755,42 @@
       ? `<img src="${escapeHTML(primaryImg)}" class="product-photo" alt="${safeName}" width="600" height="800" loading="lazy" decoding="async">`
       : `<div class="placeholder"><img src="images/logo-mark.png" alt="" width="90" height="40" loading="lazy" decoding="async"></div>`;
 
-    // Sizes
+    // Stitched / Unstitched segmented toggle (or plain label if only one type is available)
+    let stitchOptionHTML = "";
+    if (availTypes.length > 1) {
+      stitchOptionHTML = `
+        <div class="stitch-option">
+          <div class="stitch-toggle" role="group" aria-label="Select Type">
+            <button type="button" class="stitch-toggle__btn" data-stitch-type="stitched" aria-pressed="${defaultType === 'stitched' ? 'true' : 'false'}" ${isSoldOut ? 'disabled' : ''}>Stitched</button>
+            <button type="button" class="stitch-toggle__btn" data-stitch-type="unstitched" aria-pressed="${defaultType === 'unstitched' ? 'true' : 'false'}" ${isSoldOut ? 'disabled' : ''}>Unstitched</button>
+          </div>
+        </div>
+      `;
+    } else {
+      const onlyLabel = formatStitchTypeLabel(availTypes[0]) || "Stitched";
+      stitchOptionHTML = `
+        <div class="stitch-option">
+          <span class="stitch-label">${escapeHTML(onlyLabel)}</span>
+        </div>
+      `;
+    }
+
+    // Sizes (applies to Stitched only; hidden when Unstitched is selected)
     let sizesHTML = "";
     if (product.hasSizes && product.sizes && product.sizes.length > 0) {
       const sizeBtns = product.sizes.map(size => `
         <button type="button" class="size-btn" data-size="${escapeHTML(size)}" aria-pressed="false" ${isSoldOut ? 'disabled' : ''}>${escapeHTML(size)}</button>
       `).join("");
+      const hideSizesClass = defaultType === "unstitched" ? " is-hidden" : "";
       sizesHTML = `
-        <div class="sizes" role="group" aria-label="Select Size">
-          ${sizeBtns}
+        <div class="sizes-collapse${hideSizesClass}" aria-hidden="${defaultType === 'unstitched' ? 'true' : 'false'}">
+          <div class="sizes-collapse__inner">
+            <div class="sizes" role="group" aria-label="Select Size">
+              ${sizeBtns}
+            </div>
+            <div class="size-hint" aria-live="polite">Please select a size</div>
+          </div>
         </div>
-        <div class="size-hint" aria-live="polite">Please select a size</div>
       `;
     }
 
@@ -747,9 +814,10 @@
             <span class="product-card__cat">${safeCat}</span>
             <h3 class="product-card__name">${safeName}</h3>
             <div class="product-card__price">
-              <span>${formatPKR(product.price)}</span>
+              <span class="product-card__price-val">${formatPKR(initialPrice)}</span>
               ${product.originalPrice ? `<s>${formatPKR(product.originalPrice)}</s>` : ""}
             </div>
+            ${stitchOptionHTML}
             ${sizesHTML}
             <div class="product-card__actions">
               ${actionBtn}
@@ -771,10 +839,43 @@
       });
     }
 
-    // Size selection
+    // Stitch type & size selection state
+    let selectedType = getDefaultStitchType(product);
     let selectedSize = null;
+
+    const stitchBtns = cardEl.querySelectorAll(".stitch-toggle__btn");
+    const priceValEl = cardEl.querySelector(".product-card__price-val");
+    const sizesCollapseEl = cardEl.querySelector(".sizes-collapse");
     const sizeBtns = cardEl.querySelectorAll(".size-btn");
     const sizeHint = cardEl.querySelector(".size-hint");
+
+    stitchBtns.forEach(btn => {
+      btn.addEventListener("click", (e) => {
+        e.stopPropagation();
+        const nextType = btn.getAttribute("data-stitch-type");
+        if (!nextType || nextType === selectedType) return;
+
+        selectedType = nextType;
+        stitchBtns.forEach(b => {
+          b.setAttribute("aria-pressed", b.getAttribute("data-stitch-type") === selectedType ? "true" : "false");
+        });
+
+        if (priceValEl) {
+          priceValEl.textContent = formatPKR(getProductPriceForType(product, selectedType));
+        }
+
+        if (sizesCollapseEl) {
+          if (selectedType === "unstitched") {
+            sizesCollapseEl.classList.add("is-hidden");
+            sizesCollapseEl.setAttribute("aria-hidden", "true");
+            if (sizeHint) sizeHint.classList.remove("is-shown");
+          } else {
+            sizesCollapseEl.classList.remove("is-hidden");
+            sizesCollapseEl.setAttribute("aria-hidden", "false");
+          }
+        }
+      });
+    });
 
     sizeBtns.forEach(btn => {
       btn.addEventListener("click", (e) => {
@@ -791,7 +892,8 @@
     if (addBtn && product.inStock) {
       addBtn.addEventListener("click", (e) => {
         e.stopPropagation();
-        if (product.hasSizes && !selectedSize) {
+        const requiresSize = selectedType === "stitched" && product.hasSizes && product.sizes && product.sizes.length > 0;
+        if (requiresSize && !selectedSize) {
           if (sizeHint) {
             sizeHint.classList.add("is-shown");
             setTimeout(() => sizeHint.classList.remove("is-shown"), 2800);
@@ -799,8 +901,10 @@
           return;
         }
 
-        addToCart(product.id, selectedSize);
-        showToast(`Added to cart: ${product.name}${selectedSize ? ` (${selectedSize})` : ""}`);
+        const effectiveSize = requiresSize ? selectedSize : null;
+        const typeLabel = formatStitchTypeLabel(selectedType) || "Stitched";
+        addToCart(product.id, effectiveSize, 1, selectedType);
+        showToast(`Added to cart: ${product.name} (${typeLabel}${effectiveSize ? `, ${effectiveSize}` : ""})`);
       });
     }
   }
@@ -837,12 +941,22 @@
   if (cartCloseBtn) cartCloseBtn.addEventListener("click", closeCart);
   if (cartBackdrop) cartBackdrop.addEventListener("click", closeCart);
 
-  function addToCart(productId, size = null, qty = 1) {
-    const existing = cart.find(item => item.id === productId && item.size === size);
+  function isSameCartLine(item, productId, size, type) {
+    const itemType = item.type || null;
+    const targetType = type || null;
+    const itemSize = item.size || null;
+    const targetSize = size || null;
+    return item.id === productId && itemType === targetType && itemSize === targetSize;
+  }
+
+  function addToCart(productId, size = null, qty = 1, type = null) {
+    const normalizedType = type ? String(type).toLowerCase() : null;
+    const normalizedSize = normalizedType === "unstitched" ? null : (size || null);
+    const existing = cart.find(item => isSameCartLine(item, productId, normalizedSize, normalizedType));
     if (existing) {
       existing.quantity += qty;
     } else {
-      cart.push({ id: productId, size: size, quantity: qty });
+      cart.push({ id: productId, type: normalizedType, size: normalizedSize, quantity: qty });
     }
     saveCart();
 
@@ -854,18 +968,18 @@
     });
   }
 
-  function updateItemQty(productId, size, delta) {
-    const item = cart.find(i => i.id === productId && i.size === size);
+  function updateItemQty(productId, size, delta, type = null) {
+    const item = cart.find(i => isSameCartLine(i, productId, size, type));
     if (!item) return;
     item.quantity += delta;
     if (item.quantity <= 0) {
-      cart = cart.filter(i => !(i.id === productId && i.size === size));
+      cart = cart.filter(i => !isSameCartLine(i, productId, size, type));
     }
     saveCart();
   }
 
-  function removeItem(productId, size) {
-    cart = cart.filter(i => !(i.id === productId && i.size === size));
+  function removeItem(productId, size, type = null) {
+    cart = cart.filter(i => !isSameCartLine(i, productId, size, type));
     saveCart();
   }
 
@@ -906,7 +1020,8 @@
       const product = window.PRODUCTS ? window.PRODUCTS.find(p => p.id === item.id) : null;
       if (!product) return;
 
-      const lineTotal = product.price * item.quantity;
+      const unitPrice = getProductPriceForType(product, item.type);
+      const lineTotal = unitPrice * item.quantity;
       subtotal += lineTotal;
 
       const itemEl = document.createElement("div");
@@ -917,12 +1032,18 @@
         ? `<img src="${escapeHTML(product.images[0])}" class="product-photo" alt="${safeName}" width="72" height="96" loading="lazy" decoding="async">`
         : `<div class="placeholder"><img src="images/logo-mark.png" alt="" width="72" height="32" loading="lazy" decoding="async"></div>`;
 
+      const typeLabel = formatStitchTypeLabel(item.type);
+      const showSize = item.size && item.type !== "unstitched";
+      const metaParts = [escapeHTML(product.categoryLabel)];
+      if (typeLabel) metaParts.push(escapeHTML(typeLabel));
+      if (showSize) metaParts.push(`Size: ${escapeHTML(item.size)}`);
+
       itemEl.innerHTML = `
         <div class="cart-item__thumb">${thumbHTML}</div>
         <div class="cart-item__info">
           <h3 class="cart-item__name">${safeName}</h3>
-          <div class="cart-item__meta">${escapeHTML(product.categoryLabel)}${item.size ? ` • Size: ${escapeHTML(item.size)}` : ""}</div>
-          <div class="cart-item__price">${formatPKR(product.price)}</div>
+          <div class="cart-item__meta">${metaParts.join(" • ")}</div>
+          <div class="cart-item__price">${formatPKR(unitPrice)}</div>
           <div class="qty" role="group" aria-label="Quantity">
             <button type="button" class="qty-minus" aria-label="Decrease quantity">−</button>
             <span>${item.quantity}</span>
@@ -932,9 +1053,11 @@
         <button type="button" class="cart-item__remove" aria-label="Remove ${safeName}">Remove</button>
       `;
 
-      itemEl.querySelector(".qty-minus").addEventListener("click", () => updateItemQty(item.id, item.size, -1));
-      itemEl.querySelector(".qty-plus").addEventListener("click", () => updateItemQty(item.id, item.size, 1));
-      itemEl.querySelector(".cart-item__remove").addEventListener("click", () => removeItem(item.id, item.size));
+      const itemType = item.type || null;
+      const itemSize = item.size || null;
+      itemEl.querySelector(".qty-minus").addEventListener("click", () => updateItemQty(item.id, itemSize, -1, itemType));
+      itemEl.querySelector(".qty-plus").addEventListener("click", () => updateItemQty(item.id, itemSize, 1, itemType));
+      itemEl.querySelector(".cart-item__remove").addEventListener("click", () => removeItem(item.id, itemSize, itemType));
 
       cartItemsContainer.appendChild(itemEl);
     });
@@ -987,11 +1110,19 @@
     cart.forEach(item => {
       const product = window.PRODUCTS ? window.PRODUCTS.find(p => p.id === item.id) : null;
       if (!product) return;
-      const lineTotal = product.price * item.quantity;
+      const unitPrice = getProductPriceForType(product, item.type);
+      const lineTotal = unitPrice * item.quantity;
       subtotal += lineTotal;
+      const typeLabel = formatStitchTypeLabel(item.type);
+      const showSize = item.size && item.type !== "unstitched";
+      const detailParts = [];
+      if (typeLabel) detailParts.push(escapeHTML(typeLabel));
+      if (showSize) detailParts.push(`Size ${escapeHTML(item.size)}`);
+      const detailSuffix = detailParts.length ? ` (${detailParts.join(", ")})` : "";
+
       rowsHTML += `
         <div class="order-summary__row">
-          <span>${product.name} ${item.size ? `(${item.size})` : ""} × ${item.quantity}</span>
+          <span>${escapeHTML(product.name)}${detailSuffix} × ${item.quantity}</span>
           <span>${formatPKR(lineTotal)}</span>
         </div>
       `;
@@ -1042,16 +1173,21 @@
       let orderItemsText = "";
       let totalAmount = 0;
 
-      cart.forEach((item, index) => {
+      cart.forEach((item) => {
         const product = window.PRODUCTS ? window.PRODUCTS.find(p => p.id === item.id) : null;
         if (!product) return;
-        const lineTotal = product.price * item.quantity;
+        const unitPrice = getProductPriceForType(product, item.type);
+        const lineTotal = unitPrice * item.quantity;
         totalAmount += lineTotal;
-        orderItemsText += `${index + 1}. *${product.name}*\n` +
-          `   • Category: ${product.categoryLabel}\n` +
-          (item.size ? `   • Size: ${item.size}\n` : "") +
-          `   • Quantity: ${item.quantity}\n` +
-          `   • Price: ${formatPKR(lineTotal)}\n\n`;
+
+        const typeLabel = formatStitchTypeLabel(item.type);
+        const showSize = item.size && item.type !== "unstitched";
+        const lineParts = [`${item.quantity}x ${product.name}`];
+        if (typeLabel) lineParts.push(typeLabel);
+        if (showSize) lineParts.push(`Size ${item.size}`);
+        lineParts.push(formatPKR(lineTotal));
+
+        orderItemsText += `${lineParts.join(" - ")}\n`;
       });
 
       const message =
@@ -1065,7 +1201,8 @@ _Stitch n Style — Premium Ladies Wear_
 `\n• Delivery Address: ${address}
 
 🛍️ *ORDER ITEMS:*
-${orderItemsText}💰 *TOTAL AMOUNT:* ${formatPKR(totalAmount)}
+${orderItemsText}
+💰 *TOTAL AMOUNT:* ${formatPKR(totalAmount)}
 
 _Thank you! I would like to proceed with payment and order confirmation via WhatsApp._`;
 
@@ -1204,6 +1341,13 @@ _Thank you! I would like to proceed with payment and order confirmation via What
     const cleanSizes = Array.isArray(row.sizes)
       ? row.sizes.map(s => String(s).trim()).filter(Boolean)
       : [];
+    const availableTypes = normalizeAvailableTypes(row.available_types);
+    const hasUnstitchedPrice =
+      row.unstitched_price !== null &&
+      row.unstitched_price !== undefined &&
+      row.unstitched_price !== "" &&
+      !isNaN(Number(row.unstitched_price)) &&
+      Number(row.unstitched_price) >= 0;
 
     return {
       id: String(row.id),
@@ -1213,6 +1357,8 @@ _Thank you! I would like to proceed with payment and order confirmation via What
       categoryLabel: rawCat,
       subcategory: rawSub || null,
       price: Number(row.price) || 0,
+      unstitchedPrice: hasUnstitchedPrice ? Number(row.unstitched_price) : null,
+      availableTypes: availableTypes,
       originalPrice: null,
       badge: row.badge ? String(row.badge).trim() : null,
       inStock: row.in_stock !== false,

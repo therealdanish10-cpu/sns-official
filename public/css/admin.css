@@ -311,6 +311,14 @@
    Knob: 18x18px round warm ivory (#F5EFE0) strictly INSIDE the track.
    Label: To the right with comfortable spacing, vertically aligned with inputs.
    ------------------------------------------------------------------------- */
+.field__hint {
+  display: block;
+  margin-top: 0.38rem;
+  font-size: 0.74rem;
+  line-height: 1.4;
+  color: var(--muted);
+}
+
 .admin-toggle-field {
   display: flex;
   flex-direction: column;
@@ -320,6 +328,14 @@
   min-height: 46px;
   display: flex;
   align-items: center;
+}
+
+.admin-switch-group {
+  min-height: 44px;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.75rem 1.75rem;
 }
 
 .admin-switch,
@@ -735,6 +751,12 @@
   background: rgba(201, 130, 107, 0.12);
   color: #E0A38E;
   border-color: rgba(201, 130, 107, 0.3);
+}
+
+.admin-pill--type {
+  background: transparent;
+  color: var(--gold);
+  border: 1px solid var(--gold-35);
 }
 
 .admin-item__actions {

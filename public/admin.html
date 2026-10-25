@@ -124,6 +124,7 @@
                 <div class="field">
                   <label for="prodPrice">Price (PKR) *</label>
                   <input type="number" id="prodPrice" required min="0" step="1" placeholder="e.g. 18500">
+                  <span class="field__hint">Used for Stitched, and for Unstitched when no separate price is set</span>
                 </div>
 
                 <div class="field">
@@ -133,6 +134,32 @@
                     <option value="brides">Brides</option>
                   </select>
                 </div>
+              </div>
+
+              <div class="field admin-toggle-field">
+                <span class="field__label">Available as *</span>
+                <div class="admin-switch-group" role="group" aria-label="Available as">
+                  <label class="admin-switch" for="prodTypeStitched">
+                    <input type="checkbox" id="prodTypeStitched" class="admin-switch__input" checked>
+                    <span class="admin-switch__track" aria-hidden="true">
+                      <span class="admin-switch__knob"></span>
+                    </span>
+                    <span class="admin-switch__text">Stitched</span>
+                  </label>
+                  <label class="admin-switch" for="prodTypeUnstitched">
+                    <input type="checkbox" id="prodTypeUnstitched" class="admin-switch__input" checked>
+                    <span class="admin-switch__track" aria-hidden="true">
+                      <span class="admin-switch__knob"></span>
+                    </span>
+                    <span class="admin-switch__text">Unstitched</span>
+                  </label>
+                </div>
+              </div>
+
+              <div class="field" id="unstitchedPriceField">
+                <label for="prodUnstitchedPrice">Unstitched price (PKR) <span class="opt">(Optional)</span></label>
+                <input type="number" id="prodUnstitchedPrice" min="0" step="1" placeholder="e.g. 14500">
+                <span class="field__hint">Leave empty to use the same price as above</span>
               </div>
 
               <div class="admin-form-row">
@@ -181,6 +208,7 @@
                     <button type="button" id="addSizeTagBtn" class="btn btn--outline admin-btn--sm">Add</button>
                   </div>
                 </div>
+                <span class="field__hint">Sizes apply to Stitched only.</span>
               </div>
 
               <!-- Multiple Image Upload & Reordering -->
