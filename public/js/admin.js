@@ -1,6 +1,6 @@
 /**
  * SNS Official — Stitch n Style
- * Admin Portal Controller (Products, Approved Reviews & Pending Reviews)
+ * Admin Portal Controller (Products, Menu Navigation, Approved Reviews & Pending Reviews)
  */
 
 (function () {
@@ -31,10 +31,12 @@
   const tabBtns = document.querySelectorAll(".admin-tab[data-tab]");
   const tabPanels = {
     products: document.getElementById("tab-products"),
+    menu: document.getElementById("tab-menu"),
     reviews: document.getElementById("tab-reviews"),
     pending: document.getElementById("tab-pending")
   };
   const productsCountBadge = document.getElementById("productsCountBadge");
+  const menuCountBadge = document.getElementById("menuCountBadge");
   const approvedCountBadge = document.getElementById("approvedCountBadge");
   const pendingCountBadge = document.getElementById("pendingCountBadge");
 
@@ -45,7 +47,10 @@
   const productIdInput = document.getElementById("productId");
   const prodNameInput = document.getElementById("prodName");
   const prodPriceInput = document.getElementById("prodPrice");
+  const prodSectionInput = document.getElementById("prodSection");
   const prodCategoryInput = document.getElementById("prodCategory");
+  const prodSubcategoryInput = document.getElementById("prodSubcategory");
+  const subcategoryDatalist = document.getElementById("subcategorySuggestions");
   const prodBadgeInput = document.getElementById("prodBadge");
   const prodInStockInput = document.getElementById("prodInStock");
   const prodInStockLabel = document.getElementById("prodInStockLabel");
@@ -58,6 +63,20 @@
   const productSubmitBtn = document.getElementById("productSubmitBtn");
   const refreshProductsBtn = document.getElementById("refreshProductsBtn");
   const productsListEl = document.getElementById("productsList");
+
+  // Menu Tab DOM
+  const refreshMenuBtn = document.getElementById("refreshMenuBtn");
+  const menuSectionBtns = document.querySelectorAll(".menu-section-btn[data-menu-section]");
+  const toggleAddMenuFormBtn = document.getElementById("toggleAddMenuFormBtn");
+  const addTopMenuForm = document.getElementById("addTopMenuForm");
+  const addTopMenuSectionLabel = document.getElementById("addTopMenuSectionLabel");
+  const newMenuLabelInput = document.getElementById("newMenuLabel");
+  const newMenuUrlInput = document.getElementById("newMenuUrl");
+  const newMenuVisibleInput = document.getElementById("newMenuVisible");
+  const newMenuVisibleLabel = document.getElementById("newMenuVisibleLabel");
+  const newMenuSubmitBtn = document.getElementById("newMenuSubmitBtn");
+  const cancelNewMenuBtn = document.getElementById("cancelNewMenuBtn");
+  const menuItemsListEl = document.getElementById("menuItemsList");
 
   // Reviews Tab DOM
   const reviewForm = document.getElementById("reviewForm");
@@ -85,11 +104,15 @@
    * Local State
    * ----------------------------------------------------------------------- */
   let allProducts = [];
+  let allMenuItems = [];
   let allReviews = [];
+
+  // Menu tab state
+  let activeMenuSection = "women";
+  const expandedMenuParents = new Set();
 
   // Product form state
   let currentProductSizes = [];
-  // Each item: { type: 'url', url: string } OR { type: 'file', file: File, previewUrl: string }
   let currentProductImages = [];
 
   // Review form state
@@ -123,6 +146,10 @@
     } catch (e) {
       return "";
     }
+  }
+
+  function formatSectionLabel(sec) {
+    return String(sec || "women").toLowerCase() === "brides" ? "Brides" : "Women";
   }
 
   let alertTimer = null;
@@ -165,6 +192,32 @@
       throw new Error("Could not retrieve public URL for uploaded image.");
     }
     return data.publicUrl;
+  }
+
+  // Update the <datalist id="subcategorySuggestions"> from menu sub-options & existing products
+  function refreshSubcategorySuggestions() {
+    if (!subcategoryDatalist) return;
+    const suggestions = new Set();
+
+    // Add all sub-option labels from menu_items
+    allMenuItems.forEach(item => {
+      if (item.parent_id && item.label) {
+        suggestions.add(String(item.label).trim());
+      }
+    });
+
+    // Also include existing subcategories from products
+    allProducts.forEach(prod => {
+      if (prod.subcategory) {
+        suggestions.add(String(prod.subcategory).trim());
+      }
+    });
+
+    subcategoryDatalist.innerHTML = Array.from(suggestions)
+      .filter(Boolean)
+      .sort((a, b) => a.localeCompare(b))
+      .map(label => `<option value="${escapeHTML(label)}"></option>`)
+      .join("");
   }
 
   /* -------------------------------------------------------------------------
@@ -262,16 +315,20 @@
 
   function loadAllAdminData() {
     fetchProducts();
+    fetchMenuItems();
     fetchReviews();
   }
 
   /* -------------------------------------------------------------------------
-   * 3. Products Management (CRUD, Sizes Tags, Multi-Image Upload & Reorder)
+   * 3. Products Management (CRUD, Section, Subcategory, Sizes, Images)
    * ----------------------------------------------------------------------- */
-  if (prodInStockInput && prodInStockLabel) {
-    prodInStockInput.addEventListener("change", () => {
-      prodInStockLabel.textContent = prodInStockInput.checked ? "In Stock" : "Out of Stock (Sold Out)";
-    });
+  function updateInStockSwitchLabel() {
+    if (!prodInStockInput || !prodInStockLabel) return;
+    prodInStockLabel.textContent = prodInStockInput.checked ? "In Stock" : "Out of Stock";
+  }
+
+  if (prodInStockInput) {
+    prodInStockInput.addEventListener("change", updateInStockSwitchLabel);
   }
 
   // ---- Sizes Tag Input ----
@@ -403,8 +460,10 @@
     if (!productForm) return;
     productForm.reset();
     productIdInput.value = "";
+    if (prodSectionInput) prodSectionInput.value = "women";
+    if (prodSubcategoryInput) prodSubcategoryInput.value = "";
     prodInStockInput.checked = true;
-    if (prodInStockLabel) prodInStockLabel.textContent = "In Stock";
+    updateInStockSwitchLabel();
 
     currentProductSizes = [];
     renderSizeTags();
@@ -429,12 +488,16 @@
     productIdInput.value = product.id;
     prodNameInput.value = product.name || "";
     prodPriceInput.value = product.price ?? "";
+    if (prodSectionInput) {
+      prodSectionInput.value = (product.section && product.section.toLowerCase() === "brides") ? "brides" : "women";
+    }
     prodCategoryInput.value = product.category || "";
+    if (prodSubcategoryInput) {
+      prodSubcategoryInput.value = product.subcategory || "";
+    }
     prodBadgeInput.value = product.badge || "";
     prodInStockInput.checked = product.in_stock !== false;
-    if (prodInStockLabel) {
-      prodInStockLabel.textContent = prodInStockInput.checked ? "In Stock" : "Out of Stock (Sold Out)";
-    }
+    updateInStockSwitchLabel();
 
     currentProductSizes = Array.isArray(product.sizes) ? [...product.sizes] : [];
     renderSizeTags();
@@ -466,6 +529,7 @@
 
     allProducts = data || [];
     if (productsCountBadge) productsCountBadge.textContent = allProducts.length;
+    refreshSubcategorySuggestions();
     renderProductsList();
   }
 
@@ -482,6 +546,7 @@
       const mainImg = imgs[0] || null;
       const sizes = Array.isArray(product.sizes) ? product.sizes.filter(Boolean) : [];
       const inStock = product.in_stock !== false;
+      const sectionLabel = formatSectionLabel(product.section);
 
       const row = document.createElement("div");
       row.className = "admin-item";
@@ -498,11 +563,13 @@
             <span class="admin-item__price">${formatPKR(product.price)}</span>
           </div>
           <div class="admin-item__meta">
+            <span>Section: <strong>${escapeHTML(sectionLabel)}</strong></span>
             <span>Category: <strong>${escapeHTML(product.category)}</strong></span>
+            ${product.subcategory ? `<span>Subcategory: <strong>${escapeHTML(product.subcategory)}</strong></span>` : ""}
             <span>Sizes: ${sizes.length ? escapeHTML(sizes.join(", ")) : "None"}</span>
             <span>Photos: ${imgs.length}</span>
             ${product.badge ? `<span class="admin-pill">${escapeHTML(product.badge)}</span>` : ""}
-            <span class="admin-pill ${inStock ? "" : "admin-pill--out"}">${inStock ? "In Stock" : "Sold Out"}</span>
+            <span class="admin-pill ${inStock ? "" : "admin-pill--out"}">${inStock ? "In Stock" : "Out of Stock"}</span>
           </div>
         </div>
         <div class="admin-item__actions">
@@ -540,7 +607,6 @@
       e.preventDefault();
       if (!sb) return;
 
-      // Capture any uncommitted size text still in the input box
       if (prodSizeInput && prodSizeInput.value.trim()) {
         addSizesFromString(prodSizeInput.value);
         prodSizeInput.value = "";
@@ -548,7 +614,9 @@
 
       const name = (prodNameInput.value || "").trim();
       const priceVal = parseInt(prodPriceInput.value, 10);
+      const section = prodSectionInput && prodSectionInput.value === "brides" ? "brides" : "women";
       const category = (prodCategoryInput.value || "").trim();
+      const subcategory = prodSubcategoryInput ? ((prodSubcategoryInput.value || "").trim() || null) : null;
       const badge = (prodBadgeInput.value || "").trim() || null;
       const in_stock = Boolean(prodInStockInput.checked);
       const editingId = productIdInput.value || null;
@@ -573,7 +641,6 @@
       productSubmitBtn.textContent = "Uploading & Saving…";
 
       try {
-        // Upload any newly selected image files while preserving exact order
         const finalImageUrls = [];
         for (const item of currentProductImages) {
           if (item.type === "url") {
@@ -587,7 +654,9 @@
         const payload = {
           name,
           price: priceVal,
+          section,
           category,
+          subcategory,
           images: finalImageUrls,
           sizes: currentProductSizes,
           badge,
@@ -620,7 +689,447 @@
   }
 
   /* -------------------------------------------------------------------------
-   * 4. Reviews & Pending Reviews Management
+   * 4. Menu Navigation Management (Women & Brides, Top-level & Sub-options)
+   * ----------------------------------------------------------------------- */
+  if (newMenuVisibleInput && newMenuVisibleLabel) {
+    newMenuVisibleInput.addEventListener("change", () => {
+      newMenuVisibleLabel.textContent = newMenuVisibleInput.checked ? "Visible" : "Hidden";
+    });
+  }
+
+  menuSectionBtns.forEach(btn => {
+    btn.addEventListener("click", () => {
+      const sec = btn.getAttribute("data-menu-section");
+      if (!sec || sec === activeMenuSection) return;
+      activeMenuSection = sec;
+
+      menuSectionBtns.forEach(b => {
+        const active = b.getAttribute("data-menu-section") === activeMenuSection;
+        b.classList.toggle("is-active", active);
+        b.setAttribute("aria-selected", active ? "true" : "false");
+      });
+
+      if (addTopMenuSectionLabel) {
+        addTopMenuSectionLabel.textContent = formatSectionLabel(activeMenuSection);
+      }
+
+      renderMenuAdminList();
+    });
+  });
+
+  if (toggleAddMenuFormBtn && addTopMenuForm) {
+    toggleAddMenuFormBtn.addEventListener("click", () => {
+      const isHidden = addTopMenuForm.hidden;
+      addTopMenuForm.hidden = !isHidden;
+      if (!addTopMenuForm.hidden && newMenuLabelInput) {
+        newMenuLabelInput.focus();
+      }
+    });
+  }
+
+  if (cancelNewMenuBtn && addTopMenuForm) {
+    cancelNewMenuBtn.addEventListener("click", () => {
+      addTopMenuForm.reset();
+      if (newMenuVisibleInput) newMenuVisibleInput.checked = true;
+      if (newMenuVisibleLabel) newMenuVisibleLabel.textContent = "Visible";
+      addTopMenuForm.hidden = true;
+    });
+  }
+
+  async function fetchMenuItems() {
+    if (!sb || !menuItemsListEl) return;
+    menuItemsListEl.innerHTML = `<div class="admin-loading">Loading menu items…</div>`;
+
+    const { data, error } = await sb
+      .from("menu_items")
+      .select("*")
+      .order("sort_order", { ascending: true })
+      .order("created_at", { ascending: true });
+
+    if (error) {
+      menuItemsListEl.innerHTML = `<div class="admin-empty">Could not load menu_items (${escapeHTML(error.message)}). Please run <code>supabase/menu-migration.sql</code> in the Supabase SQL Editor.</div>`;
+      return;
+    }
+
+    allMenuItems = data || [];
+    if (menuCountBadge) {
+      menuCountBadge.textContent = allMenuItems.filter(i => !i.parent_id).length;
+    }
+    refreshSubcategorySuggestions();
+    renderMenuAdminList();
+  }
+
+  function getMenuSiblings(section, parentId = null) {
+    return allMenuItems
+      .filter(i => i.section === section && (parentId ? i.parent_id === parentId : !i.parent_id))
+      .sort((a, b) => (a.sort_order - b.sort_order) || (new Date(a.created_at) - new Date(b.created_at)));
+  }
+
+  async function handleReorderMenuItem(item, direction) {
+    const siblings = getMenuSiblings(item.section, item.parent_id || null);
+    const idx = siblings.findIndex(s => s.id === item.id);
+    const targetIdx = idx + direction;
+    if (idx < 0 || targetIdx < 0 || targetIdx >= siblings.length) return;
+
+    // Normalize sort_order across siblings and swap idx with targetIdx
+    const reordered = [...siblings];
+    const temp = reordered[idx];
+    reordered[idx] = reordered[targetIdx];
+    reordered[targetIdx] = temp;
+
+    try {
+      await Promise.all(
+        reordered.map((node, index) =>
+          sb.from("menu_items").update({ sort_order: index + 1 }).eq("id", node.id)
+        )
+      );
+      showAlert(dashboardAlert, `Updated order for "${item.label}".`, "success", 2500);
+      fetchMenuItems();
+    } catch (err) {
+      showAlert(dashboardAlert, err.message || "Failed to reorder menu items.", "error");
+    }
+  }
+
+  async function handleSaveMenuItem(item, newLabel, newCustomUrl) {
+    const cleanLabel = (newLabel || "").trim();
+    const cleanUrl = (newCustomUrl || "").trim() || null;
+
+    if (!cleanLabel) {
+      showAlert(dashboardAlert, "Menu item label cannot be empty.", "error");
+      return;
+    }
+
+    const { error } = await sb
+      .from("menu_items")
+      .update({ label: cleanLabel, custom_url: cleanUrl })
+      .eq("id", item.id);
+
+    if (error) {
+      showAlert(dashboardAlert, `Failed to update "${item.label}": ${error.message}`, "error");
+      return;
+    }
+
+    showAlert(dashboardAlert, `Saved "${cleanLabel}".`, "success");
+    fetchMenuItems();
+  }
+
+  async function handleToggleMenuItemVisibility(item, isVisible) {
+    const { error } = await sb
+      .from("menu_items")
+      .update({ is_visible: isVisible })
+      .eq("id", item.id);
+
+    if (error) {
+      showAlert(dashboardAlert, `Failed to update visibility: ${error.message}`, "error");
+      fetchMenuItems();
+      return;
+    }
+
+    item.is_visible = isVisible;
+    showAlert(
+      dashboardAlert,
+      `"${item.label}" is now ${isVisible ? "visible" : "hidden"} on the storefront.`,
+      "success",
+      2500
+    );
+  }
+
+  async function handleDeleteMenuItem(item) {
+    const isTopLevel = !item.parent_id;
+    const subCount = isTopLevel ? allMenuItems.filter(i => i.parent_id === item.id).length : 0;
+    const msg = isTopLevel && subCount > 0
+      ? `Delete "${item.label}" and its ${subCount} sub-option(s)? This cannot be undone.`
+      : `Delete "${item.label}" from the menu?`;
+
+    if (!window.confirm(msg)) return;
+
+    const { error } = await sb.from("menu_items").delete().eq("id", item.id);
+    if (error) {
+      showAlert(dashboardAlert, `Failed to delete "${item.label}": ${error.message}`, "error");
+      return;
+    }
+
+    expandedMenuParents.delete(item.id);
+    showAlert(dashboardAlert, `Deleted "${item.label}".`, "success");
+    fetchMenuItems();
+  }
+
+  async function handleCreateMenuItem({ section, parent_id = null, label, custom_url = null, is_visible = true }) {
+    const cleanLabel = (label || "").trim();
+    const cleanUrl = (custom_url || "").trim() || null;
+
+    if (!cleanLabel) {
+      showAlert(dashboardAlert, "Please enter a menu label.", "error");
+      return false;
+    }
+
+    const siblings = getMenuSiblings(section, parent_id);
+    const maxSort = siblings.reduce((max, s) => Math.max(max, Number(s.sort_order) || 0), 0);
+
+    const { error } = await sb.from("menu_items").insert([
+      {
+        section,
+        parent_id,
+        label: cleanLabel,
+        custom_url: cleanUrl,
+        sort_order: maxSort + 1,
+        is_visible: Boolean(is_visible)
+      }
+    ]);
+
+    if (error) {
+      showAlert(dashboardAlert, `Failed to create menu item: ${error.message}`, "error");
+      return false;
+    }
+
+    showAlert(dashboardAlert, `Added "${cleanLabel}" to ${formatSectionLabel(section)} menu.`, "success");
+    fetchMenuItems();
+    return true;
+  }
+
+  if (addTopMenuForm) {
+    addTopMenuForm.addEventListener("submit", async function (e) {
+      e.preventDefault();
+      if (!sb) return;
+
+      newMenuSubmitBtn.disabled = true;
+      newMenuSubmitBtn.textContent = "Creating…";
+
+      try {
+        const ok = await handleCreateMenuItem({
+          section: activeMenuSection,
+          parent_id: null,
+          label: newMenuLabelInput.value,
+          custom_url: newMenuUrlInput.value,
+          is_visible: newMenuVisibleInput.checked
+        });
+
+        if (ok) {
+          addTopMenuForm.reset();
+          if (newMenuVisibleInput) newMenuVisibleInput.checked = true;
+          if (newMenuVisibleLabel) newMenuVisibleLabel.textContent = "Visible";
+          addTopMenuForm.hidden = true;
+        }
+      } finally {
+        newMenuSubmitBtn.disabled = false;
+        newMenuSubmitBtn.textContent = "Create Menu Item";
+      }
+    });
+  }
+
+  function renderMenuAdminList() {
+    if (!menuItemsListEl) return;
+
+    const topItems = getMenuSiblings(activeMenuSection, null);
+    if (topItems.length === 0) {
+      menuItemsListEl.innerHTML = `
+        <div class="admin-empty">
+          No top-level menu items in <strong>${formatSectionLabel(activeMenuSection)}</strong> yet.
+          Click <strong>+ Add Menu Item</strong> above to create one.
+        </div>
+      `;
+      return;
+    }
+
+    menuItemsListEl.innerHTML = "";
+
+    topItems.forEach((item, idx) => {
+      const subItems = getMenuSiblings(activeMenuSection, item.id);
+      const isExpanded = expandedMenuParents.has(item.id);
+      const switchId = `menu-vis-${item.id}`;
+
+      const card = document.createElement("div");
+      card.className = "menu-node";
+      card.innerHTML = `
+        <div class="menu-node__main">
+          <div class="menu-node__inputs">
+            <input type="text" class="menu-inline-input item-label-input" value="${escapeHTML(item.label)}" aria-label="Menu item label" placeholder="Label (e.g. Saree)">
+            <input type="text" class="menu-inline-input item-url-input" value="${escapeHTML(item.custom_url || "")}" aria-label="Optional custom URL" placeholder="Optional custom URL (e.g. shop.html?sort=newest)">
+          </div>
+
+          <div class="menu-node__controls">
+            <label class="admin-switch" for="${switchId}">
+              <input type="checkbox" id="${switchId}" class="admin-switch__input item-vis-input" ${item.is_visible !== false ? "checked" : ""}>
+              <span class="admin-switch__track" aria-hidden="true">
+                <span class="admin-switch__knob"></span>
+              </span>
+              <span class="admin-switch__text item-vis-label">${item.is_visible !== false ? "Visible" : "Hidden"}</span>
+            </label>
+
+            <div class="menu-node__btns">
+              <button type="button" class="admin-action-btn item-save-btn">Save</button>
+              <button type="button" class="admin-action-btn item-up-btn" title="Move up" ${idx === 0 ? "disabled" : ""}>&uarr;</button>
+              <button type="button" class="admin-action-btn item-down-btn" title="Move down" ${idx === topItems.length - 1 ? "disabled" : ""}>&darr;</button>
+              <button type="button" class="admin-action-btn admin-action-btn--danger item-del-btn">Delete</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="menu-node__sub-bar">
+          <button type="button" class="menu-sub-toggle" aria-expanded="${isExpanded ? "true" : "false"}">
+            <span>${isExpanded ? "▾" : "▸"} Sub-options (${subItems.length})</span>
+          </button>
+          <button type="button" class="admin-link-btn add-sub-trigger-btn">+ Add Sub-option</button>
+        </div>
+
+        <div class="menu-subitems" ${isExpanded ? "" : "hidden"}>
+          <form class="menu-subnode add-sub-form" hidden novalidate>
+            <div class="menu-node__inputs">
+              <input type="text" class="menu-inline-input sub-new-label" required placeholder="Sub-option label (e.g. Banarasi, Organza)">
+              <input type="text" class="menu-inline-input sub-new-url" placeholder="Optional custom URL override">
+            </div>
+            <div class="menu-node__btns">
+              <button type="submit" class="btn btn--primary admin-btn--sm">Add Sub-option</button>
+              <button type="button" class="btn btn--outline admin-btn--sm cancel-sub-btn">Cancel</button>
+            </div>
+          </form>
+          <div class="subitems-container"></div>
+        </div>
+      `;
+
+      // Bind top-level controls
+      const labelInput = card.querySelector(".item-label-input");
+      const urlInput = card.querySelector(".item-url-input");
+      const visInput = card.querySelector(".item-vis-input");
+      const visLabel = card.querySelector(".item-vis-label");
+
+      card.querySelector(".item-save-btn").addEventListener("click", () => {
+        handleSaveMenuItem(item, labelInput.value, urlInput.value);
+      });
+
+      visInput.addEventListener("change", () => {
+        visLabel.textContent = visInput.checked ? "Visible" : "Hidden";
+        handleToggleMenuItemVisibility(item, visInput.checked);
+      });
+
+      card.querySelector(".item-up-btn").addEventListener("click", () => handleReorderMenuItem(item, -1));
+      card.querySelector(".item-down-btn").addEventListener("click", () => handleReorderMenuItem(item, 1));
+      card.querySelector(".item-del-btn").addEventListener("click", () => handleDeleteMenuItem(item));
+
+      // Expand/collapse sub-options
+      const subToggleBtn = card.querySelector(".menu-sub-toggle");
+      const subItemsWrap = card.querySelector(".menu-subitems");
+      const addSubForm = card.querySelector(".add-sub-form");
+      const addSubTriggerBtn = card.querySelector(".add-sub-trigger-btn");
+      const cancelSubBtn = card.querySelector(".cancel-sub-btn");
+      const subContainer = card.querySelector(".subitems-container");
+
+      subToggleBtn.addEventListener("click", () => {
+        const nowOpen = subItemsWrap.hidden;
+        subItemsWrap.hidden = !nowOpen;
+        subToggleBtn.setAttribute("aria-expanded", nowOpen ? "true" : "false");
+        subToggleBtn.querySelector("span").textContent = `${nowOpen ? "▾" : "▸"} Sub-options (${subItems.length})`;
+        if (nowOpen) {
+          expandedMenuParents.add(item.id);
+        } else {
+          expandedMenuParents.delete(item.id);
+        }
+      });
+
+      addSubTriggerBtn.addEventListener("click", () => {
+        subItemsWrap.hidden = false;
+        expandedMenuParents.add(item.id);
+        subToggleBtn.setAttribute("aria-expanded", "true");
+        subToggleBtn.querySelector("span").textContent = `▾ Sub-options (${subItems.length})`;
+        addSubForm.hidden = false;
+        addSubForm.querySelector(".sub-new-label").focus();
+      });
+
+      cancelSubBtn.addEventListener("click", () => {
+        addSubForm.reset();
+        addSubForm.hidden = true;
+      });
+
+      addSubForm.addEventListener("submit", async (e) => {
+        e.preventDefault();
+        const subLabel = addSubForm.querySelector(".sub-new-label").value;
+        const subUrl = addSubForm.querySelector(".sub-new-url").value;
+        expandedMenuParents.add(item.id);
+        const ok = await handleCreateMenuItem({
+          section: activeMenuSection,
+          parent_id: item.id,
+          label: subLabel,
+          custom_url: subUrl,
+          is_visible: true
+        });
+        if (ok) {
+          addSubForm.reset();
+          addSubForm.hidden = true;
+        }
+      });
+
+      // Render existing sub-options
+      if (subItems.length === 0) {
+        subContainer.innerHTML = `<div class="muted" style="font-size:0.8rem;padding:0.25rem 0;">No sub-options yet. This item links directly to the shop.</div>`;
+      } else {
+        subItems.forEach((sub, sIdx) => {
+          const subSwitchId = `menu-vis-${sub.id}`;
+          const subEl = document.createElement("div");
+          subEl.className = "menu-subnode";
+          subEl.innerHTML = `
+            <div class="menu-node__inputs">
+              <input type="text" class="menu-inline-input sub-label-input" value="${escapeHTML(sub.label)}" aria-label="Sub-option label" placeholder="Sub-option label">
+              <input type="text" class="menu-inline-input sub-url-input" value="${escapeHTML(sub.custom_url || "")}" aria-label="Optional custom URL" placeholder="Optional custom URL">
+            </div>
+            <div class="menu-node__controls">
+              <label class="admin-switch" for="${subSwitchId}">
+                <input type="checkbox" id="${subSwitchId}" class="admin-switch__input sub-vis-input" ${sub.is_visible !== false ? "checked" : ""}>
+                <span class="admin-switch__track" aria-hidden="true">
+                  <span class="admin-switch__knob"></span>
+                </span>
+                <span class="admin-switch__text sub-vis-label">${sub.is_visible !== false ? "Visible" : "Hidden"}</span>
+              </label>
+              <div class="menu-node__btns">
+                <button type="button" class="admin-action-btn sub-save-btn">Save</button>
+                <button type="button" class="admin-action-btn sub-up-btn" title="Move up" ${sIdx === 0 ? "disabled" : ""}>&uarr;</button>
+                <button type="button" class="admin-action-btn sub-down-btn" title="Move down" ${sIdx === subItems.length - 1 ? "disabled" : ""}>&darr;</button>
+                <button type="button" class="admin-action-btn admin-action-btn--danger sub-del-btn">Delete</button>
+              </div>
+            </div>
+          `;
+
+          const sLabelInput = subEl.querySelector(".sub-label-input");
+          const sUrlInput = subEl.querySelector(".sub-url-input");
+          const sVisInput = subEl.querySelector(".sub-vis-input");
+          const sVisLabel = subEl.querySelector(".sub-vis-label");
+
+          subEl.querySelector(".sub-save-btn").addEventListener("click", () => {
+            expandedMenuParents.add(item.id);
+            handleSaveMenuItem(sub, sLabelInput.value, sUrlInput.value);
+          });
+
+          sVisInput.addEventListener("change", () => {
+            sVisLabel.textContent = sVisInput.checked ? "Visible" : "Hidden";
+            handleToggleMenuItemVisibility(sub, sVisInput.checked);
+          });
+
+          subEl.querySelector(".sub-up-btn").addEventListener("click", () => {
+            expandedMenuParents.add(item.id);
+            handleReorderMenuItem(sub, -1);
+          });
+          subEl.querySelector(".sub-down-btn").addEventListener("click", () => {
+            expandedMenuParents.add(item.id);
+            handleReorderMenuItem(sub, 1);
+          });
+          subEl.querySelector(".sub-del-btn").addEventListener("click", () => {
+            expandedMenuParents.add(item.id);
+            handleDeleteMenuItem(sub);
+          });
+
+          subContainer.appendChild(subEl);
+        });
+      }
+
+      menuItemsListEl.appendChild(card);
+    });
+  }
+
+  if (refreshMenuBtn) {
+    refreshMenuBtn.addEventListener("click", fetchMenuItems);
+  }
+
+  /* -------------------------------------------------------------------------
+   * 5. Reviews & Pending Reviews Management
    * ----------------------------------------------------------------------- */
   function setAdminStarRating(rating) {
     const num = Math.min(5, Math.max(1, parseInt(rating, 10) || 5));

@@ -32,7 +32,7 @@
       <img src="images/logo-mark.png" alt="SNS Official" class="admin-auth__logo" width="90" height="40">
       <span class="eyebrow">Management Portal</span>
       <h1 class="admin-auth__title">Admin Sign In</h1>
-      <p class="admin-auth__sub">Sign in with your administrator credentials to manage products and customer reviews.</p>
+      <p class="admin-auth__sub">Sign in with your administrator credentials to manage products, menu navigation, and customer reviews.</p>
 
       <div id="authAlert" class="admin-alert" role="alert" hidden></div>
 
@@ -83,6 +83,10 @@
           Products
           <span id="productsCountBadge" class="admin-tab__badge">0</span>
         </button>
+        <button type="button" class="admin-tab" role="tab" aria-selected="false" data-tab="menu">
+          Menu
+          <span id="menuCountBadge" class="admin-tab__badge">0</span>
+        </button>
         <button type="button" class="admin-tab" role="tab" aria-selected="false" data-tab="reviews">
           Reviews
           <span id="approvedCountBadge" class="admin-tab__badge">0</span>
@@ -123,8 +127,24 @@
                 </div>
 
                 <div class="field">
+                  <label for="prodSection">Section *</label>
+                  <select id="prodSection" required>
+                    <option value="women">Women</option>
+                    <option value="brides">Brides</option>
+                  </select>
+                </div>
+              </div>
+
+              <div class="admin-form-row">
+                <div class="field">
                   <label for="prodCategory">Category *</label>
                   <input type="text" id="prodCategory" required placeholder="e.g. Saree, Dupatta, Short, Maxi">
+                </div>
+
+                <div class="field">
+                  <label for="prodSubcategory">Subcategory <span class="opt">(Optional)</span></label>
+                  <input type="text" id="prodSubcategory" list="subcategorySuggestions" placeholder="e.g. Banarasi, Organza">
+                  <datalist id="subcategorySuggestions"></datalist>
                 </div>
               </div>
 
@@ -135,12 +155,16 @@
                 </div>
 
                 <div class="field admin-toggle-field">
-                  <label for="prodInStock">Availability</label>
-                  <label class="admin-switch">
-                    <input type="checkbox" id="prodInStock" checked>
-                    <span class="admin-switch__slider"></span>
-                    <span class="admin-switch__label" id="prodInStockLabel">In Stock</span>
-                  </label>
+                  <span class="field__label">Availability</span>
+                  <div class="admin-toggle-wrap">
+                    <label class="admin-switch" for="prodInStock">
+                      <input type="checkbox" id="prodInStock" class="admin-switch__input" checked>
+                      <span class="admin-switch__track" aria-hidden="true">
+                        <span class="admin-switch__knob"></span>
+                      </span>
+                      <span class="admin-switch__text" id="prodInStockLabel">In Stock</span>
+                    </label>
+                  </div>
                 </div>
               </div>
 
@@ -201,7 +225,74 @@
       </section>
 
       <!-- =====================================================================
-           TAB 2: APPROVED REVIEWS
+           TAB 2: MENU NAVIGATION (WOMEN & BRIDES)
+           ===================================================================== -->
+      <section id="tab-menu" class="admin-panel" role="tabpanel" hidden>
+        <div class="admin-card">
+          <div class="admin-card__head admin-card__head--wrap">
+            <div>
+              <h2>Storefront Side Menu</h2>
+              <p class="admin-hint">Menu labels link to the shop automatically. For a menu item or sub-option to show products, use the same name in the product's Category (top-level) or Subcategory (sub-option) field.</p>
+            </div>
+            <button type="button" id="refreshMenuBtn" class="admin-link-btn">Refresh</button>
+          </div>
+
+          <!-- Section Switcher (Women / Brides) & Add Top-Level Item Button -->
+          <div class="menu-toolbar">
+            <div class="menu-section-switch" role="tablist" aria-label="Menu Section">
+              <button type="button" class="menu-section-btn is-active" data-menu-section="women" role="tab" aria-selected="true">
+                Women
+              </button>
+              <button type="button" class="menu-section-btn" data-menu-section="brides" role="tab" aria-selected="false">
+                Brides
+              </button>
+            </div>
+
+            <button type="button" id="toggleAddMenuFormBtn" class="btn btn--primary admin-btn--sm">
+              + Add Menu Item
+            </button>
+          </div>
+
+          <!-- Add New Top-Level Menu Item Form -->
+          <form id="addTopMenuForm" class="menu-add-form" hidden novalidate>
+            <h3 class="menu-add-form__title">New Top-Level Item (<span id="addTopMenuSectionLabel">Women</span>)</h3>
+            <div class="menu-add-form__grid">
+              <div class="field">
+                <label for="newMenuLabel">Label *</label>
+                <input type="text" id="newMenuLabel" required placeholder="e.g. Saree, Formal Wear, Lehenga">
+              </div>
+              <div class="field">
+                <label for="newMenuUrl">Custom URL <span class="opt">(Optional override)</span></label>
+                <input type="text" id="newMenuUrl" placeholder="e.g. shop.html?sort=newest">
+              </div>
+              <div class="field admin-toggle-field">
+                <span class="field__label">Visibility</span>
+                <div class="admin-toggle-wrap">
+                  <label class="admin-switch" for="newMenuVisible">
+                    <input type="checkbox" id="newMenuVisible" class="admin-switch__input" checked>
+                    <span class="admin-switch__track" aria-hidden="true">
+                      <span class="admin-switch__knob"></span>
+                    </span>
+                    <span class="admin-switch__text" id="newMenuVisibleLabel">Visible</span>
+                  </label>
+                </div>
+              </div>
+            </div>
+            <div class="menu-add-form__actions">
+              <button type="submit" id="newMenuSubmitBtn" class="btn btn--primary admin-btn--sm">Create Menu Item</button>
+              <button type="button" id="cancelNewMenuBtn" class="btn btn--outline admin-btn--sm">Cancel</button>
+            </div>
+          </form>
+
+          <!-- Top-Level Menu Items & Expandable Sub-options -->
+          <div id="menuItemsList" class="menu-admin-list" aria-live="polite">
+            <div class="admin-loading">Loading menu items…</div>
+          </div>
+        </div>
+      </section>
+
+      <!-- =====================================================================
+           TAB 3: APPROVED REVIEWS
            ===================================================================== -->
       <section id="tab-reviews" class="admin-panel" role="tabpanel" hidden>
         <div class="admin-grid">
@@ -276,7 +367,7 @@
       </section>
 
       <!-- =====================================================================
-           TAB 3: PENDING REVIEWS (Customer Submissions)
+           TAB 4: PENDING REVIEWS (Customer Submissions)
            ===================================================================== -->
       <section id="tab-pending" class="admin-panel" role="tabpanel" hidden>
         <div class="admin-card">

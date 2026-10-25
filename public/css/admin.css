@@ -225,20 +225,65 @@
   border-bottom: 1px solid rgba(245, 239, 224, 0.07);
 }
 
+.admin-card__head--wrap {
+  align-items: flex-start;
+  flex-wrap: wrap;
+}
+
 .admin-card__head h2 {
   font-size: 1.35rem;
 }
 
-.admin-card__sub {
+.admin-card__sub,
+.admin-hint {
   font-size: 0.82rem;
   color: var(--muted);
-  margin-top: 0.2rem;
+  margin-top: 0.35rem;
+  max-width: 720px;
+  line-height: 1.55;
 }
 
 .admin-form-row {
   display: grid;
   grid-template-columns: 1fr;
   gap: 1rem;
+}
+
+/* Select dropdown matching .field input */
+.field select {
+  width: 100%;
+  padding: 0.85rem 2.25rem 0.85rem 1rem;
+  border-radius: var(--radius-sm);
+  border: 1px solid rgba(245, 239, 224, 0.1);
+  background-color: var(--bg-alt);
+  background-image: linear-gradient(45deg, transparent 50%, var(--gold) 50%),
+                    linear-gradient(135deg, var(--gold) 50%, transparent 50%);
+  background-position: calc(100% - 18px) 52%, calc(100% - 12px) 52%;
+  background-size: 6px 6px, 6px 6px;
+  background-repeat: no-repeat;
+  color: var(--text);
+  font-weight: 300;
+  outline: none;
+  appearance: none;
+  -webkit-appearance: none;
+  transition: border-color 0.35s;
+}
+.field select:focus {
+  border-color: var(--gold);
+}
+.field select option {
+  background: var(--panel);
+  color: var(--text);
+}
+
+.field__label {
+  display: block;
+  font-size: 0.7rem;
+  font-weight: 400;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin-bottom: 0.45rem;
 }
 
 .admin-label-row {
@@ -260,62 +305,104 @@
 .admin-link-btn--danger { color: #D99B88; }
 .admin-link-btn--danger:hover { color: #F0B8A8; }
 
-/* In-Stock Switch */
+/* -------------------------------------------------------------------------
+   Rebuilt Toggle Switch (Part 1 & Part 4)
+   Track: 46x26px rounded, gold outline when OFF, solid gold fill when ON.
+   Knob: 18x18px round warm ivory (#F5EFE0) strictly INSIDE the track.
+   Label: To the right with comfortable spacing, vertically aligned with inputs.
+   ------------------------------------------------------------------------- */
 .admin-toggle-field {
   display: flex;
   flex-direction: column;
-  justify-content: center;
 }
 
-.admin-switch {
-  display: inline-flex;
+.admin-toggle-wrap {
+  min-height: 46px;
+  display: flex;
+  align-items: center;
+}
+
+.admin-switch,
+.field label.admin-switch {
+  position: relative;
+  display: inline-flex !important;
   align-items: center;
   gap: 0.75rem;
+  margin: 0 !important;
+  padding: 0.25rem 0;
+  min-height: 36px;
   cursor: pointer;
-  margin-top: 0.35rem;
   user-select: none;
+  font-size: 0.88rem !important;
+  font-weight: 400 !important;
+  letter-spacing: 0.02em !important;
+  text-transform: none !important;
+  color: var(--text) !important;
 }
 
-.admin-switch input {
-  position: absolute;
-  opacity: 0;
-  width: 0;
-  height: 0;
+.admin-switch__input,
+.field input.admin-switch__input {
+  position: absolute !important;
+  width: 1px !important;
+  height: 1px !important;
+  padding: 0 !important;
+  margin: -1px !important;
+  overflow: hidden !important;
+  clip: rect(0, 0, 0, 0) !important;
+  white-space: nowrap !important;
+  border: 0 !important;
+  opacity: 0 !important;
+  pointer-events: none;
 }
 
-.admin-switch__slider {
+.admin-switch__track {
   position: relative;
+  display: inline-block;
+  flex-shrink: 0;
   width: 46px;
   height: 26px;
-  background: rgba(245, 239, 224, 0.14);
   border-radius: 999px;
-  transition: background-color 0.3s;
+  background-color: var(--bg-alt);
+  border: 1.5px solid var(--gold);
+  box-sizing: border-box;
+  transition: background-color 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease;
 }
 
-.admin-switch__slider::after {
-  content: "";
+.admin-switch__knob {
   position: absolute;
-  top: 3px;
+  top: 50%;
   left: 3px;
-  width: 20px;
-  height: 20px;
+  width: 18px;
+  height: 18px;
   border-radius: 50%;
-  background: var(--text);
-  transition: transform 0.3s;
+  background-color: var(--text); /* warm ivory #F5EFE0 */
+  transform: translate(0, -50%);
+  transition: transform 0.3s cubic-bezier(0.22, 0.61, 0.36, 1), background-color 0.3s ease;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.45);
 }
 
-.admin-switch input:checked + .admin-switch__slider {
-  background: var(--gold);
+.admin-switch__input:checked + .admin-switch__track {
+  background-color: var(--gold);
+  border-color: var(--gold);
 }
 
-.admin-switch input:checked + .admin-switch__slider::after {
-  transform: translateX(20px);
-  background: var(--bg);
+.admin-switch__input:checked + .admin-switch__track .admin-switch__knob {
+  transform: translate(19px, -50%);
+  background-color: var(--text); /* round ivory knob inside the track */
 }
 
-.admin-switch__label {
-  font-size: 0.85rem;
+.admin-switch__input:focus-visible + .admin-switch__track {
+  outline: 1px solid var(--champagne);
+  outline-offset: 3px;
+}
+
+.admin-switch__text {
+  font-family: var(--font-sans);
+  font-size: 0.88rem;
+  font-weight: 400;
+  line-height: 1.2;
   color: var(--text);
+  white-space: nowrap;
 }
 
 /* Tag-style Sizes Input */
@@ -671,9 +758,14 @@
   transition: border-color 0.25s, color 0.25s, background-color 0.25s;
 }
 
-.admin-action-btn:hover {
+.admin-action-btn:hover:not(:disabled) {
   border-color: var(--gold);
   color: var(--gold);
+}
+
+.admin-action-btn:disabled {
+  opacity: 0.3;
+  cursor: default;
 }
 
 .admin-action-btn--approve {
@@ -681,7 +773,7 @@
   background: var(--gold-08);
   color: var(--gold);
 }
-.admin-action-btn--approve:hover {
+.admin-action-btn--approve:hover:not(:disabled) {
   background: var(--gold);
   color: var(--bg);
 }
@@ -690,7 +782,7 @@
   border-color: rgba(201, 130, 107, 0.35);
   color: #D99B88;
 }
-.admin-action-btn--danger:hover {
+.admin-action-btn--danger:hover:not(:disabled) {
   border-color: #E39A84;
   background: rgba(201, 130, 107, 0.12);
   color: #F5B9A7;
@@ -758,7 +850,171 @@
   color: var(--muted);
 }
 
-/* 07. Responsive Breakpoints ---------------------------------------------- */
+/* 07. Menu Management Tab (Part 4) ---------------------------------------- */
+.menu-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+  margin-bottom: 1.35rem;
+}
+
+.menu-section-switch {
+  display: inline-flex;
+  padding: 0.25rem;
+  border-radius: 999px;
+  background: var(--bg-alt);
+  border: 1px solid rgba(212, 175, 55, 0.25);
+}
+
+.menu-section-btn {
+  padding: 0.5rem 1.4rem;
+  border-radius: 999px;
+  font-size: 0.74rem;
+  font-weight: 500;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--muted);
+  transition: color 0.3s, background-color 0.3s;
+}
+
+.menu-section-btn:hover {
+  color: var(--text);
+}
+
+.menu-section-btn.is-active {
+  background: var(--gold);
+  color: var(--bg);
+}
+
+.menu-add-form {
+  padding: 1.25rem;
+  margin-bottom: 1.35rem;
+  border-radius: var(--radius-sm);
+  background: var(--bg-alt);
+  border: 1px solid var(--gold-35);
+}
+
+.menu-add-form__title {
+  font-size: 1.05rem;
+  margin-bottom: 1rem;
+  color: var(--gold);
+}
+
+.menu-add-form__grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1rem;
+}
+
+.menu-add-form__actions {
+  display: flex;
+  gap: 0.65rem;
+  margin-top: 0.5rem;
+}
+
+.menu-admin-list {
+  display: grid;
+  gap: 1rem;
+}
+
+.menu-node {
+  border-radius: var(--radius-sm);
+  background: var(--bg-alt);
+  border: 1px solid rgba(245, 239, 224, 0.08);
+  padding: 1.1rem;
+}
+
+.menu-node__main {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 0.85rem;
+  align-items: center;
+}
+
+.menu-node__inputs {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 0.65rem;
+}
+
+.menu-inline-input {
+  width: 100%;
+  padding: 0.65rem 0.85rem;
+  border-radius: var(--radius-sm);
+  border: 1px solid rgba(245, 239, 224, 0.12);
+  background: var(--panel);
+  color: var(--text);
+  font-size: 0.86rem;
+  outline: none;
+  transition: border-color 0.3s;
+}
+.menu-inline-input:focus {
+  border-color: var(--gold);
+}
+.menu-inline-input::placeholder {
+  color: rgba(168, 159, 141, 0.55);
+}
+
+.menu-node__controls {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.menu-node__btns {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  flex-wrap: wrap;
+}
+
+.menu-node__sub-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+  margin-top: 0.9rem;
+  padding-top: 0.75rem;
+  border-top: 1px solid rgba(245, 239, 224, 0.06);
+}
+
+.menu-sub-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  font-size: 0.74rem;
+  font-weight: 500;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: var(--gold);
+}
+.menu-sub-toggle:hover {
+  color: var(--champagne);
+}
+
+.menu-subitems {
+  margin-top: 0.85rem;
+  padding-left: 0.85rem;
+  border-left: 2px solid rgba(212, 175, 55, 0.25);
+  display: grid;
+  gap: 0.75rem;
+}
+
+.menu-subnode {
+  padding: 0.85rem;
+  border-radius: var(--radius-sm);
+  background: var(--panel);
+  border: 1px solid rgba(245, 239, 224, 0.06);
+  display: grid;
+  gap: 0.7rem;
+}
+
+/* 08. Responsive Breakpoints ---------------------------------------------- */
 @media (min-width: 640px) {
   .admin-card {
     padding: 1.75rem 1.6rem;
@@ -774,14 +1030,23 @@
     border-top: 0;
     padding-top: 0;
   }
+  .menu-node__inputs {
+    grid-template-columns: 1fr 1.2fr;
+  }
+  .menu-add-form__grid {
+    grid-template-columns: 1fr 1fr auto;
+  }
 }
 
 @media (min-width: 992px) {
   .admin-grid {
-    grid-template-columns: 420px 1fr;
+    grid-template-columns: 440px 1fr;
     gap: 2rem;
   }
   .admin-list--wide {
     grid-template-columns: repeat(2, 1fr);
+  }
+  .menu-node__main {
+    grid-template-columns: 1.3fr auto;
   }
 }

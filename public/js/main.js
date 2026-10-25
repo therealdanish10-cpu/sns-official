@@ -49,13 +49,37 @@
   }
 
   /* -------------------------------------------------------------------------
-   * 2. Navigation & Mobile Menu
+   * 2. Navigation & Slide-in Luxury Side Menu Drawer
    * ----------------------------------------------------------------------- */
   const navbar = document.querySelector(".nav");
   const heroSection = document.querySelector(".hero");
-  const navToggle = document.querySelector(".nav__toggle");
   const navLogo = document.querySelector(".nav__logo");
-  const mobileMenu = document.querySelector(".mobile-menu");
+
+  const sideMenuOpenBtn = document.getElementById("sideMenuOpenBtn");
+  const sideMenuDrawer = document.getElementById("sideMenuDrawer");
+  const sideMenuCloseBtn = document.getElementById("sideMenuCloseBtn");
+  const sideMenuBackdrop = document.getElementById("sideMenuBackdrop");
+  const sideMenuList = document.getElementById("sideMenuList");
+  const sideMenuTabs = document.querySelectorAll("[data-drawer-tab]");
+
+  // Built-in default menu structure (used as fallback if Supabase fails or is empty)
+  const DEFAULT_MENU_TREE = {
+    women: [
+      { id: "def-new", section: "women", label: "New Arrivals", custom_url: "shop.html?sort=newest", sort_order: 10, children: [] },
+      { id: "def-saree", section: "women", label: "Saree", custom_url: null, sort_order: 20, children: [] },
+      { id: "def-dupatta", section: "women", label: "Dupatta", custom_url: null, sort_order: 30, children: [] },
+      { id: "def-short", section: "women", label: "Short", custom_url: null, sort_order: 40, children: [] },
+      { id: "def-maxi", section: "women", label: "Maxi", custom_url: null, sort_order: 50, children: [] }
+    ],
+    brides: []
+  };
+
+  window.MENU_TREE = {
+    women: DEFAULT_MENU_TREE.women.slice(),
+    brides: DEFAULT_MENU_TREE.brides.slice()
+  };
+
+  let activeDrawerTab = "women";
 
   // Logo reload requirement: "Clicking the logo fully reloads the page."
   if (navLogo) {
@@ -77,7 +101,7 @@
   // - Slides up (-100%) on scroll down, slides back in on scroll up
   // - Uses dark blurred background (.is-scrolled) once past hero (or >= 80px on shop page)
   // - Auto-hides after 1.5s of scroll inactivity when visible away from top
-  // - Never hides while mobile menu, cart drawer, or checkout modal is open
+  // - Never hides while side menu drawer, cart drawer, or checkout modal is open
   const TOP_THRESHOLD = 80;
   const SCROLL_DELTA = 5;
   const IDLE_HIDE_DELAY = 1500;
@@ -91,6 +115,7 @@
     const checkoutEl = document.getElementById("checkoutModal");
     return (
       document.body.classList.contains("menu-open") ||
+      (sideMenuDrawer && sideMenuDrawer.classList.contains("is-open")) ||
       (cartEl && cartEl.classList.contains("is-open")) ||
       (checkoutEl && checkoutEl.classList.contains("is-open"))
     );
@@ -132,7 +157,7 @@
       navbar.classList.remove("is-scrolled");
     }
 
-    // Never hide while mobile menu, cart drawer, or checkout form is open
+    // Never hide while side menu drawer, cart drawer, or checkout form is open
     if (isNavLockedOpen()) {
       navbar.classList.remove("is-hidden");
       clearNavIdleTimer();
@@ -175,7 +200,7 @@
   }, { passive: true });
   updateNavbarOnScroll();
 
-  // Keep navbar visible whenever mobile menu, cart drawer, or checkout modal is open
+  // Keep navbar visible whenever side menu drawer, cart drawer, or checkout modal is open
   if ("MutationObserver" in window && navbar) {
     const overlayObserver = new MutationObserver(function () {
       if (isNavLockedOpen()) {
@@ -188,32 +213,240 @@
     overlayObserver.observe(document.body, { attributes: true, attributeFilter: ["class"] });
     const cartEl = document.getElementById("cartDrawer");
     const checkoutEl = document.getElementById("checkoutModal");
+    if (sideMenuDrawer) overlayObserver.observe(sideMenuDrawer, { attributes: true, attributeFilter: ["class"] });
     if (cartEl) overlayObserver.observe(cartEl, { attributes: true, attributeFilter: ["class"] });
     if (checkoutEl) overlayObserver.observe(checkoutEl, { attributes: true, attributeFilter: ["class"] });
   }
 
-  // Mobile menu toggle
-  if (navToggle) {
-    navToggle.addEventListener("click", function () {
-      const isOpen = document.body.classList.toggle("menu-open");
-      navToggle.setAttribute("aria-expanded", isOpen ? "true" : "false");
-      if (isOpen) {
-        document.body.classList.add("is-locked");
+  // Side Menu Drawer Open / Close & Focus Management
+  function openSideMenu() {
+    if (!sideMenuDrawer) return;
+    sideMenuDrawer.classList.add("is-open");
+    sideMenuDrawer.setAttribute("aria-hidden", "false");
+    if (sideMenuBackdrop) {
+      sideMenuBackdrop.classList.add("is-visible");
+      sideMenuBackdrop.setAttribute("aria-hidden", "false");
+    }
+    if (sideMenuOpenBtn) {
+      sideMenuOpenBtn.setAttribute("aria-expanded", "true");
+    }
+    document.body.classList.add("menu-open", "is-locked");
+    if (navbar) {
+      navbar.classList.remove("is-hidden");
+      clearNavIdleTimer();
+    }
+    setTimeout(function () {
+      if (sideMenuDrawer) sideMenuDrawer.focus();
+    }, 30);
+  }
+
+  function closeSideMenu(returnFocus) {
+    if (!sideMenuDrawer || !sideMenuDrawer.classList.contains("is-open")) return;
+    sideMenuDrawer.classList.remove("is-open");
+    sideMenuDrawer.setAttribute("aria-hidden", "true");
+    if (sideMenuBackdrop) {
+      sideMenuBackdrop.classList.remove("is-visible");
+      sideMenuBackdrop.setAttribute("aria-hidden", "true");
+    }
+    if (sideMenuOpenBtn) {
+      sideMenuOpenBtn.setAttribute("aria-expanded", "false");
+    }
+    document.body.classList.remove("menu-open", "is-locked");
+    if (returnFocus !== false && sideMenuOpenBtn) {
+      sideMenuOpenBtn.focus();
+    }
+  }
+
+  if (sideMenuOpenBtn) {
+    sideMenuOpenBtn.addEventListener("click", function () {
+      if (sideMenuDrawer && sideMenuDrawer.classList.contains("is-open")) {
+        closeSideMenu(true);
       } else {
-        document.body.classList.remove("is-locked");
+        openSideMenu();
       }
     });
   }
 
-  // Close mobile menu on internal navigation links
-  if (mobileMenu) {
-    mobileMenu.querySelectorAll("a").forEach(link => {
-      link.addEventListener("click", () => {
-        document.body.classList.remove("menu-open", "is-locked");
-        if (navToggle) navToggle.setAttribute("aria-expanded", "false");
-      });
+  if (sideMenuCloseBtn) {
+    sideMenuCloseBtn.addEventListener("click", function () {
+      closeSideMenu(true);
     });
   }
+
+  if (sideMenuBackdrop) {
+    sideMenuBackdrop.addEventListener("click", function () {
+      closeSideMenu(true);
+    });
+  }
+
+  // Close drawer on Escape key
+  window.addEventListener("keydown", function (e) {
+    if (e.key === "Escape" && sideMenuDrawer && sideMenuDrawer.classList.contains("is-open")) {
+      e.preventDefault();
+      closeSideMenu(true);
+    }
+  });
+
+  // Automatically close drawer when any link inside it is clicked
+  if (sideMenuDrawer) {
+    sideMenuDrawer.addEventListener("click", function (e) {
+      const link = e.target.closest("a");
+      if (link) {
+        closeSideMenu(false);
+      }
+    });
+  }
+
+  function buildMenuItemUrl(section, itemLabel, customUrl, subLabel) {
+    const custom = String(customUrl || "").trim();
+    if (custom) return custom;
+    const sec = encodeURIComponent(String(section || "women").toLowerCase());
+    const cat = encodeURIComponent(String(itemLabel || "").trim());
+    if (subLabel) {
+      return `shop.html?section=${sec}&category=${cat}&sub=${encodeURIComponent(String(subLabel).trim())}`;
+    }
+    return `shop.html?section=${sec}&category=${cat}`;
+  }
+
+  function renderSideMenuList(section, withFade) {
+    if (!sideMenuList) return;
+    const secKey = section === "brides" ? "brides" : "women";
+    const items = (window.MENU_TREE && Array.isArray(window.MENU_TREE[secKey]))
+      ? window.MENU_TREE[secKey]
+      : [];
+
+    const doRender = function () {
+      sideMenuList.innerHTML = "";
+
+      if (items.length === 0) {
+        const emptyLi = document.createElement("li");
+        emptyLi.className = "side-menu__empty";
+        emptyLi.textContent = "Coming soon";
+        sideMenuList.appendChild(emptyLi);
+        return;
+      }
+
+      items.forEach(function (item) {
+        const li = document.createElement("li");
+        li.className = "side-menu__item";
+
+        const children = Array.isArray(item.children) ? item.children : [];
+        const itemUrl = buildMenuItemUrl(secKey, item.label, item.custom_url, null);
+
+        if (children.length === 0) {
+          // Item WITHOUT sub-options: link straight to shop
+          const row = document.createElement("div");
+          row.className = "side-menu__row";
+
+          const a = document.createElement("a");
+          a.className = "side-menu__link";
+          a.href = itemUrl;
+          a.textContent = item.label;
+
+          row.appendChild(a);
+          li.appendChild(row);
+        } else {
+          // Item WITH sub-options: accordion trigger + "+" icon
+          const row = document.createElement("div");
+          row.className = "side-menu__row";
+
+          const btn = document.createElement("button");
+          btn.type = "button";
+          btn.className = "side-menu__trigger";
+          btn.setAttribute("aria-expanded", "false");
+          btn.innerHTML = `
+            <span>${escapeHTML(item.label)}</span>
+            <span class="side-menu__plus" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round">
+                <line x1="12" y1="5" x2="12" y2="19"></line>
+                <line x1="5" y1="12" x2="19" y2="12"></line>
+              </svg>
+            </span>
+          `;
+
+          const subWrap = document.createElement("div");
+          subWrap.className = "side-menu__sub-wrap";
+          const subInner = document.createElement("div");
+          subInner.className = "side-menu__sub-inner";
+          const subUl = document.createElement("ul");
+          subUl.className = "side-menu__sub-list";
+
+          // First sub-option is always "View All [Item name]"
+          const viewAllLi = document.createElement("li");
+          const viewAllA = document.createElement("a");
+          viewAllA.className = "side-menu__sub-link side-menu__sub-link--all";
+          viewAllA.href = itemUrl;
+          viewAllA.textContent = `View All ${item.label}`;
+          viewAllLi.appendChild(viewAllA);
+          subUl.appendChild(viewAllLi);
+
+          children.forEach(function (sub) {
+            const subLi = document.createElement("li");
+            const subA = document.createElement("a");
+            subA.className = "side-menu__sub-link";
+            subA.href = buildMenuItemUrl(secKey, item.label, sub.custom_url, sub.label);
+            subA.textContent = sub.label;
+            subLi.appendChild(subA);
+            subUl.appendChild(subLi);
+          });
+
+          subInner.appendChild(subUl);
+          subWrap.appendChild(subInner);
+
+          btn.addEventListener("click", function () {
+            const isExpanded = li.classList.contains("is-expanded");
+            // Collapse any other expanded item in the drawer
+            sideMenuList.querySelectorAll(".side-menu__item.is-expanded").forEach(function (other) {
+              if (other !== li) {
+                other.classList.remove("is-expanded");
+                const otherBtn = other.querySelector(".side-menu__trigger");
+                if (otherBtn) otherBtn.setAttribute("aria-expanded", "false");
+              }
+            });
+            li.classList.toggle("is-expanded", !isExpanded);
+            btn.setAttribute("aria-expanded", !isExpanded ? "true" : "false");
+          });
+
+          row.appendChild(btn);
+          li.appendChild(row);
+          li.appendChild(subWrap);
+        }
+
+        sideMenuList.appendChild(li);
+      });
+    };
+
+    const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    if (withFade && !reducedMotion) {
+      sideMenuList.classList.add("is-fading");
+      setTimeout(function () {
+        doRender();
+        requestAnimationFrame(function () {
+          sideMenuList.classList.remove("is-fading");
+        });
+      }, 180);
+    } else {
+      doRender();
+      sideMenuList.classList.remove("is-fading");
+    }
+  }
+
+  // Drawer WOMEN / BRIDES Tab Switching
+  sideMenuTabs.forEach(function (tabBtn) {
+    tabBtn.addEventListener("click", function () {
+      const targetTab = (tabBtn.getAttribute("data-drawer-tab") || "women").toLowerCase();
+      if (targetTab === activeDrawerTab) return;
+      activeDrawerTab = targetTab;
+
+      sideMenuTabs.forEach(function (btn) {
+        const isCurrent = btn.getAttribute("data-drawer-tab") === activeDrawerTab;
+        btn.classList.toggle("is-active", isCurrent);
+        btn.setAttribute("aria-selected", isCurrent ? "true" : "false");
+      });
+
+      renderSideMenuList(activeDrawerTab, true);
+    });
+  });
 
   /* -------------------------------------------------------------------------
    * 3. Scroll Reveal Animations (IntersectionObserver)
@@ -904,7 +1137,10 @@ _Thank you! I would like to proceed with payment and order confirmation via What
   }
 
   function normalizeDbProduct(row) {
+    const rawSection = String(row.section || "women").trim().toLowerCase();
+    const section = rawSection === "brides" ? "brides" : "women";
     const rawCat = String(row.category || "Collection").trim() || "Collection";
+    const rawSub = row.subcategory ? String(row.subcategory).trim() : null;
     const cleanImages = Array.isArray(row.images) ? row.images.filter(Boolean) : [];
     const cleanSizes = Array.isArray(row.sizes)
       ? row.sizes.map(s => String(s).trim()).filter(Boolean)
@@ -913,8 +1149,10 @@ _Thank you! I would like to proceed with payment and order confirmation via What
     return {
       id: String(row.id),
       name: row.name || "Untitled Piece",
+      section: section,
       category: rawCat.toLowerCase(),
       categoryLabel: rawCat,
+      subcategory: rawSub || null,
       price: Number(row.price) || 0,
       originalPrice: null,
       badge: row.badge ? String(row.badge).trim() : null,
@@ -924,6 +1162,92 @@ _Thank you! I would like to proceed with payment and order confirmation via What
       images: cleanImages.length > 0 ? cleanImages : [null],
       date: row.created_at || new Date().toISOString()
     };
+  }
+
+  // Load visible menu items from Supabase; fall back to built-in default menu if Supabase fails or returns nothing
+  async function loadMenuFromSupabase() {
+    const sb = window.supabaseClient;
+    if (!sb) {
+      window.MENU_TREE = {
+        women: DEFAULT_MENU_TREE.women.slice(),
+        brides: DEFAULT_MENU_TREE.brides.slice()
+      };
+      renderSideMenuList(activeDrawerTab, false);
+      return;
+    }
+
+    try {
+      const { data, error } = await sb
+        .from("menu_items")
+        .select("*")
+        .eq("is_visible", true)
+        .order("sort_order", { ascending: true })
+        .order("created_at", { ascending: true });
+
+      if (error || !Array.isArray(data) || data.length === 0) {
+        throw error || new Error("Empty or invalid menu_items response");
+      }
+
+      const tree = { women: [], brides: [] };
+      const topById = new Map();
+
+      // First pass: top-level items (parent_id is null)
+      data.forEach(function (row) {
+        if (!row.parent_id) {
+          const sec = String(row.section || "women").toLowerCase() === "brides" ? "brides" : "women";
+          const item = {
+            id: String(row.id),
+            section: sec,
+            label: String(row.label || "").trim(),
+            custom_url: row.custom_url ? String(row.custom_url).trim() : null,
+            sort_order: Number(row.sort_order) || 0,
+            children: []
+          };
+          if (item.label) {
+            tree[sec].push(item);
+            topById.set(item.id, item);
+          }
+        }
+      });
+
+      // Second pass: sub-options (parent_id references a visible top-level item)
+      data.forEach(function (row) {
+        if (row.parent_id) {
+          const parent = topById.get(String(row.parent_id));
+          if (parent) {
+            const subLabel = String(row.label || "").trim();
+            if (subLabel) {
+              parent.children.push({
+                id: String(row.id),
+                parent_id: String(row.parent_id),
+                section: parent.section,
+                label: subLabel,
+                custom_url: row.custom_url ? String(row.custom_url).trim() : null,
+                sort_order: Number(row.sort_order) || 0
+              });
+            }
+          }
+        }
+      });
+
+      // If both tabs somehow have 0 visible top-level items, fall back to built-in default
+      if (tree.women.length === 0 && tree.brides.length === 0) {
+        window.MENU_TREE = {
+          women: DEFAULT_MENU_TREE.women.slice(),
+          brides: DEFAULT_MENU_TREE.brides.slice()
+        };
+      } else {
+        window.MENU_TREE = tree;
+      }
+    } catch (err) {
+      console.warn("Could not load menu_items from Supabase; using built-in default menu:", err);
+      window.MENU_TREE = {
+        women: DEFAULT_MENU_TREE.women.slice(),
+        brides: DEFAULT_MENU_TREE.brides.slice()
+      };
+    }
+
+    renderSideMenuList(activeDrawerTab, false);
   }
 
   // Load products from Supabase; fall back to /public/js/products.js if Supabase fails
@@ -1080,6 +1404,14 @@ _Thank you! I would like to proceed with payment and order confirmation via What
     return false;
   }
 
+  function matchesSubcategory(itemSub, activeSub) {
+    if (!activeSub || activeSub === "all") return true;
+    const subA = String(itemSub || "").trim().toLowerCase();
+    const subB = String(activeSub || "").trim().toLowerCase();
+    if (!subA) return false;
+    return subA === subB;
+  }
+
   // --- SHOP PAGE INITIALIZER ---
   function initShopPage() {
     const shopGrid = document.getElementById("shopGrid");
@@ -1089,7 +1421,9 @@ _Thank you! I would like to proceed with payment and order confirmation via What
     const filterToggleBtn = document.querySelector(".filter-toggle");
     const filterCloseBtn = document.querySelector(".filters__close");
     const filterBackdrop = document.querySelector(".filters-backdrop");
+    const sectionFilterBtns = document.querySelectorAll("[data-filter-section]");
     const categoryContainer = document.querySelector('.filter-options[aria-label="Filter by Category"]');
+    const subcategoryChipsWrap = document.getElementById("subcategoryChipsWrap");
     const sortSelectBtns = document.querySelectorAll("[data-sort-opt]");
     const shopCountEl = document.querySelector(".shop__count");
 
@@ -1122,53 +1456,168 @@ _Thank you! I would like to proceed with payment and order confirmation via What
       filterBackdrop.addEventListener("click", closeFilters);
     }
 
-    // Build dynamic category list from database products
-    const categoryMap = new Map(); // lowercase key -> display label
-    window.PRODUCTS.forEach(item => {
-      const key = String(item.category || "").trim().toLowerCase();
-      const label = String(item.categoryLabel || item.category || "").trim();
-      if (key && !categoryMap.has(key)) {
-        categoryMap.set(key, label);
-      }
-    });
-
-    // Initial state from URL param
+    // Read URL parameters: section, category, sub, sort
     const urlParams = new URLSearchParams(window.location.search);
-    let rawParamCat = (urlParams.get("category") || "all").trim().toLowerCase();
-    let activeCategory = "all";
+    const rawSectionParam = (urlParams.get("section") || "all").trim().toLowerCase();
+    let activeSection = (rawSectionParam === "women" || rawSectionParam === "brides") ? rawSectionParam : "all";
 
-    if (rawParamCat !== "all") {
-      if (categoryMap.has(rawParamCat)) {
-        activeCategory = rawParamCat;
-      } else {
-        // Check if URL slug matches a free-text category (e.g. "short" -> "short kurti")
+    let rawParamCat = (urlParams.get("category") || "all").trim();
+    let activeCategory = rawParamCat ? rawParamCat.toLowerCase() : "all";
+
+    let rawParamSub = (urlParams.get("sub") || "all").trim();
+    let activeSub = rawParamSub ? rawParamSub.toLowerCase() : "all";
+
+    let rawParamSort = (urlParams.get("sort") || "featured").trim().toLowerCase();
+    if (rawParamSort === "alpha") rawParamSort = "az";
+    const validSorts = ["featured", "newest", "price-asc", "price-desc", "az"];
+    let activeSort = validSorts.includes(rawParamSort) ? rawParamSort : "featured";
+
+    // Build dynamic category map from products and menu_items
+    function buildCategoryMap() {
+      const categoryMap = new Map(); // lowercase key -> display label
+
+      window.PRODUCTS.forEach(function (item) {
+        if (activeSection !== "all" && String(item.section || "women").toLowerCase() !== activeSection) {
+          return;
+        }
+        const key = String(item.category || "").trim().toLowerCase();
+        const label = String(item.categoryLabel || item.category || "").trim();
+        if (key && !categoryMap.has(key)) {
+          categoryMap.set(key, label);
+        }
+      });
+
+      // Also include categories defined in the menu (excluding custom-URL links like "New Arrivals")
+      if (window.MENU_TREE) {
+        const sectionsToScan = activeSection === "all" ? ["women", "brides"] : [activeSection];
+        sectionsToScan.forEach(function (sec) {
+          const menuItems = window.MENU_TREE[sec] || [];
+          menuItems.forEach(function (mItem) {
+            if (mItem.custom_url && !mItem.children?.length) return;
+            const key = String(mItem.label || "").trim().toLowerCase();
+            const label = String(mItem.label || "").trim();
+            if (key && !categoryMap.has(key)) {
+              categoryMap.set(key, label);
+            }
+          });
+        });
+      }
+
+      // Reconcile activeCategory with categoryMap keys
+      if (activeCategory !== "all" && !categoryMap.has(activeCategory)) {
         let matchedKey = null;
-        categoryMap.forEach((_label, key) => {
-          if (!matchedKey && matchesCategory(key, rawParamCat)) {
+        categoryMap.forEach(function (_label, key) {
+          if (!matchedKey && matchesCategory(key, activeCategory)) {
             matchedKey = key;
           }
         });
         if (matchedKey) {
           activeCategory = matchedKey;
         } else {
-          // Preserve requested category in filter list even if 0 products currently exist in it
-          activeCategory = rawParamCat;
-          const fallbackLabel = rawParamCat.charAt(0).toUpperCase() + rawParamCat.slice(1);
-          categoryMap.set(rawParamCat, fallbackLabel);
+          const fallbackLabel = rawParamCat && rawParamCat.toLowerCase() === activeCategory
+            ? rawParamCat.charAt(0).toUpperCase() + rawParamCat.slice(1)
+            : activeCategory.charAt(0).toUpperCase() + activeCategory.slice(1);
+          categoryMap.set(activeCategory, fallbackLabel);
         }
       }
+
+      return categoryMap;
     }
 
-    let activeSort = "featured";
+    // Collect subcategories for the currently selected category
+    function getSubcategoriesForActiveCategory() {
+      const subMap = new Map(); // lowercase -> display label
+      if (activeCategory === "all") return subMap;
 
-    // Render dynamic category filter buttons
-    if (categoryContainer) {
+      // 1. From products in this category
+      window.PRODUCTS.forEach(function (item) {
+        if (activeSection !== "all" && String(item.section || "women").toLowerCase() !== activeSection) return;
+        if (!matchesCategory(item.category, activeCategory)) return;
+        if (item.subcategory) {
+          const subLabel = String(item.subcategory).trim();
+          const subKey = subLabel.toLowerCase();
+          if (subKey && !subMap.has(subKey)) {
+            subMap.set(subKey, subLabel);
+          }
+        }
+      });
+
+      // 2. From menu_items sub-options under matching top-level item
+      if (window.MENU_TREE) {
+        const sectionsToScan = activeSection === "all" ? ["women", "brides"] : [activeSection];
+        sectionsToScan.forEach(function (sec) {
+          const menuItems = window.MENU_TREE[sec] || [];
+          menuItems.forEach(function (mItem) {
+            if (matchesCategory(mItem.label, activeCategory) && Array.isArray(mItem.children)) {
+              mItem.children.forEach(function (child) {
+                const subLabel = String(child.label || "").trim();
+                const subKey = subLabel.toLowerCase();
+                if (subKey && !subMap.has(subKey)) {
+                  subMap.set(subKey, subLabel);
+                }
+              });
+            }
+          });
+        });
+      }
+
+      // If URL specified a sub that isn't in subMap yet, preserve it
+      if (activeSub !== "all" && !subMap.has(activeSub)) {
+        const fallbackSubLabel = rawParamSub && rawParamSub.toLowerCase() === activeSub
+          ? rawParamSub
+          : activeSub.charAt(0).toUpperCase() + activeSub.slice(1);
+        subMap.set(activeSub, fallbackSubLabel);
+      }
+
+      return subMap;
+    }
+
+    function syncShopUrlParams() {
+      const url = new URL(window.location);
+      if (activeSection === "all") {
+        url.searchParams.delete("section");
+      } else {
+        url.searchParams.set("section", activeSection);
+      }
+
+      if (activeCategory === "all") {
+        url.searchParams.delete("category");
+      } else {
+        url.searchParams.set("category", activeCategory);
+      }
+
+      if (activeSub === "all" || activeCategory === "all") {
+        url.searchParams.delete("sub");
+      } else {
+        url.searchParams.set("sub", activeSub);
+      }
+
+      if (activeSort === "featured") {
+        url.searchParams.delete("sort");
+      } else {
+        url.searchParams.set("sort", activeSort);
+      }
+
+      window.history.replaceState({}, "", url);
+    }
+
+    function updateSectionUI() {
+      sectionFilterBtns.forEach(function (btn) {
+        const sec = (btn.getAttribute("data-filter-section") || "all").toLowerCase();
+        btn.setAttribute("aria-pressed", sec === activeSection ? "true" : "false");
+      });
+    }
+
+    function renderCategoryButtons() {
+      if (!categoryContainer) return;
+      const categoryMap = buildCategoryMap();
+
       let buttonsHTML = `
         <button type="button" class="filter-option" data-filter-cat="all" aria-pressed="${activeCategory === 'all' ? 'true' : 'false'}">
           <span>All Pieces</span>
         </button>
       `;
-      categoryMap.forEach((label, key) => {
+      categoryMap.forEach(function (label, key) {
         const isPressed = activeCategory === key;
         buttonsHTML += `
           <button type="button" class="filter-option" data-filter-cat="${escapeHTML(key)}" aria-pressed="${isPressed ? 'true' : 'false'}">
@@ -1177,20 +1626,55 @@ _Thank you! I would like to proceed with payment and order confirmation via What
         `;
       });
       categoryContainer.innerHTML = buttonsHTML;
+
+      categoryContainer.querySelectorAll("[data-filter-cat]").forEach(function (btn) {
+        btn.addEventListener("click", function () {
+          activeCategory = (btn.getAttribute("data-filter-cat") || "all").toLowerCase();
+          activeSub = "all";
+          renderCategoryButtons();
+          renderSubcategoryChips();
+          renderFilteredProducts();
+          syncShopUrlParams();
+          closeFilters();
+        });
+      });
     }
 
-    const categoryFilterBtns = document.querySelectorAll("[data-filter-cat]");
+    function renderSubcategoryChips() {
+      if (!subcategoryChipsWrap) return;
+      const subMap = getSubcategoriesForActiveCategory();
 
-    function updateCategoryUI() {
-      categoryFilterBtns.forEach(btn => {
-        const cat = (btn.getAttribute("data-filter-cat") || "").toLowerCase();
-        const isSelected = (cat === activeCategory);
-        btn.setAttribute("aria-pressed", isSelected ? "true" : "false");
+      if (activeCategory === "all" || subMap.size === 0) {
+        subcategoryChipsWrap.hidden = true;
+        subcategoryChipsWrap.innerHTML = "";
+        return;
+      }
+
+      subcategoryChipsWrap.hidden = false;
+      let chipsHTML = `
+        <button type="button" class="sub-chip" data-filter-sub="all" aria-pressed="${activeSub === 'all' ? 'true' : 'false'}">All</button>
+      `;
+      subMap.forEach(function (label, key) {
+        const isPressed = activeSub === key;
+        chipsHTML += `
+          <button type="button" class="sub-chip" data-filter-sub="${escapeHTML(key)}" aria-pressed="${isPressed ? 'true' : 'false'}">${escapeHTML(label)}</button>
+        `;
+      });
+      subcategoryChipsWrap.innerHTML = chipsHTML;
+
+      subcategoryChipsWrap.querySelectorAll("[data-filter-sub]").forEach(function (chip) {
+        chip.addEventListener("click", function () {
+          activeSub = (chip.getAttribute("data-filter-sub") || "all").toLowerCase();
+          renderSubcategoryChips();
+          renderFilteredProducts();
+          syncShopUrlParams();
+          closeFilters();
+        });
       });
     }
 
     function updateSortUI() {
-      sortSelectBtns.forEach(btn => {
+      sortSelectBtns.forEach(function (btn) {
         const sortVal = btn.getAttribute("data-sort-opt");
         const isSelected = (sortVal === activeSort);
         btn.setAttribute("aria-pressed", isSelected ? "true" : "false");
@@ -1198,10 +1682,19 @@ _Thank you! I would like to proceed with payment and order confirmation via What
     }
 
     function renderFilteredProducts() {
-      // 1. Filter
-      let list = window.PRODUCTS.filter(item => {
-        if (activeCategory === "all") return true;
-        return matchesCategory(item.category, activeCategory);
+      // 1. Filter by section, category, and subcategory
+      let list = window.PRODUCTS.filter(function (item) {
+        if (activeSection !== "all") {
+          const itemSec = String(item.section || "women").toLowerCase();
+          if (itemSec !== activeSection) return false;
+        }
+        if (activeCategory !== "all" && !matchesCategory(item.category, activeCategory)) {
+          return false;
+        }
+        if (activeCategory !== "all" && activeSub !== "all" && !matchesSubcategory(item.subcategory, activeSub)) {
+          return false;
+        }
+        return true;
       });
 
       // 2. Sort
@@ -1211,7 +1704,7 @@ _Thank you! I would like to proceed with payment and order confirmation via What
         list.sort((a, b) => b.price - a.price);
       } else if (activeSort === "newest") {
         list.sort((a, b) => new Date(b.date) - new Date(a.date));
-      } else if (activeSort === "alpha") {
+      } else if (activeSort === "az" || activeSort === "alpha") {
         list.sort((a, b) => a.name.localeCompare(b.name));
       }
 
@@ -1225,7 +1718,7 @@ _Thank you! I would like to proceed with payment and order confirmation via What
       if (list.length === 0) {
         shopGrid.innerHTML = `
           <div class="empty-state">
-            <p>No products found in this category.</p>
+            <p>No products found in this collection.</p>
           </div>
         `;
         return;
@@ -1245,22 +1738,19 @@ _Thank you! I would like to proceed with payment and order confirmation via What
       initScrollReveals();
     }
 
-    // Category button events
-    categoryFilterBtns.forEach(btn => {
-      btn.addEventListener("click", () => {
-        activeCategory = (btn.getAttribute("data-filter-cat") || "all").toLowerCase();
-        updateCategoryUI();
+    // Section filter button events
+    sectionFilterBtns.forEach(function (btn) {
+      if (btn.dataset.bound) return;
+      btn.dataset.bound = "true";
+      btn.addEventListener("click", function () {
+        activeSection = (btn.getAttribute("data-filter-section") || "all").toLowerCase();
+        activeSub = "all";
+        updateSectionUI();
+        renderCategoryButtons();
+        renderSubcategoryChips();
         renderFilteredProducts();
+        syncShopUrlParams();
         closeFilters();
-
-        // Update URL query string without reloading
-        const url = new URL(window.location);
-        if (activeCategory === "all") {
-          url.searchParams.delete("category");
-        } else {
-          url.searchParams.set("category", activeCategory);
-        }
-        window.history.replaceState({}, "", url);
       });
     });
 
@@ -1272,12 +1762,15 @@ _Thank you! I would like to proceed with payment and order confirmation via What
         activeSort = btn.getAttribute("data-sort-opt");
         updateSortUI();
         renderFilteredProducts();
+        syncShopUrlParams();
         closeFilters();
       });
     });
 
     // Set initial active state and render
-    updateCategoryUI();
+    updateSectionUI();
+    renderCategoryButtons();
+    renderSubcategoryChips();
     updateSortUI();
     renderFilteredProducts();
   }
@@ -1287,11 +1780,15 @@ _Thank you! I would like to proceed with payment and order confirmation via What
    * ----------------------------------------------------------------------- */
   document.addEventListener("DOMContentLoaded", async function () {
     initInstagramLinks();
+    renderSideMenuList(activeDrawerTab, false);
     updateCartUI();
     initScrollReveals();
 
-    // Load products from Supabase (with automatic fallback to products.js)
-    await loadProductsFromSupabase();
+    // Load menu and products from Supabase (with automatic fallback)
+    await Promise.all([
+      loadMenuFromSupabase(),
+      loadProductsFromSupabase()
+    ]);
 
     // Re-sync cart UI with loaded products & initialize storefront views
     updateCartUI();

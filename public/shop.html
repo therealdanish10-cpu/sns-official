@@ -28,10 +28,20 @@
        ========================================================================= -->
   <header class="nav is-scrolled" role="banner">
     <div class="container nav__inner">
-      <!-- Monogram Logo (~40px, reloads page on click) -->
-      <a href="index.html" class="nav__logo" aria-label="SNS Official Home">
-        <img src="images/logo-mark.png" alt="SNS Official" width="90" height="40">
-      </a>
+      <!-- Left: Hamburger Menu Button & Monogram Logo (~40px, reloads page on click) -->
+      <div class="nav__left">
+        <button type="button" class="icon-btn nav__menu-btn" id="sideMenuOpenBtn" aria-label="Open navigation menu" aria-expanded="false" aria-controls="sideMenuDrawer">
+          <span class="burger" aria-hidden="true">
+            <span></span>
+            <span></span>
+            <span></span>
+          </span>
+        </button>
+
+        <a href="index.html" class="nav__logo" aria-label="SNS Official Home">
+          <img src="images/logo-mark.png" alt="SNS Official" width="90" height="40">
+        </a>
+      </div>
 
       <!-- Desktop Navigation Links -->
       <nav class="nav__links" aria-label="Main Navigation">
@@ -42,7 +52,7 @@
         <a href="index.html#contact" class="nav__link">Contact</a>
       </nav>
 
-      <!-- Actions: Cart Button & Mobile Hamburger -->
+      <!-- Actions: Cart Button -->
       <div class="nav__actions">
         <button type="button" class="icon-btn cart-toggle" aria-label="View shopping bag">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
@@ -52,32 +62,48 @@
           </svg>
           <span class="cart-count is-empty" aria-label="Items in bag">0</span>
         </button>
-
-        <button type="button" class="icon-btn nav__toggle" aria-label="Toggle navigation menu" aria-expanded="false">
-          <span class="burger">
-            <span></span>
-            <span></span>
-            <span></span>
-          </span>
-        </button>
       </div>
     </div>
   </header>
 
-  <!-- Mobile Fullscreen Overlay Menu -->
-  <div class="mobile-menu" role="dialog" aria-modal="true" aria-label="Mobile Navigation">
-    <ul class="mobile-menu__links">
-      <li><a href="index.html">Home</a></li>
-      <li><a href="shop.html" class="is-active">Shop</a></li>
-      <li><a href="index.html#about">About</a></li>
-      <li><a href="index.html#reviews">Reviews</a></li>
-      <li><a href="index.html#contact">Contact</a></li>
-    </ul>
-    <div class="mobile-menu__contact">
-      <p>WhatsApp: <a href="https://wa.me/923085220513" target="_blank" rel="noopener">0308 5220513</a></p>
-      <p>Direct Call: <a href="tel:03098593900">0309 8593900</a></p>
+  <!-- Slide-in Luxury Side Menu Drawer (All screen sizes; replaces mobile overlay) -->
+  <div class="side-menu-backdrop backdrop" id="sideMenuBackdrop" aria-hidden="true"></div>
+  <aside class="side-menu" id="sideMenuDrawer" role="dialog" aria-modal="true" aria-label="Collections Menu" aria-hidden="true" tabindex="-1">
+    <div class="side-menu__head">
+      <a href="index.html" class="side-menu__logo" aria-label="SNS Official Home">
+        <img src="images/logo-mark.png" alt="SNS Official" width="90" height="40">
+      </a>
+      <button type="button" class="side-menu__close" id="sideMenuCloseBtn" aria-label="Close menu">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round">
+          <line x1="18" y1="6" x2="6" y2="18"/>
+          <line x1="6" y1="6" x2="18" y2="18"/>
+        </svg>
+      </button>
     </div>
-  </div>
+
+    <div class="side-menu__tabs" role="tablist" aria-label="Collection Sections">
+      <button type="button" class="side-menu__tab is-active" role="tab" aria-selected="true" data-drawer-tab="women">
+        <span>WOMEN</span>
+        <span class="side-menu__tab-indicator" aria-hidden="true"></span>
+      </button>
+      <button type="button" class="side-menu__tab" role="tab" aria-selected="false" data-drawer-tab="brides">
+        <span>BRIDES</span>
+        <span class="side-menu__tab-indicator" aria-hidden="true"></span>
+      </button>
+    </div>
+
+    <div class="side-menu__body">
+      <ul class="side-menu__list" id="sideMenuList" aria-live="polite"></ul>
+
+      <!-- Mobile-only Quick Links -->
+      <div class="side-menu__quick">
+        <a href="index.html" class="side-menu__quick-link">Home</a>
+        <a href="index.html#about" class="side-menu__quick-link">About</a>
+        <a href="index.html#reviews" class="side-menu__quick-link">Reviews</a>
+        <a href="index.html#contact" class="side-menu__quick-link">Contact</a>
+      </div>
+    </div>
+  </aside>
 
   <main>
     <!-- =======================================================================
@@ -128,7 +154,23 @@
               </button>
             </div>
 
-            <!-- Categories -->
+            <!-- Section (All, Women, Brides) -->
+            <div class="filter-group">
+              <h3 class="filter-group__title">Section</h3>
+              <div class="filter-options" role="group" aria-label="Filter by Section">
+                <button type="button" class="filter-option" data-filter-section="all" aria-pressed="true">
+                  <span>All</span>
+                </button>
+                <button type="button" class="filter-option" data-filter-section="women" aria-pressed="false">
+                  <span>Women</span>
+                </button>
+                <button type="button" class="filter-option" data-filter-section="brides" aria-pressed="false">
+                  <span>Brides</span>
+                </button>
+              </div>
+            </div>
+
+            <!-- Categories & Subcategory Chips -->
             <div class="filter-group">
               <h3 class="filter-group__title">Categories</h3>
               <div class="filter-options" role="group" aria-label="Filter by Category">
@@ -148,6 +190,9 @@
                   <span>Maxi</span>
                 </button>
               </div>
+
+              <!-- Subcategory Chips (Shown when selected category has subcategories) -->
+              <div id="subcategoryChipsWrap" class="sub-chips" role="group" aria-label="Filter by Subcategory" hidden></div>
             </div>
 
             <!-- Sort By -->
@@ -166,7 +211,7 @@
                 <button type="button" class="filter-option" data-sort-opt="newest" aria-pressed="false">
                   <span>Newest Arrivals</span>
                 </button>
-                <button type="button" class="filter-option" data-sort-opt="alpha" aria-pressed="false">
+                <button type="button" class="filter-option" data-sort-opt="az" aria-pressed="false">
                   <span>Alphabetical (A – Z)</span>
                 </button>
               </div>
