@@ -2001,10 +2001,182 @@ _Thank you! I would like to proceed with payment and order confirmation via What
   }
 
   /* -------------------------------------------------------------------------
-   * 11. Global Initialization
+   * 11. Floating WhatsApp Contact Button (index.html & shop.html only)
+   * ----------------------------------------------------------------------- */
+  function initFloatingWhatsAppButton() {
+    const pathLower = (window.location.pathname || "").toLowerCase();
+    if (pathLower.endsWith("admin.html") || pathLower.endsWith("review.html")) return;
+    if (!navbar && !document.querySelector(".footer")) return;
+
+    const prefillMessage = "Hello SNS Official, I would like to know more about your collection.";
+    const whatsappHref = `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(prefillMessage)}`;
+
+    // Reuse existing button in place if present, without creating a duplicate
+    let waBtn = document.getElementById("whatsappFloatBtn");
+    const isNewBtn = !waBtn;
+    if (isNewBtn) {
+      waBtn = document.createElement("a");
+      waBtn.id = "whatsappFloatBtn";
+    }
+    waBtn.className = "wa-float";
+    waBtn.href = whatsappHref;
+    waBtn.target = "_blank";
+    waBtn.rel = "noopener noreferrer";
+    waBtn.setAttribute("aria-label", "Chat with us on WhatsApp");
+    waBtn.innerHTML = `
+      <span class="wa-float__label-clip" aria-hidden="true">
+        <span class="wa-float__label">Chat with us</span>
+      </span>
+      <span class="wa-float__btn" aria-hidden="true">
+        <span class="wa-float__pulse"></span>
+        <svg class="wa-float__icon" viewBox="0 0 24 24" fill="currentColor" focusable="false">
+          <path d="M20.52 3.48A11.82 11.82 0 0 0 12.06 0C5.5 0 .16 5.34.16 11.9c0 2.1.55 4.15 1.6 5.95L0 24l6.33-1.66a11.87 11.87 0 0 0 5.73 1.46h.01c6.55 0 11.89-5.34 11.9-11.9a11.82 11.82 0 0 0-3.45-8.42zM12.07 21.8h-.01a9.87 9.87 0 0 1-5.03-1.38l-.36-.21-3.75.98 1-3.66-.24-.37a9.85 9.85 0 0 1-1.52-5.26c0-5.45 4.44-9.89 9.9-9.89a9.83 9.83 0 0 1 7 2.9 9.84 9.84 0 0 1 2.9 7c0 5.46-4.44 9.89-9.89 9.89zm5.43-7.41c-.3-.15-1.76-.87-2.03-.97-.27-.1-.47-.15-.67.15-.2.3-.77.97-.94 1.16-.17.2-.35.22-.64.08-.3-.15-1.25-.46-2.39-1.48-.88-.79-1.48-1.76-1.65-2.06-.17-.3-.02-.46.13-.6.13-.14.3-.35.45-.52.15-.17.2-.3.3-.5.1-.2.05-.37-.03-.52-.07-.15-.67-1.61-.91-2.21-.24-.58-.49-.5-.67-.51h-.57c-.2 0-.52.07-.79.37-.27.3-1.04 1.02-1.04 2.48s1.07 2.88 1.21 3.08c.15.2 2.1 3.2 5.08 4.49.71.31 1.26.49 1.69.63.71.23 1.36.2 1.87.12.57-.09 1.76-.72 2.01-1.41.25-.7.25-1.29.17-1.42-.07-.12-.27-.2-.57-.35z"/>
+        </svg>
+      </span>
+    `;
+
+    if (isNewBtn) {
+      document.body.appendChild(waBtn);
+    }
+
+    if (waBtn.dataset.waBound === "true") return;
+    waBtn.dataset.waBound = "true";
+
+    // Hide the floating button while side menu, cart drawer, checkout modal, or lightbox is open.
+    // Does not restart or reset the intro label sequence when overlays open/close.
+    function syncWhatsAppVisibility() {
+      const cartEl = document.getElementById("cartDrawer");
+      const checkoutEl = document.getElementById("checkoutModal");
+      const lightboxEl = document.getElementById("lightbox");
+      const shouldHide = Boolean(
+        document.body.classList.contains("menu-open") ||
+        (sideMenuDrawer && sideMenuDrawer.classList.contains("is-open")) ||
+        (cartEl && cartEl.classList.contains("is-open")) ||
+        (checkoutEl && checkoutEl.classList.contains("is-open")) ||
+        (lightboxEl && lightboxEl.classList.contains("is-open"))
+      );
+      waBtn.classList.toggle("is-overlay-hidden", shouldHide);
+    }
+
+    syncWhatsAppVisibility();
+
+    if ("MutationObserver" in window) {
+      const waObserver = new MutationObserver(syncWhatsAppVisibility);
+      waObserver.observe(document.body, { attributes: true, attributeFilter: ["class"] });
+      const cartEl = document.getElementById("cartDrawer");
+      const checkoutEl = document.getElementById("checkoutModal");
+      const lightboxEl = document.getElementById("lightbox");
+      if (sideMenuDrawer) waObserver.observe(sideMenuDrawer, { attributes: true, attributeFilter: ["class"] });
+      if (cartEl) waObserver.observe(cartEl, { attributes: true, attributeFilter: ["class"] });
+      if (checkoutEl) waObserver.observe(checkoutEl, { attributes: true, attributeFilter: ["class"] });
+      if (lightboxEl) waObserver.observe(lightboxEl, { attributes: true, attributeFilter: ["class"] });
+    }
+
+    // Label visibility state & timers:
+    // - On all screen sizes: ~3s after load, slides out (~0.8s), stays ~3s once fully visible, then slides back.
+    // - Reappears on mouse hover or keyboard focus, and hides ~1s after mouse leave / blur (never while hovered/focused).
+    // - On touch devices, tapping opens WhatsApp directly without triggering hover/focus label reveal.
+    let isHovered = false;
+    let isFocused = false;
+    let isIntroActive = false;
+    let recentTouch = false;
+    let hideDelayTimer = null;
+
+    function clearHideDelayTimer() {
+      if (hideDelayTimer) {
+        clearTimeout(hideDelayTimer);
+        hideDelayTimer = null;
+      }
+    }
+
+    function showLabel() {
+      clearHideDelayTimer();
+      waBtn.classList.add("is-label-visible");
+    }
+
+    function scheduleHideLabel(delayMs) {
+      clearHideDelayTimer();
+      hideDelayTimer = setTimeout(function () {
+        hideDelayTimer = null;
+        if (!isHovered && !isFocused && !isIntroActive) {
+          waBtn.classList.remove("is-label-visible");
+        }
+      }, delayMs);
+    }
+
+    // Track touch interactions so finger taps never trigger hover/focus reveal
+    waBtn.addEventListener("touchstart", function () {
+      recentTouch = true;
+      setTimeout(function () {
+        recentTouch = false;
+      }, 800);
+    }, { passive: true });
+
+    if ("PointerEvent" in window) {
+      waBtn.addEventListener("pointerenter", function (e) {
+        if (e.pointerType !== "mouse") return;
+        isHovered = true;
+        showLabel();
+      });
+      waBtn.addEventListener("pointerleave", function (e) {
+        if (e.pointerType !== "mouse") return;
+        isHovered = false;
+        if (!isFocused && !isIntroActive) {
+          scheduleHideLabel(1000);
+        }
+      });
+    } else {
+      waBtn.addEventListener("mouseenter", function () {
+        if (recentTouch) return;
+        isHovered = true;
+        showLabel();
+      });
+      waBtn.addEventListener("mouseleave", function () {
+        if (recentTouch) return;
+        isHovered = false;
+        if (!isFocused && !isIntroActive) {
+          scheduleHideLabel(1000);
+        }
+      });
+    }
+
+    waBtn.addEventListener("focus", function () {
+      if (recentTouch) return;
+      isFocused = true;
+      showLabel();
+    });
+
+    waBtn.addEventListener("blur", function () {
+      isFocused = false;
+      if (!isHovered && !isIntroActive) {
+        scheduleHideLabel(1000);
+      }
+    });
+
+    // Intro sequence (runs once per page load on all screen sizes)
+    const reducedMotion = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    const slideDurationMs = reducedMotion ? 0 : 800;
+    const visibleHoldMs = 3000;
+
+    setTimeout(function () {
+      isIntroActive = true;
+      showLabel();
+
+      setTimeout(function () {
+        isIntroActive = false;
+        if (!isHovered && !isFocused) {
+          waBtn.classList.remove("is-label-visible");
+        }
+      }, slideDurationMs + visibleHoldMs);
+    }, 3000);
+  }
+
+  /* -------------------------------------------------------------------------
+   * 12. Global Initialization
    * ----------------------------------------------------------------------- */
   document.addEventListener("DOMContentLoaded", async function () {
     initInstagramLinks();
+    initFloatingWhatsAppButton();
     renderSideMenuList(activeDrawerTab, false);
     updateCartUI();
     initScrollReveals();
