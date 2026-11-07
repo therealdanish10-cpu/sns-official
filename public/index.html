@@ -70,7 +70,7 @@
 <body>
 
   <!-- =========================================================================
-       Navbar (Transparent over hero, dark #0A0A0A after scroll, no borders)
+       Navbar (Solid dark #0A0A0A at all scroll positions, no borders)
        ========================================================================= -->
   <header class="nav" role="banner">
     <div class="container nav__inner">
@@ -153,42 +153,70 @@
 
   <main>
     <!-- =======================================================================
-         a) Hero Section (Full-screen video, 30% overlay, ~140px fade into #FFFFFF)
+         a) Hero Section (Light cream-to-white gradient, gold arch doorway frame,
+            faint SNS monogram watermark, and centered editorial typography)
          ======================================================================= -->
     <section class="hero" aria-label="Hero">
-      <video class="hero__video" autoplay muted loop playsinline preload="auto" poster="images/hero-poster.jpg">
-        <source src="video/video.mp4" type="video/mp4">
-      </video>
-      <div class="hero__overlay" aria-hidden="true"></div>
-      <div class="hero__fade" aria-hidden="true"></div>
+      <div class="container hero__container">
+        <div class="hero__frame">
+          <!-- Decorative gold arch, faint monogram watermark, and subtle sparkle accents -->
+          <div class="hero__decor" aria-hidden="true">
+            <svg class="hero__arch" viewBox="0 0 680 620" fill="none" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="none">
+              <path class="hero__arch-path" d="M 16 604 L 16 240 C 16 96 160 14 340 14 C 520 14 664 96 664 240 L 664 604 Z" stroke="#D4AF37" stroke-opacity="0.4" stroke-width="1.35" vector-effect="non-scaling-stroke" pathLength="1"/>
+              <path class="hero__arch-path hero__arch-path--inner" d="M 28 592 L 28 242 C 28 108 166 26 340 26 C 514 26 652 108 652 242 L 652 592 Z" stroke="#D4AF37" stroke-opacity="0.18" stroke-width="1" vector-effect="non-scaling-stroke" pathLength="1"/>
+            </svg>
 
-      <div class="container hero__content">
-        <!-- a) Small gold line-art ornamental flourish (~80px wide, symmetrical) -->
-        <svg class="hero__flourish" width="80" height="18" viewBox="0 0 80 18" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-          <path d="M40 4L43.5 9L40 14L36.5 9L40 4Z" stroke="#D4AF37" stroke-width="1" stroke-linejoin="round"/>
-          <path d="M36.5 9C31 9 28 4.5 22 4.5C17.5 4.5 15 7 15 9.5C15 11.5 17 12.8 19 12C20.5 11.4 20.5 9.5 19 9" stroke="#D4AF37" stroke-width="1" stroke-linecap="round"/>
-          <path d="M43.5 9C49 9 52 4.5 58 4.5C62.5 4.5 65 7 65 9.5C65 11.5 63 12.8 61 12C59.5 11.4 59.5 9.5 61 9" stroke="#D4AF37" stroke-width="1" stroke-linecap="round"/>
-          <path d="M36.5 9C32 9 29 13.5 24 13.5C21 13.5 19.5 12 19.5 10.5" stroke="#D4AF37" stroke-width="0.9" stroke-linecap="round"/>
-          <path d="M43.5 9C48 9 51 13.5 56 13.5C59 13.5 60.5 12 60.5 10.5" stroke="#D4AF37" stroke-width="0.9" stroke-linecap="round"/>
-          <path d="M15 9H2" stroke="#D4AF37" stroke-width="0.9" stroke-linecap="round"/>
-          <path d="M65 9H78" stroke="#D4AF37" stroke-width="0.9" stroke-linecap="round"/>
-          <circle cx="40" cy="9" r="1" fill="#D4AF37"/>
-        </svg>
+            <img src="images/logo-mark.png" alt="" class="hero__watermark" width="320" height="142" decoding="async">
 
-        <!-- b) Headline in Playfair Display, warm ivory #F5EFE0 -->
-        <h1 class="hero__title">Stitch n Style</h1>
+            <svg class="hero__sparkle hero__sparkle--tl" width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M8 0L9.8 6.2L16 8L9.8 9.8L8 16L6.2 9.8L0 8L6.2 6.2L8 0Z" fill="#D4AF37" fill-opacity="0.45"/>
+            </svg>
+            <svg class="hero__sparkle hero__sparkle--tr" width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M8 0L9.8 6.2L16 8L9.8 9.8L8 16L6.2 9.8L0 8L6.2 6.2L8 0Z" fill="#D4AF37" fill-opacity="0.45"/>
+            </svg>
+            <svg class="hero__sparkle hero__sparkle--ml" width="10" height="10" viewBox="0 0 12 12" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M6 0L12 6L6 12L0 6L6 0Z" fill="#D4AF37" fill-opacity="0.38"/>
+            </svg>
+            <svg class="hero__sparkle hero__sparkle--mr" width="10" height="10" viewBox="0 0 12 12" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M6 0L12 6L6 12L0 6L6 0Z" fill="#D4AF37" fill-opacity="0.38"/>
+            </svg>
+            <svg class="hero__sparkle hero__sparkle--top" width="10" height="10" viewBox="0 0 12 12" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M6 0L12 6L6 12L0 6L6 0Z" fill="#D4AF37" fill-opacity="0.45"/>
+            </svg>
+          </div>
 
-        <!-- c) Small uppercase gold subtitle -->
-        <p class="hero__subtitle">PREMIUM LADIES WEAR</p>
+          <div class="hero__content">
+            <!-- a) Small gold line-art ornamental flourish (~80px wide, symmetrical) -->
+            <svg class="hero__flourish" width="80" height="18" viewBox="0 0 80 18" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+              <path d="M40 4L43.5 9L40 14L36.5 9L40 4Z" stroke="#D4AF37" stroke-width="1" stroke-linejoin="round"/>
+              <path d="M36.5 9C31 9 28 4.5 22 4.5C17.5 4.5 15 7 15 9.5C15 11.5 17 12.8 19 12C20.5 11.4 20.5 9.5 19 9" stroke="#D4AF37" stroke-width="1" stroke-linecap="round"/>
+              <path d="M43.5 9C49 9 52 4.5 58 4.5C62.5 4.5 65 7 65 9.5C65 11.5 63 12.8 61 12C59.5 11.4 59.5 9.5 61 9" stroke="#D4AF37" stroke-width="1" stroke-linecap="round"/>
+              <path d="M36.5 9C32 9 29 13.5 24 13.5C21 13.5 19.5 12 19.5 10.5" stroke="#D4AF37" stroke-width="0.9" stroke-linecap="round"/>
+              <path d="M43.5 9C48 9 51 13.5 56 13.5C59 13.5 60.5 12 60.5 10.5" stroke="#D4AF37" stroke-width="0.9" stroke-linecap="round"/>
+              <path d="M15 9H2" stroke="#D4AF37" stroke-width="0.9" stroke-linecap="round"/>
+              <path d="M65 9H78" stroke="#D4AF37" stroke-width="0.9" stroke-linecap="round"/>
+              <circle cx="40" cy="9" r="1" fill="#D4AF37"/>
+            </svg>
 
-        <!-- d) Tiny gold diamond divider (~8px rotated square) -->
-        <span class="hero__diamond" aria-hidden="true"></span>
+            <!-- b) Headline in bold Playfair Display, #1A1A1A -->
+            <h1 class="hero__title">Stitch n Style</h1>
 
-        <!-- e) Calligraphic script tagline in curly quotes -->
-        <p class="hero__tagline">&ldquo;Elegance stitched for every occasion&rdquo;</p>
+            <!-- c) Small uppercase subtitle in Poppins, deep gold #8A6A14 -->
+            <p class="hero__subtitle">PREMIUM LADIES WEAR</p>
 
-        <!-- f) Outlined rectangular SHOP NOW button -->
-        <a href="shop.html" class="hero__btn">SHOP NOW</a>
+            <!-- d) Tiny gold diamond divider (~8px rotated square) -->
+            <span class="hero__diamond" aria-hidden="true"></span>
+
+            <!-- e) Calligraphic script tagline in Great Vibes, #1A1A1A, wrapped in curly quotes -->
+            <p class="hero__tagline">&ldquo;Elegance stitched for every occasion&rdquo;</p>
+
+            <!-- f) Primary SHOP NOW & Secondary NEW ARRIVALS buttons -->
+            <div class="hero__actions">
+              <a href="shop.html" class="btn btn--primary hero__btn">SHOP NOW</a>
+              <a href="shop.html?sort=newest" class="btn btn--outline hero__btn">NEW ARRIVALS</a>
+            </div>
+          </div>
+        </div>
       </div>
     </section>
 

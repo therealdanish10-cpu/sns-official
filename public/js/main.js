@@ -53,7 +53,6 @@
    * 2. Navigation & Slide-in Luxury Side Menu Drawer
    * ----------------------------------------------------------------------- */
   const navbar = document.querySelector(".nav");
-  const heroSection = document.querySelector(".hero");
   const navLogo = document.querySelector(".nav__logo");
 
   const sideMenuOpenBtn = document.getElementById("sideMenuOpenBtn");
@@ -98,9 +97,9 @@
   }
 
   // Smart navbar scroll behavior:
-  // - Always visible & transparent near top (< 80px)
+  // - Always solid dark (#0A0A0A) at all scroll positions
+  // - Always visible near top (< 80px)
   // - Slides up (-100%) on scroll down, slides back in on scroll up
-  // - Uses dark blurred background (.is-scrolled) once past hero (or >= 80px on shop page)
   // - Auto-hides after 1.5s of scroll inactivity when visible away from top
   // - Never hides while side menu drawer, cart drawer, or checkout modal is open
   const TOP_THRESHOLD = 80;
@@ -147,18 +146,6 @@
     const currentScrollY = Math.max(0, window.scrollY);
     const delta = currentScrollY - lastScrollY;
 
-    // Solid dark background on non-hero pages (shop.html); past hero on index.html
-    if (!heroSection) {
-      navbar.classList.add("is-scrolled");
-    } else {
-      const blurThreshold = Math.max(TOP_THRESHOLD, heroSection.offsetHeight - 160);
-      if (currentScrollY >= TOP_THRESHOLD && currentScrollY >= blurThreshold) {
-        navbar.classList.add("is-scrolled");
-      } else {
-        navbar.classList.remove("is-scrolled");
-      }
-    }
-
     // Never hide while side menu drawer, cart drawer, or checkout form is open
     if (isNavLockedOpen()) {
       navbar.classList.remove("is-hidden");
@@ -167,7 +154,7 @@
       return;
     }
 
-    // Always visible & transparent at the very top of the page (< 80px)
+    // Always visible at the very top of the page (< 80px)
     if (currentScrollY < TOP_THRESHOLD) {
       navbar.classList.remove("is-hidden");
       clearNavIdleTimer();
