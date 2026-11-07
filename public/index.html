@@ -160,8 +160,22 @@
     <section class="hero" id="heroSection" aria-label="Hero">
       <!-- 1. Sliding Banner Carousel (reserves space on load so there is no layout jump or flash of the old hero) -->
       <div class="hero-banner" id="heroBanner">
-        <h1 class="visually-hidden" id="heroBannerH1">SNS Official - Stitch n Style, premium ladies wear</h1>
         <div class="hero-banner__track" id="heroBannerTrack"></div>
+        <div class="hero-banner__gradient" aria-hidden="true"></div>
+        <div class="hero-banner__overlay">
+          <div class="container hero-banner__container">
+            <div class="hero-banner__content">
+              <p class="hero-banner__subtitle">PREMIUM LADIES WEAR</p>
+              <span class="hero-banner__diamond" aria-hidden="true"></span>
+              <h1 class="hero-banner__title" id="heroBannerH1">Stitch n Style</h1>
+              <p class="hero-banner__tagline">&ldquo;Elegance stitched for every occasion&rdquo;</p>
+              <div class="hero-banner__actions">
+                <a href="shop.html" class="btn hero-banner__btn hero-banner__btn--primary">SHOP NOW</a>
+                <a href="shop.html?sort=newest" class="btn hero-banner__btn hero-banner__btn--secondary">NEW ARRIVALS</a>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
 
       <!-- 2. Fallback Arch Hero (shown only when 0 visible slides exist or Supabase query fails) -->

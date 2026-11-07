@@ -1607,9 +1607,14 @@ _Thank you! I would like to proceed with payment and order confirmation via What
 
     if (heroBanner) {
       heroBanner.hidden = true;
+      // Demote the banner overlay heading so the page has strictly one <h1>
       const bannerH1 = document.getElementById("heroBannerH1");
-      if (bannerH1 && bannerH1.parentNode) {
-        bannerH1.parentNode.removeChild(bannerH1);
+      if (bannerH1 && bannerH1.tagName.toLowerCase() === "h1") {
+        const div = document.createElement("div");
+        div.className = bannerH1.className || "hero-banner__title";
+        div.id = "heroBannerH1";
+        div.textContent = bannerH1.textContent || "Stitch n Style";
+        bannerH1.parentNode.replaceChild(div, bannerH1);
       }
     }
 
@@ -1631,20 +1636,21 @@ _Thank you! I would like to proceed with payment and order confirmation via What
     // Demote arch heading if it was previously promoted to h1 so page has strictly one h1
     const archHeading = document.getElementById("heroArchHeading");
     if (archHeading && archHeading.tagName.toLowerCase() === "h1") {
-      const p = document.createElement("p");
-      p.className = archHeading.className || "hero__title";
-      p.id = "heroArchHeading";
-      p.textContent = archHeading.textContent || "Stitch n Style";
-      archHeading.parentNode.replaceChild(p, archHeading);
+      const div = document.createElement("div");
+      div.className = archHeading.className || "hero__title";
+      div.id = "heroArchHeading";
+      div.textContent = archHeading.textContent || "Stitch n Style";
+      archHeading.parentNode.replaceChild(div, archHeading);
     }
 
-    let bannerH1 = document.getElementById("heroBannerH1");
-    if (!bannerH1) {
-      bannerH1 = document.createElement("h1");
-      bannerH1.className = "visually-hidden";
-      bannerH1.id = "heroBannerH1";
-      bannerH1.textContent = "SNS Official - Stitch n Style, premium ladies wear";
-      heroBanner.insertBefore(bannerH1, heroBanner.firstChild);
+    // Ensure the visible banner overlay headline ("Stitch n Style") is an <h1>
+    const bannerHeading = document.getElementById("heroBannerH1");
+    if (bannerHeading && bannerHeading.tagName.toLowerCase() !== "h1") {
+      const h1 = document.createElement("h1");
+      h1.className = bannerHeading.className || "hero-banner__title";
+      h1.id = "heroBannerH1";
+      h1.textContent = bannerHeading.textContent || "Stitch n Style";
+      bannerHeading.parentNode.replaceChild(h1, bannerHeading);
     }
   }
 
@@ -1756,7 +1762,6 @@ _Thank you! I would like to proceed with payment and order confirmation via What
 
     let trackIndex = 1; // 1 corresponds to validSlides[0]
     let isTransitioning = false;
-    let isHovered = false;
     let autoTimer = null;
     let safetyTimer = null;
 
@@ -1791,7 +1796,9 @@ _Thank you! I would like to proceed with payment and order confirmation via What
     }
 
     function goToOffset(delta) {
-      if (isTransitioning) return;
+      if (isTransitioning) {
+        normalizeInfiniteLoopPosition();
+      }
       trackIndex += delta;
 
       if (reducedMotionQuery.matches) {
@@ -1813,8 +1820,9 @@ _Thank you! I would like to proceed with payment and order confirmation via What
     }
     heroBannerTrack.addEventListener("transitionend", onTransitionEnd);
 
+    // Only stop auto-advancing when browser tab is hidden or prefers-reduced-motion is enabled (never pause on hover)
     function shouldAutoAdvance() {
-      return !isHovered && !document.hidden && !reducedMotionQuery.matches;
+      return !document.hidden && !reducedMotionQuery.matches;
     }
 
     function stopAutoAdvance() {
@@ -1834,16 +1842,6 @@ _Thank you! I would like to proceed with payment and order confirmation via What
       }, 5000);
     }
 
-    function onMouseEnter() {
-      isHovered = true;
-      stopAutoAdvance();
-    }
-
-    function onMouseLeave() {
-      isHovered = false;
-      startAutoAdvance();
-    }
-
     function onVisibilityChange() {
       if (document.hidden) {
         stopAutoAdvance();
@@ -1853,7 +1851,16 @@ _Thank you! I would like to proceed with payment and order confirmation via What
       }
     }
 
-    // Touch swipe left / right on mobile & tablet
+    function onReducedMotionChange() {
+      if (reducedMotionQuery.matches) {
+        stopAutoAdvance();
+        normalizeInfiniteLoopPosition();
+      } else {
+        startAutoAdvance();
+      }
+    }
+
+    // Touch swipe left / right on mobile & tablet: snaps to new slide and restarts the 5s auto-advance timer
     let touchStartX = 0;
     let touchStartY = 0;
     let touchTracking = false;
@@ -1867,26 +1874,35 @@ _Thank you! I would like to proceed with payment and order confirmation via What
     }
 
     function onTouchEnd(e) {
-      if (!touchTracking || !e.changedTouches || !e.changedTouches[0]) return;
+      if (!touchTracking) return;
       touchTracking = false;
-      const dx = e.changedTouches[0].clientX - touchStartX;
-      const dy = e.changedTouches[0].clientY - touchStartY;
+      if (e.changedTouches && e.changedTouches[0]) {
+        const dx = e.changedTouches[0].clientX - touchStartX;
+        const dy = e.changedTouches[0].clientY - touchStartY;
 
-      if (Math.abs(dx) > 40 && Math.abs(dx) > Math.abs(dy)) {
-        if (dx < 0) {
-          goToOffset(1);
-        } else {
-          goToOffset(-1);
+        if (Math.abs(dx) > 40 && Math.abs(dx) > Math.abs(dy)) {
+          if (dx < 0) {
+            goToOffset(1);
+          } else {
+            goToOffset(-1);
+          }
         }
       }
       startAutoAdvance();
     }
 
-    heroBanner.addEventListener("mouseenter", onMouseEnter);
-    heroBanner.addEventListener("mouseleave", onMouseLeave);
+    function onTouchCancel() {
+      touchTracking = false;
+      startAutoAdvance();
+    }
+
     heroBanner.addEventListener("touchstart", onTouchStart, { passive: true });
     heroBanner.addEventListener("touchend", onTouchEnd, { passive: true });
+    heroBanner.addEventListener("touchcancel", onTouchCancel, { passive: true });
     document.addEventListener("visibilitychange", onVisibilityChange);
+    if (reducedMotionQuery.addEventListener) {
+      reducedMotionQuery.addEventListener("change", onReducedMotionChange);
+    }
 
     startAutoAdvance();
 
@@ -1894,11 +1910,13 @@ _Thank you! I would like to proceed with payment and order confirmation via What
       stopAutoAdvance();
       if (safetyTimer) clearTimeout(safetyTimer);
       heroBannerTrack.removeEventListener("transitionend", onTransitionEnd);
-      heroBanner.removeEventListener("mouseenter", onMouseEnter);
-      heroBanner.removeEventListener("mouseleave", onMouseLeave);
       heroBanner.removeEventListener("touchstart", onTouchStart);
       heroBanner.removeEventListener("touchend", onTouchEnd);
+      heroBanner.removeEventListener("touchcancel", onTouchCancel);
       document.removeEventListener("visibilitychange", onVisibilityChange);
+      if (reducedMotionQuery.removeEventListener) {
+        reducedMotionQuery.removeEventListener("change", onReducedMotionChange);
+      }
     };
   }
 
