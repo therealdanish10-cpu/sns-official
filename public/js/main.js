@@ -147,15 +147,16 @@
     const currentScrollY = Math.max(0, window.scrollY);
     const delta = currentScrollY - lastScrollY;
 
-    // Blur background threshold: past hero on index.html, or past top 80px on shop.html
-    const blurThreshold = heroSection
-      ? Math.max(TOP_THRESHOLD, heroSection.offsetHeight - TOP_THRESHOLD)
-      : TOP_THRESHOLD;
-
-    if (currentScrollY >= TOP_THRESHOLD && currentScrollY >= blurThreshold) {
+    // Solid dark background on non-hero pages (shop.html); past hero on index.html
+    if (!heroSection) {
       navbar.classList.add("is-scrolled");
     } else {
-      navbar.classList.remove("is-scrolled");
+      const blurThreshold = Math.max(TOP_THRESHOLD, heroSection.offsetHeight - 160);
+      if (currentScrollY >= TOP_THRESHOLD && currentScrollY >= blurThreshold) {
+        navbar.classList.add("is-scrolled");
+      } else {
+        navbar.classList.remove("is-scrolled");
+      }
     }
 
     // Never hide while side menu drawer, cart drawer, or checkout form is open
@@ -508,42 +509,49 @@
     }
 
     // Update active dot on scroll
-    let ticking = false;
-    track.addEventListener("scroll", () => {
-      if (!ticking) {
-        requestAnimationFrame(() => {
-          if (!dotsContainer) return;
-          const dots = dotsContainer.querySelectorAll(".dot");
-          if (!dots.length) return;
+    if (!track.dataset.scrollBound) {
+      track.dataset.scrollBound = "true";
+      let ticking = false;
+      track.addEventListener("scroll", () => {
+        if (!ticking) {
+          requestAnimationFrame(() => {
+            if (!dotsContainer) return;
+            const dots = dotsContainer.querySelectorAll(".dot");
+            if (!dots.length) return;
 
-          const trackLeft = track.getBoundingClientRect().left;
-          let activeIndex = 0;
-          let minDiff = Infinity;
+            const trackLeft = track.getBoundingClientRect().left;
+            let activeIndex = 0;
+            let minDiff = Infinity;
 
-          for (let i = 0; i < items.length; i++) {
-            const diff = Math.abs(items[i].getBoundingClientRect().left - trackLeft);
-            if (diff < minDiff) {
-              minDiff = diff;
-              activeIndex = i;
+            for (let i = 0; i < items.length; i++) {
+              const diff = Math.abs(items[i].getBoundingClientRect().left - trackLeft);
+              if (diff < minDiff) {
+                minDiff = diff;
+                activeIndex = i;
+              }
             }
-          }
 
-          dots.forEach((d, idx) => d.classList.toggle("is-active", idx === activeIndex));
-          ticking = false;
-        });
-        ticking = true;
-      }
-    }, { passive: true });
+            dots.forEach((d, idx) => d.classList.toggle("is-active", idx === activeIndex));
+            ticking = false;
+          });
+          ticking = true;
+        }
+      }, { passive: true });
+    }
 
     // Desktop arrow buttons
-    if (prevBtn) {
+    if (prevBtn && !prevBtn.dataset.bound) {
+      prevBtn.dataset.bound = "true";
       prevBtn.addEventListener("click", () => {
+        if (!items[0]) return;
         const itemWidth = items[0].getBoundingClientRect().width + 20;
         track.scrollBy({ left: -itemWidth, behavior: "smooth" });
       });
     }
-    if (nextBtn) {
+    if (nextBtn && !nextBtn.dataset.bound) {
+      nextBtn.dataset.bound = "true";
       nextBtn.addEventListener("click", () => {
+        if (!items[0]) return;
         const itemWidth = items[0].getBoundingClientRect().width + 20;
         track.scrollBy({ left: itemWidth, behavior: "smooth" });
       });
@@ -749,10 +757,13 @@
       </span>
     ` : "";
 
-    // Image/Placeholder
+    // Image/Placeholder (with optional second image for desktop hover crossfade)
     const primaryImg = (product.images && product.images[0]) ? product.images[0] : null;
+    const secondaryImg = (product.images && product.images.length > 1 && product.images[1]) ? product.images[1] : null;
+    const hasSecondImgClass = (primaryImg && secondaryImg) ? " has-second-image" : "";
     const mediaInner = primaryImg
-      ? `<img src="${escapeHTML(primaryImg)}" class="product-photo" alt="${safeName}" width="600" height="800" loading="lazy" decoding="async">`
+      ? `<img src="${escapeHTML(primaryImg)}" class="product-photo product-photo--primary" alt="${safeName}" width="600" height="800" loading="lazy" decoding="async">` +
+        (secondaryImg ? `<img src="${escapeHTML(secondaryImg)}" class="product-photo product-photo--secondary" alt="" aria-hidden="true" width="600" height="800" loading="lazy" decoding="async">` : "")
       : `<div class="placeholder"><img src="images/logo-mark.png" alt="" width="90" height="40" loading="lazy" decoding="async"></div>`;
 
     // Stitched / Unstitched segmented toggle (or plain label if only one type is available)
@@ -805,7 +816,7 @@
     return `
       <article class="product-card reveal ${isSoldOut ? 'is-soldout' : ''}" data-product-id="${escapeHTML(product.id)}" ${delayStyle}>
         <div class="product-card__inner">
-          <div class="product-card__media ${isMultiImage ? 'is-gallery' : ''}" role="${isMultiImage ? 'button' : 'region'}" aria-label="${safeName}">
+          <div class="product-card__media ${isMultiImage ? 'is-gallery' : ''}${hasSecondImgClass}" role="${isMultiImage ? 'button' : 'region'}" aria-label="${safeName}">
             ${badgeHTML}
             ${galleryHintHTML}
             ${mediaInner}
@@ -1588,17 +1599,79 @@ _Thank you! I would like to proceed with payment and order confirmation via What
 
   // --- HOMEPAGE INITIALIZER ---
   function initHomePage() {
+    const allProducts = Array.isArray(window.PRODUCTS) ? window.PRODUCTS : [];
+
+    // 1. Collections tiles (Saree, Dupatta, Short, Maxi):
+    //    Show first product image of that category (or cream placeholder with gold SNS monogram),
+    //    update dynamic product count, and hide any tile whose category has no products.
+    const collectionTiles = document.querySelectorAll("[data-collection-cat]");
+    if (collectionTiles.length > 0) {
+      let visibleTilesCount = 0;
+      collectionTiles.forEach(function (tile) {
+        const catName = (tile.getAttribute("data-collection-cat") || "").trim();
+        const catProducts = allProducts.filter(function (p) {
+          return String(p.section || "women").toLowerCase() !== "brides" && matchesCategory(p.category, catName);
+        });
+
+        if (catProducts.length === 0) {
+          tile.hidden = true;
+          return;
+        }
+
+        tile.hidden = false;
+        visibleTilesCount++;
+
+        const countEl = tile.querySelector("[data-collection-count]");
+        if (countEl) {
+          countEl.textContent = `${catProducts.length} ${catProducts.length === 1 ? "Product" : "Products"}`;
+        }
+
+        const mediaWrap = tile.querySelector(".cat-tile__media");
+        if (mediaWrap) {
+          let firstImage = null;
+          for (let i = 0; i < catProducts.length; i++) {
+            const imgs = catProducts[i].images;
+            if (Array.isArray(imgs) && imgs[0]) {
+              firstImage = imgs[0];
+              break;
+            }
+          }
+
+          if (firstImage) {
+            mediaWrap.innerHTML = `<img src="${escapeHTML(firstImage)}" class="cat-tile__img" alt="${escapeHTML(catName)} Collection" width="600" height="800" loading="lazy" decoding="async">`;
+          } else {
+            mediaWrap.innerHTML = `
+              <div class="cat-tile__placeholder">
+                <img src="images/logo-mark.png" alt="" width="90" height="40" loading="lazy" decoding="async">
+              </div>
+            `;
+          }
+        }
+      });
+
+      const categoriesSection = document.getElementById("categories");
+      if (categoriesSection) {
+        categoriesSection.hidden = (visibleTilesCount === 0);
+      }
+    }
+
+    // 2. New Arrivals: 8 newest products (Desktop 4-col grid, Mobile swipeable carousel with dots)
     const featuredTrack = document.getElementById("featuredTrack");
-    if (featuredTrack && window.PRODUCTS) {
-      // Pick up to 4 items from products data
-      const featuredItems = window.PRODUCTS.slice(0, 4);
+    if (featuredTrack) {
+      const newestItems = allProducts
+        .slice()
+        .sort(function (a, b) {
+          return new Date(b.date || 0) - new Date(a.date || 0);
+        })
+        .slice(0, 8);
+
       featuredTrack.innerHTML = "";
 
-      if (featuredItems.length === 0) {
+      if (newestItems.length === 0) {
         featuredTrack.innerHTML = `<div class="empty-state"><p>New collection pieces arriving soon.</p></div>`;
       } else {
-        featuredItems.forEach((product, idx) => {
-          const delay = (idx + 1) * 160; // 160ms staggered delay
+        newestItems.forEach((product, idx) => {
+          const delay = Math.min((idx % 4 + 1) * 140, 560);
           const cardHTML = createProductCardHTML(product, delay);
           const temp = document.createElement("div");
           temp.innerHTML = cardHTML;
@@ -1608,12 +1681,94 @@ _Thank you! I would like to proceed with payment and order confirmation via What
         });
       }
 
-      // Mobile carousel dots for featured
+      // Mobile carousel dots for New Arrivals
       setupCarousel("#featuredTrack", "#featuredDots");
-      initScrollReveals();
     }
 
-    // Initialize reviews carousel (placeholder first, then updated if approved reviews exist)
+    // 3. Dynamic Category Rows (Saree, Dupatta, Short, Maxi, and Brides if any products have section = brides)
+    const categoryRowsContainer = document.getElementById("categoryRowsContainer");
+    if (categoryRowsContainer) {
+      categoryRowsContainer.innerHTML = "";
+
+      const rowDefs = [
+        {
+          key: "saree",
+          title: "Saree",
+          eyebrow: "Timeless Drapes",
+          link: "shop.html?section=women&category=Saree",
+          items: allProducts.filter(p => String(p.section || "women").toLowerCase() !== "brides" && matchesCategory(p.category, "saree"))
+        },
+        {
+          key: "dupatta",
+          title: "Dupatta",
+          eyebrow: "Artisanal Veils",
+          link: "shop.html?section=women&category=Dupatta",
+          items: allProducts.filter(p => String(p.section || "women").toLowerCase() !== "brides" && matchesCategory(p.category, "dupatta"))
+        },
+        {
+          key: "short",
+          title: "Short",
+          eyebrow: "Tailored Silhouettes",
+          link: "shop.html?section=women&category=Short",
+          items: allProducts.filter(p => String(p.section || "women").toLowerCase() !== "brides" && matchesCategory(p.category, "short"))
+        },
+        {
+          key: "maxi",
+          title: "Maxi",
+          eyebrow: "Regal Ensembles",
+          link: "shop.html?section=women&category=Maxi",
+          items: allProducts.filter(p => String(p.section || "women").toLowerCase() !== "brides" && matchesCategory(p.category, "maxi"))
+        },
+        {
+          key: "brides",
+          title: "Brides",
+          eyebrow: "Bridal Couture",
+          link: "shop.html?section=brides",
+          items: allProducts.filter(p => String(p.section || "").toLowerCase() === "brides")
+        }
+      ];
+
+      const activeRows = rowDefs.filter(r => r.items.length > 0);
+
+      activeRows.forEach(function (row, rowIdx) {
+        // Alternate white (.section) and cream (.section--alt) backgrounds
+        const isAlt = (rowIdx % 2 === 1);
+        const sectionEl = document.createElement("section");
+        sectionEl.className = "section" + (isAlt ? " section--alt" : "");
+        sectionEl.id = `cat-row-${row.key}`;
+
+        sectionEl.innerHTML = `
+          <div class="container">
+            <div class="section__head reveal">
+              <span class="eyebrow">${escapeHTML(row.eyebrow)}</span>
+              <h2 class="section__title">${escapeHTML(row.title)}</h2>
+              <span class="section__diamond" aria-hidden="true"></span>
+            </div>
+            <div class="product-grid product-grid--row"></div>
+            <div class="section__cta reveal">
+              <a href="${escapeHTML(row.link)}" class="btn btn--outline">View All</a>
+            </div>
+          </div>
+        `;
+
+        const gridEl = sectionEl.querySelector(".product-grid");
+        row.items.slice(0, 4).forEach(function (product, idx) {
+          const delay = (idx + 1) * 140;
+          const cardHTML = createProductCardHTML(product, delay);
+          const temp = document.createElement("div");
+          temp.innerHTML = cardHTML;
+          const cardEl = temp.firstElementChild;
+          gridEl.appendChild(cardEl);
+          bindProductCardEvents(cardEl, product);
+        });
+
+        categoryRowsContainer.appendChild(sectionEl);
+      });
+    }
+
+    initScrollReveals();
+
+    // 4. Initialize reviews carousel (placeholder first, then updated if approved reviews exist)
     setupCarousel("#reviewsTrack", "#reviewsDots", "#reviewsPrev", "#reviewsNext");
   }
 
@@ -2179,6 +2334,8 @@ _Thank you! I would like to proceed with payment and order confirmation via What
     initFloatingWhatsAppButton();
     renderSideMenuList(activeDrawerTab, false);
     updateCartUI();
+    initHomePage();
+    initShopPage();
     initScrollReveals();
 
     // Load menu and products from Supabase (with automatic fallback)

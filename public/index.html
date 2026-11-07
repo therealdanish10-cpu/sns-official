@@ -70,7 +70,7 @@
 <body>
 
   <!-- =========================================================================
-       Navbar (Fully transparent over hero, no border/shadow, gold hover only)
+       Navbar (Transparent over hero, dark #0A0A0A after scroll, no borders)
        ========================================================================= -->
   <header class="nav" role="banner">
     <div class="container nav__inner">
@@ -112,7 +112,7 @@
     </div>
   </header>
 
-  <!-- Slide-in Luxury Side Menu Drawer (All screen sizes; replaces mobile overlay) -->
+  <!-- Slide-in Luxury Side Menu Drawer (Dark #0A0A0A on all screen sizes) -->
   <div class="side-menu-backdrop backdrop" id="sideMenuBackdrop" aria-hidden="true"></div>
   <aside class="side-menu" id="sideMenuDrawer" role="dialog" aria-modal="true" aria-label="Collections Menu" aria-hidden="true" tabindex="-1">
     <div class="side-menu__head">
@@ -153,7 +153,7 @@
 
   <main>
     <!-- =======================================================================
-         Hero Section (Full-screen background video, 30% overlay, gentle bottom fade)
+         a) Hero Section (Full-screen video, 30% overlay, ~140px fade into #FFFFFF)
          ======================================================================= -->
     <section class="hero" aria-label="Hero">
       <video class="hero__video" autoplay muted loop playsinline preload="auto" poster="images/hero-poster.jpg">
@@ -193,151 +193,116 @@
     </section>
 
     <!-- =======================================================================
-         1. Shop by Category (Saree, Dupatta, Short, Maxi with gold ring borders)
+         b) Collections (4 rectangular image tiles: Saree, Dupatta, Short, Maxi)
          ======================================================================= -->
     <section class="section" id="categories">
       <div class="container">
         <div class="section__head reveal">
           <span class="eyebrow">Curated Collections</span>
-          <h2 class="section__title">Shop by Category</h2>
+          <h2 class="section__title">Collections</h2>
+          <span class="section__diamond" aria-hidden="true"></span>
           <p class="section__lead">Discover our signature craftsmanship across four timeless silhouettes.</p>
         </div>
 
-        <div class="categories">
-          <!-- Category 1: Saree -->
-          <a href="shop.html?section=women&category=Saree" class="cat-tile reveal" style="transition-delay: 150ms;">
-            <div class="cat-tile__ring">
-              <div class="cat-tile__circle">
-                <!-- Saree draped motif SVG -->
-                <svg viewBox="0 0 64 64" fill="none" stroke="currentColor">
-                  <path d="M32 10c-6 8-12 20-14 36 6-2 14-2 28 0-2-16-8-28-14-36z"/>
-                  <path d="M22 28c8-1 14 3 20 6"/>
-                  <path d="M20 38c7-1 16 2 24 6"/>
-                  <path d="M32 6v6"/>
-                </svg>
+        <div class="categories" id="collectionsGrid">
+          <!-- Tile 1: Saree -->
+          <a href="shop.html?section=women&category=Saree" class="cat-tile reveal" data-collection-cat="Saree" style="transition-delay: 150ms;">
+            <div class="cat-tile__media">
+              <div class="cat-tile__placeholder">
+                <img src="images/logo-mark.png" alt="" width="90" height="40" loading="lazy" decoding="async">
               </div>
             </div>
-            <h3 class="cat-tile__name">Saree</h3>
-            <span class="cat-tile__meta">Explore Styles</span>
+            <div class="cat-tile__overlay" aria-hidden="true"></div>
+            <div class="cat-tile__content">
+              <h3 class="cat-tile__name">Saree</h3>
+              <span class="cat-tile__count" data-collection-count="Saree">3 Products</span>
+            </div>
           </a>
 
-          <!-- Category 2: Dupatta -->
-          <a href="shop.html?section=women&category=Dupatta" class="cat-tile reveal" style="transition-delay: 300ms;">
-            <div class="cat-tile__ring">
-              <div class="cat-tile__circle">
-                <!-- Dupatta flowing motif SVG -->
-                <svg viewBox="0 0 64 64" fill="none" stroke="currentColor">
-                  <path d="M16 16c8 2 16 12 24 10s8-12 16-10v32c-8-2-16 10-24 10s-8-12-16-10V16z"/>
-                  <path d="M28 22c4 3 8 7 12 6"/>
-                  <path d="M24 36c6 3 12 7 18 6"/>
-                </svg>
+          <!-- Tile 2: Dupatta -->
+          <a href="shop.html?section=women&category=Dupatta" class="cat-tile reveal" data-collection-cat="Dupatta" style="transition-delay: 300ms;">
+            <div class="cat-tile__media">
+              <div class="cat-tile__placeholder">
+                <img src="images/logo-mark.png" alt="" width="90" height="40" loading="lazy" decoding="async">
               </div>
             </div>
-            <h3 class="cat-tile__name">Dupatta</h3>
-            <span class="cat-tile__meta">Explore Styles</span>
+            <div class="cat-tile__overlay" aria-hidden="true"></div>
+            <div class="cat-tile__content">
+              <h3 class="cat-tile__name">Dupatta</h3>
+              <span class="cat-tile__count" data-collection-count="Dupatta">3 Products</span>
+            </div>
           </a>
 
-          <!-- Category 3: Short -->
-          <a href="shop.html?section=women&category=Short" class="cat-tile reveal" style="transition-delay: 450ms;">
-            <div class="cat-tile__ring">
-              <div class="cat-tile__circle">
-                <!-- Short Kurti motif SVG -->
-                <svg viewBox="0 0 64 64" fill="none" stroke="currentColor">
-                  <path d="M24 12h16l8 12-4 6-6-4v24H26V26l-6 4-4-6 8-12z"/>
-                  <path d="M28 12c1 4 3 6 4 6s3-2 4-6"/>
-                </svg>
+          <!-- Tile 3: Short -->
+          <a href="shop.html?section=women&category=Short" class="cat-tile reveal" data-collection-cat="Short" style="transition-delay: 450ms;">
+            <div class="cat-tile__media">
+              <div class="cat-tile__placeholder">
+                <img src="images/logo-mark.png" alt="" width="90" height="40" loading="lazy" decoding="async">
               </div>
             </div>
-            <h3 class="cat-tile__name">Short</h3>
-            <span class="cat-tile__meta">Explore Styles</span>
+            <div class="cat-tile__overlay" aria-hidden="true"></div>
+            <div class="cat-tile__content">
+              <h3 class="cat-tile__name">Short</h3>
+              <span class="cat-tile__count" data-collection-count="Short">3 Products</span>
+            </div>
           </a>
 
-          <!-- Category 4: Maxi -->
-          <a href="shop.html?section=women&category=Maxi" class="cat-tile reveal" style="transition-delay: 600ms;">
-            <div class="cat-tile__ring">
-              <div class="cat-tile__circle">
-                <!-- Maxi Anarkali gown motif SVG -->
-                <svg viewBox="0 0 64 64" fill="none" stroke="currentColor">
-                  <path d="M26 12h12l4 8-2 4-4-2v6l12 24H16l12-24v-6l-4 2-2-4 4-8z"/>
-                  <path d="M29 12c1 3 2 4 3 4s2-1 3-4"/>
-                  <path d="M32 28v24"/>
-                </svg>
+          <!-- Tile 4: Maxi -->
+          <a href="shop.html?section=women&category=Maxi" class="cat-tile reveal" data-collection-cat="Maxi" style="transition-delay: 600ms;">
+            <div class="cat-tile__media">
+              <div class="cat-tile__placeholder">
+                <img src="images/logo-mark.png" alt="" width="90" height="40" loading="lazy" decoding="async">
               </div>
             </div>
-            <h3 class="cat-tile__name">Maxi</h3>
-            <span class="cat-tile__meta">Explore Styles</span>
+            <div class="cat-tile__overlay" aria-hidden="true"></div>
+            <div class="cat-tile__content">
+              <h3 class="cat-tile__name">Maxi</h3>
+              <span class="cat-tile__count" data-collection-count="Maxi">3 Products</span>
+            </div>
           </a>
         </div>
       </div>
     </section>
 
     <!-- =======================================================================
-         2. Featured Products (Desktop Grid, Mobile Carousel with Dots)
+         c) New Arrivals (8 newest products; Desktop 4-col grid, Mobile carousel)
          ======================================================================= -->
     <section class="section section--alt" id="featured">
       <div class="container">
         <div class="section__head reveal">
-          <span class="eyebrow">Handpicked Masterpieces</span>
-          <h2 class="section__title">Featured Products</h2>
-          <p class="section__lead">A glimpse into our finest gold zari embroideries and royal fabrics.</p>
+          <span class="eyebrow">Latest Creations</span>
+          <h2 class="section__title">New Arrivals</h2>
+          <span class="section__diamond" aria-hidden="true"></span>
+          <p class="section__lead">A glimpse into our newest gold zari embroideries and royal fabrics.</p>
         </div>
 
-        <!-- Populated dynamically via products.js (Desktop grid, Mobile carousel) -->
+        <!-- Populated dynamically via main.js (8 newest products) -->
         <div class="featured-track" id="featuredTrack"></div>
 
         <!-- Mobile-only Carousel Dots -->
         <div class="dots featured-dots" id="featuredDots" aria-hidden="true"></div>
 
         <div class="section__cta reveal">
-          <a href="shop.html" class="btn btn--outline">View All Products</a>
+          <a href="shop.html?sort=newest" class="btn btn--outline">View All</a>
         </div>
       </div>
     </section>
 
     <!-- =======================================================================
-         3. About Section (Brand Story & Stats Row)
+         d) Category Rows (Saree, Dupatta, Short, Maxi, and Brides if any)
+            Built dynamically from Supabase / fallback products in main.js
          ======================================================================= -->
-    <section class="section" id="about">
-      <div class="container">
-        <div class="about">
-          <div class="about__visual reveal">
-            <!-- Full Logo Display in Arch -->
-            <img src="images/logo-full.png" alt="SNS Official — Stitch n Style logo" width="340" height="358" loading="lazy" decoding="async">
-          </div>
-
-          <div class="about__copy reveal">
-            <span class="eyebrow">The Heritage of Stitch n Style</span>
-            <h2 class="section__title">Crafted for Royal Grace</h2>
-            <p>At SNS Official, we believe that true elegance lies in the details. Founded on the timeless tradition of master craftsmanship, our creations harmoniously blend traditional Eastern artistry with contemporary regal aesthetics.</p>
-            <p>From the rich fall of micro-velvet sarees to the delicate movement of hand-embellished chiffon maxis, every garment is meticulously tailored to celebrate womanhood on life's most unforgettable occasions.</p>
-
-            <div class="stats">
-              <div class="stat">
-                <span class="stat__value">Est. 2026</span>
-                <span class="stat__label">Heritage</span>
-              </div>
-              <div class="stat">
-                <span class="stat__value">Made with Care</span>
-                <span class="stat__label">Quality Fabrics</span>
-              </div>
-              <div class="stat">
-                <span class="stat__value">Handmade</span>
-                <span class="stat__label">Fine Detailing</span>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </section>
+    <div id="categoryRowsContainer"></div>
 
     <!-- =======================================================================
-         4. Reviews Section (Horizontal Swipeable Carousel with Live Star Ratings)
+         e) Reviews Section (Light cards in swipeable carousel, no "verified" text)
          ======================================================================= -->
-    <section class="section section--alt" id="reviews">
+    <section class="section" id="reviews">
       <div class="container">
         <div class="section__head reveal">
           <span class="eyebrow">Customer Testimonials</span>
           <h2 class="section__title">Cherished by Our Patrons</h2>
+          <span class="section__diamond" aria-hidden="true"></span>
           <p class="section__lead">Real experiences from women who chose Stitch n Style for their grand moments.</p>
         </div>
 
@@ -443,13 +408,51 @@
     </section>
 
     <!-- =======================================================================
-         5. Contact Section (WhatsApp, Call, Instagram buttons)
+         f) About Section (Warm cream background #FAF6EE, stats in deep gold)
+         ======================================================================= -->
+    <section class="section section--alt" id="about">
+      <div class="container">
+        <div class="about">
+          <div class="about__visual reveal">
+            <!-- Full Logo Display in Arch -->
+            <img src="images/logo-full.png" alt="SNS Official — Stitch n Style logo" width="340" height="358" loading="lazy" decoding="async">
+          </div>
+
+          <div class="about__copy reveal">
+            <span class="eyebrow">The Heritage of Stitch n Style</span>
+            <h2 class="section__title">Crafted for Royal Grace</h2>
+            <span class="section__diamond" aria-hidden="true"></span>
+            <p>At SNS Official, we believe that true elegance lies in the details. Founded on the timeless tradition of master craftsmanship, our creations harmoniously blend traditional Eastern artistry with contemporary regal aesthetics.</p>
+            <p>From the rich fall of micro-velvet sarees to the delicate movement of hand-embellished chiffon maxis, every garment is meticulously tailored to celebrate womanhood on life's most unforgettable occasions.</p>
+
+            <div class="stats">
+              <div class="stat">
+                <span class="stat__value">Est. 2026</span>
+                <span class="stat__label">Heritage</span>
+              </div>
+              <div class="stat">
+                <span class="stat__value">Made with Care</span>
+                <span class="stat__label">Quality Fabrics</span>
+              </div>
+              <div class="stat">
+                <span class="stat__value">Handmade</span>
+                <span class="stat__label">Fine Detailing</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- =======================================================================
+         g) Contact Section (WhatsApp, Call, Instagram buttons)
          ======================================================================= -->
     <section class="section" id="contact">
       <div class="container">
         <div class="section__head reveal">
           <span class="eyebrow">Connect With Us</span>
           <h2 class="section__title">We Are Here to Assist You</h2>
+          <span class="section__diamond" aria-hidden="true"></span>
           <p class="section__lead">Have inquiries regarding custom sizing, orders, or fabric details? Speak directly with our team.</p>
         </div>
 
@@ -503,7 +506,7 @@
   </main>
 
   <!-- =========================================================================
-       6. Footer (logo-full.png, quick links, contact numbers, copyright)
+       h) Footer (Dark #0A0A0A, logo-full.png, gold section titles, ivory links)
        ========================================================================= -->
   <footer class="footer" role="contentinfo">
     <div class="container">
@@ -544,7 +547,7 @@
   </footer>
 
   <!-- =========================================================================
-       Cart Slide-in Drawer
+       Cart Slide-in Drawer (Light)
        ========================================================================= -->
   <div class="cart-backdrop backdrop" aria-hidden="true"></div>
   <aside class="cart" id="cartDrawer" role="dialog" aria-modal="true" aria-labelledby="cartHeading" aria-hidden="true">
@@ -568,7 +571,7 @@
   </aside>
 
   <!-- =========================================================================
-       Checkout Modal
+       Checkout Modal (Light)
        ========================================================================= -->
   <div class="modal" id="checkoutModal" role="dialog" aria-modal="true" aria-labelledby="checkoutHeading" aria-hidden="true">
     <div class="modal__backdrop" aria-hidden="true"></div>
