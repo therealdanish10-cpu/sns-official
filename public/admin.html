@@ -261,41 +261,69 @@
            ===================================================================== -->
       <section id="tab-hero" class="admin-panel" role="tabpanel" hidden>
         <div class="admin-grid">
-          <!-- Left / Top Column: Add or Edit Hero Slide Form -->
+          <!-- Left / Top Column: Multi-Image Drag & Drop Upload + Slide Metadata Editor -->
           <div class="admin-card">
             <div class="admin-card__head">
-              <h2 id="heroFormTitle">Add Slide</h2>
+              <h2 id="heroFormTitle">Upload Banner Slides</h2>
               <button type="button" id="cancelHeroEditBtn" class="admin-link-btn" hidden>Cancel Edit</button>
             </div>
 
-            <p class="admin-hint" style="margin-top: -0.5rem; margin-bottom: 1.25rem;">
-              Recommended: desktop 1920 x 700 px, mobile 800 x 1000 px. JPG or WebP.
+            <p class="admin-hint" id="heroHintText" style="margin-top: -0.5rem; margin-bottom: 1.25rem;">
+              Upload as many banners as you like at once. Recommended size: 1920 x 700 px, JPG or WebP. Keep important text and the main subject in the center 60 percent of the image so it also looks good on phones.
             </p>
 
-            <form id="heroSlideForm" novalidate>
-              <input type="hidden" id="heroSlideId" value="">
-
-              <div class="field">
-                <label for="heroDesktopInput">Desktop Banner Image *</label>
-                <input type="file" id="heroDesktopInput" accept="image/jpeg,image/png,image/webp,image/gif" class="admin-file-input">
-                <span class="field__hint">Automatically resized (max 1920px wide) and compressed (~85% quality) before upload.</span>
-                <div id="heroDesktopPreviewWrap" class="hero-photo-preview" hidden>
-                  <img id="heroDesktopPreviewImg" src="" alt="Desktop banner preview">
-                  <span id="heroDesktopPreviewMeta" class="hero-photo-preview__meta"></span>
+            <!-- Single Multi-Image Drag-and-Drop Upload Area -->
+            <div id="heroUploadSection">
+              <div
+                id="heroDropzone"
+                class="hero-dropzone"
+                role="button"
+                tabindex="0"
+                aria-label="Upload hero banner images. Drag and drop or click to select multiple JPG, PNG, or WebP images."
+              >
+                <input
+                  type="file"
+                  id="heroFilesInput"
+                  accept="image/jpeg,image/png,image/webp"
+                  multiple
+                  class="hero-dropzone__input"
+                >
+                <div class="hero-dropzone__content">
+                  <svg class="hero-dropzone__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true">
+                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                    <polyline points="17 8 12 3 7 8"/>
+                    <line x1="12" y1="3" x2="12" y2="15"/>
+                  </svg>
+                  <strong class="hero-dropzone__title">Drag &amp; drop banner images here, or click to browse</strong>
+                  <span class="hero-dropzone__sub">Select 1 or multiple images (JPG, PNG, WebP) — each image becomes its own slide</span>
                 </div>
               </div>
 
-              <div class="field">
-                <label for="heroMobileInput">Mobile Banner Image <span class="opt">(Optional)</span></label>
-                <input type="file" id="heroMobileInput" accept="image/jpeg,image/png,image/webp,image/gif" class="admin-file-input">
-                <span class="field__hint">Optional portrait banner for mobile screens (resized to max 900px wide).</span>
-                <div id="heroMobilePreviewWrap" class="hero-photo-preview hero-photo-preview--mobile" hidden>
-                  <img id="heroMobilePreviewImg" src="" alt="Mobile banner preview">
-                  <div class="hero-photo-preview__actions">
-                    <span id="heroMobilePreviewMeta" class="hero-photo-preview__meta"></span>
-                    <button type="button" id="removeHeroMobileBtn" class="admin-link-btn admin-link-btn--danger">Remove Mobile Image</button>
-                  </div>
+              <!-- Sequential Upload Progress Indicator -->
+              <div id="heroUploadProgressWrap" class="hero-upload-progress" hidden aria-live="polite">
+                <div class="hero-upload-progress__head">
+                  <strong id="heroUploadStatusText">Uploading 1 of 1</strong>
+                  <span id="heroUploadPercentText">0%</span>
                 </div>
+                <div class="hero-upload-progress__track" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" id="heroUploadProgressBarWrap">
+                  <div id="heroUploadProgressBar" class="hero-upload-progress__bar" style="width: 0%;"></div>
+                </div>
+              </div>
+
+              <!-- Thumbnail Preview Strip While Uploading -->
+              <div id="heroUploadPreviewStrip" class="hero-upload-strip" hidden aria-live="polite"></div>
+
+              <!-- Upload Batch Summary / Error Details -->
+              <div id="heroUploadResultBox" class="hero-upload-result" hidden aria-live="polite"></div>
+            </div>
+
+            <!-- Edit Existing Slide Metadata Form (Link, Alt Text, Visibility — shown when editing a slide) -->
+            <form id="heroSlideForm" class="hero-edit-form" hidden novalidate>
+              <input type="hidden" id="heroSlideId" value="">
+
+              <div id="heroEditPreviewWrap" class="hero-photo-preview" hidden>
+                <img id="heroEditPreviewImg" src="" alt="Slide banner preview">
+                <span id="heroEditPreviewMeta" class="hero-photo-preview__meta"></span>
               </div>
 
               <div class="field">
@@ -306,7 +334,7 @@
 
               <div class="field">
                 <label for="heroAltInput">Alt Text</label>
-                <input type="text" id="heroAltInput" placeholder="e.g. Festive Saree Collection — Stitch n Style">
+                <input type="text" id="heroAltInput" placeholder="e.g. SNS Official banner 1">
               </div>
 
               <div class="field admin-toggle-field">
@@ -324,7 +352,7 @@
 
               <div class="admin-form-actions">
                 <button type="submit" id="heroSubmitBtn" class="btn btn--primary btn--block">
-                  Add Slide
+                  Save Slide Changes
                 </button>
               </div>
             </form>
@@ -335,7 +363,7 @@
             <div class="admin-card__head">
               <div>
                 <h2>Hero Banner Slides</h2>
-                <p class="admin-card__sub">Ordered from top to bottom. If no slides are visible, the homepage shows the default arch hero.</p>
+                <p class="admin-card__sub">Ordered from top to bottom. Click Edit on any slide to update its link, alt text, or visibility.</p>
               </div>
               <button type="button" id="refreshHeroBtn" class="admin-link-btn">Refresh</button>
             </div>

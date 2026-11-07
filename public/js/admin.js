@@ -47,19 +47,22 @@
   const pendingCountBadge = document.getElementById("pendingCountBadge");
 
   // Hero Tab DOM
+  const heroDropzone = document.getElementById("heroDropzone");
+  const heroFilesInput = document.getElementById("heroFilesInput");
+  const heroUploadProgressWrap = document.getElementById("heroUploadProgressWrap");
+  const heroUploadStatusText = document.getElementById("heroUploadStatusText");
+  const heroUploadPercentText = document.getElementById("heroUploadPercentText");
+  const heroUploadProgressBarWrap = document.getElementById("heroUploadProgressBarWrap");
+  const heroUploadProgressBar = document.getElementById("heroUploadProgressBar");
+  const heroUploadPreviewStrip = document.getElementById("heroUploadPreviewStrip");
+  const heroUploadResultBox = document.getElementById("heroUploadResultBox");
   const heroSlideForm = document.getElementById("heroSlideForm");
   const heroFormTitle = document.getElementById("heroFormTitle");
   const cancelHeroEditBtn = document.getElementById("cancelHeroEditBtn");
   const heroSlideIdInput = document.getElementById("heroSlideId");
-  const heroDesktopInput = document.getElementById("heroDesktopInput");
-  const heroDesktopPreviewWrap = document.getElementById("heroDesktopPreviewWrap");
-  const heroDesktopPreviewImg = document.getElementById("heroDesktopPreviewImg");
-  const heroDesktopPreviewMeta = document.getElementById("heroDesktopPreviewMeta");
-  const heroMobileInput = document.getElementById("heroMobileInput");
-  const heroMobilePreviewWrap = document.getElementById("heroMobilePreviewWrap");
-  const heroMobilePreviewImg = document.getElementById("heroMobilePreviewImg");
-  const heroMobilePreviewMeta = document.getElementById("heroMobilePreviewMeta");
-  const removeHeroMobileBtn = document.getElementById("removeHeroMobileBtn");
+  const heroEditPreviewWrap = document.getElementById("heroEditPreviewWrap");
+  const heroEditPreviewImg = document.getElementById("heroEditPreviewImg");
+  const heroEditPreviewMeta = document.getElementById("heroEditPreviewMeta");
   const heroLinkInput = document.getElementById("heroLinkInput");
   const heroAltInput = document.getElementById("heroAltInput");
   const heroVisibleInput = document.getElementById("heroVisibleInput");
@@ -141,12 +144,8 @@
   let allReviews = [];
 
   // Hero tab state
-  let currentHeroDesktopUrl = null;
-  let currentHeroDesktopFile = null;
-  let currentHeroDesktopPreviewUrl = null;
-  let currentHeroMobileUrl = null;
-  let currentHeroMobileFile = null;
-  let currentHeroMobilePreviewUrl = null;
+  let isHeroBatchUploading = false;
+  let heroPreviewObjectUrls = [];
 
   // Menu tab state
   let activeMenuSection = "women";
@@ -1555,20 +1554,59 @@
   if (refreshPendingBtn) refreshPendingBtn.addEventListener("click", fetchReviews);
 
   /* -------------------------------------------------------------------------
-   * 6. Hero Banner Slides Management (Resize, Compress, Reorder, CRUD)
+   * 6. Hero Banner Slides Management (Single Multi-Image Upload, Resize, Compress, Reorder, CRUD)
    * ----------------------------------------------------------------------- */
-  function formatBytesKB(bytes) {
-    if (!bytes || isNaN(bytes)) return "";
-    const kb = Math.round(bytes / 1024);
-    return kb >= 1024 ? `${(kb / 1024).toFixed(1)} MB` : `${kb} KB`;
+  const HERO_BUCKET_MISSING_MSG =
+    "Hero image storage is not set up yet. Run hero-slides-migration.sql in the Supabase SQL editor, then try again.";
+
+  function isBucketNotFoundError(err) {
+    if (!err) return false;
+    const msg = String(err.message || err.error || err.statusText || err || "");
+    return /bucket\s*not\s*found|not\s*found.*bucket|bucket.*does\s*not\s*exist|the\s*resource\s*was\s*not\s*found/i.test(msg);
   }
 
-  // Resize image in the browser (desktop max 1920px wide, mobile max 900px wide)
-  // and compress to ~85% quality as WebP (or JPEG fallback).
-  function resizeAndCompressHeroImage(file, maxWidth, quality = 0.85) {
+  function formatHeroError(err) {
+    if (isBucketNotFoundError(err) || (err && err.isBucketMissing)) {
+      return HERO_BUCKET_MISSING_MSG;
+    }
+    return (err && err.message) ? String(err.message) : "Unexpected error.";
+  }
+
+  async function uploadHeroImageToBucket(file) {
+    const bucketName = (window.SNS_SUPABASE && window.SNS_SUPABASE.buckets && window.SNS_SUPABASE.buckets.hero)
+      ? window.SNS_SUPABASE.buckets.hero
+      : BUCKETS.hero;
+
+    const ext = (file.name.split(".").pop() || "jpg").toLowerCase().replace(/[^a-z0-9]/g, "") || "jpg";
+    const filePath = `${Date.now()}-${Math.random().toString(36).slice(2, 10)}.${ext}`;
+
+    const { error: uploadErr } = await sb.storage.from(bucketName).upload(filePath, file, {
+      cacheControl: "3600",
+      upsert: false,
+      contentType: file.type || "image/jpeg"
+    });
+
+    if (uploadErr) {
+      if (isBucketNotFoundError(uploadErr)) {
+        const missingErr = new Error(HERO_BUCKET_MISSING_MSG);
+        missingErr.isBucketMissing = true;
+        throw missingErr;
+      }
+      throw new Error(uploadErr.message || "Failed to upload image.");
+    }
+
+    const { data } = sb.storage.from(bucketName).getPublicUrl(filePath);
+    if (!data || !data.publicUrl) {
+      throw new Error("Could not retrieve public URL for uploaded image.");
+    }
+    return data.publicUrl;
+  }
+
+  // Resize image in the browser (max 1920px wide) and compress to ~85% quality as WebP (or JPEG fallback).
+  function resizeAndCompressHeroImage(file, maxWidth = 1920, quality = 0.85) {
     return new Promise((resolve, reject) => {
-      if (!file || !file.type || !file.type.startsWith("image/")) {
-        reject(new Error("Please select a valid image file (JPG, PNG, or WebP)."));
+      if (!file || !file.type || !/^image\/(jpeg|png|webp)$/i.test(file.type)) {
+        reject(new Error("Unsupported file type (use JPG, PNG, or WebP)."));
         return;
       }
 
@@ -1661,15 +1699,267 @@
 
   async function removeHeroFilesBestEffort(urls) {
     if (!sb || !Array.isArray(urls)) return;
+    const bucketName = (window.SNS_SUPABASE && window.SNS_SUPABASE.buckets && window.SNS_SUPABASE.buckets.hero)
+      ? window.SNS_SUPABASE.buckets.hero
+      : BUCKETS.hero;
     const paths = urls
-      .map(u => extractStoragePathFromPublicUrl(u, BUCKETS.hero))
+      .map(u => extractStoragePathFromPublicUrl(u, bucketName))
       .filter(Boolean);
     if (paths.length === 0) return;
     try {
-      await sb.storage.from(BUCKETS.hero).remove(paths);
+      await sb.storage.from(bucketName).remove(paths);
     } catch (err) {
       console.warn("Best-effort hero storage cleanup skipped:", err);
     }
+  }
+
+  function clearHeroPreviewObjectUrls() {
+    heroPreviewObjectUrls.forEach(url => {
+      try {
+        URL.revokeObjectURL(url);
+      } catch (_e) {}
+    });
+    heroPreviewObjectUrls = [];
+  }
+
+  function updateHeroProgressUI(currentIndex, total, pctOverride) {
+    if (!heroUploadProgressWrap) return;
+    heroUploadProgressWrap.hidden = false;
+    const pct = typeof pctOverride === "number"
+      ? Math.max(0, Math.min(100, Math.round(pctOverride)))
+      : Math.max(0, Math.min(100, Math.round((currentIndex / Math.max(1, total)) * 100)));
+
+    if (heroUploadStatusText) {
+      heroUploadStatusText.textContent = `Uploading ${currentIndex} of ${total}`;
+    }
+    if (heroUploadPercentText) {
+      heroUploadPercentText.textContent = `${pct}%`;
+    }
+    if (heroUploadProgressBar) {
+      heroUploadProgressBar.style.width = `${pct}%`;
+    }
+    if (heroUploadProgressBarWrap) {
+      heroUploadProgressBarWrap.setAttribute("aria-valuenow", String(pct));
+    }
+  }
+
+  async function handleHeroBatchFiles(rawFileList) {
+    if (!sb || isHeroBatchUploading) return;
+    const filesArr = Array.from(rawFileList || []);
+    if (filesArr.length === 0) return;
+
+    // Sort selected files by filename so slides are added in predictable filename order
+    const sortedFiles = filesArr.slice().sort((a, b) =>
+      String(a.name || "").localeCompare(String(b.name || ""), undefined, {
+        numeric: true,
+        sensitivity: "base"
+      })
+    );
+
+    const total = sortedFiles.length;
+    isHeroBatchUploading = true;
+    if (heroDropzone) heroDropzone.classList.add("is-uploading");
+    if (heroUploadResultBox) {
+      heroUploadResultBox.hidden = true;
+      heroUploadResultBox.innerHTML = "";
+    }
+
+    // Build thumbnail preview strip
+    clearHeroPreviewObjectUrls();
+    const thumbCards = [];
+    if (heroUploadPreviewStrip) {
+      heroUploadPreviewStrip.innerHTML = "";
+      heroUploadPreviewStrip.hidden = false;
+
+      sortedFiles.forEach((file) => {
+        const card = document.createElement("div");
+        card.className = "hero-upload-thumb";
+
+        let previewUrl = "";
+        if (file && file.type && file.type.startsWith("image/")) {
+          previewUrl = URL.createObjectURL(file);
+          heroPreviewObjectUrls.push(previewUrl);
+        }
+
+        card.innerHTML = `
+          ${previewUrl
+            ? `<img src="${escapeHTML(previewUrl)}" class="hero-upload-thumb__img" alt="${escapeHTML(file.name)}">`
+            : `<div class="hero-upload-thumb__img"></div>`
+          }
+          <span class="hero-upload-thumb__name" title="${escapeHTML(file.name)}">${escapeHTML(file.name)}</span>
+          <span class="hero-upload-thumb__status">Queued</span>
+        `;
+        heroUploadPreviewStrip.appendChild(card);
+        thumbCards.push(card);
+      });
+    }
+
+    let currentMaxSort = allHeroSlides.reduce((max, s) => Math.max(max, Number(s.sort_order) || 0), 0);
+    const baseSlideCount = allHeroSlides.length;
+    let uploadedCount = 0;
+    let sawBucketMissing = false;
+    const failures = [];
+
+    for (let i = 0; i < total; i++) {
+      const rawFile = sortedFiles[i];
+      const thumbEl = thumbCards[i];
+      const statusEl = thumbEl ? thumbEl.querySelector(".hero-upload-thumb__status") : null;
+
+      updateHeroProgressUI(i + 1, total, ((i + 0.2) / total) * 100);
+      if (thumbEl) thumbEl.classList.add("is-active");
+      if (statusEl) statusEl.textContent = "Uploading…";
+
+      try {
+        const { file: compressedFile } = await resizeAndCompressHeroImage(rawFile, 1920, 0.85);
+        if (compressedFile.size > 10 * 1024 * 1024) {
+          throw new Error("Compressed image exceeds the 10 MB limit.");
+        }
+
+        const publicUrl = await uploadHeroImageToBucket(compressedFile);
+        currentMaxSort += 1;
+        const slideNumber = baseSlideCount + uploadedCount + 1;
+        const defaultAlt = `SNS Official banner ${slideNumber}`;
+
+        const { error: insertErr } = await sb
+          .from("hero_slides")
+          .insert([
+            {
+              image_url: publicUrl,
+              mobile_image_url: null,
+              link_url: null,
+              alt_text: defaultAlt,
+              sort_order: currentMaxSort,
+              is_visible: true
+            }
+          ]);
+
+        if (insertErr) {
+          await removeHeroFilesBestEffort([publicUrl]);
+          throw new Error(insertErr.message || "Database insert failed.");
+        }
+
+        uploadedCount += 1;
+        if (thumbEl) {
+          thumbEl.classList.remove("is-active");
+          thumbEl.classList.add("is-done");
+        }
+        if (statusEl) statusEl.textContent = "Uploaded";
+      } catch (err) {
+        if (isBucketNotFoundError(err) || (err && err.isBucketMissing)) {
+          sawBucketMissing = true;
+        }
+        const shortReason = formatHeroError(err);
+        failures.push({
+          name: rawFile ? rawFile.name : `File ${i + 1}`,
+          reason: shortReason
+        });
+        if (thumbEl) {
+          thumbEl.classList.remove("is-active");
+          thumbEl.classList.add("is-failed");
+        }
+        if (statusEl) statusEl.textContent = "Failed";
+      }
+
+      updateHeroProgressUI(i + 1, total, ((i + 1) / total) * 100);
+    }
+
+    isHeroBatchUploading = false;
+    if (heroDropzone) heroDropzone.classList.remove("is-uploading");
+    if (heroFilesInput) heroFilesInput.value = "";
+
+    await fetchHeroSlides();
+
+    if (heroUploadResultBox) {
+      heroUploadResultBox.hidden = false;
+      if (failures.length === 0) {
+        const msg = `Successfully uploaded ${uploadedCount} ${uploadedCount === 1 ? "banner slide" : "banner slides"}.`;
+        heroUploadResultBox.className = "hero-upload-result is-success";
+        heroUploadResultBox.textContent = msg;
+        showAlert(dashboardAlert, msg, "success");
+      } else if (sawBucketMissing && uploadedCount === 0) {
+        heroUploadResultBox.className = "hero-upload-result is-error";
+        const failItems = failures
+          .map(f => `<li><strong>${escapeHTML(f.name)}</strong>: ${escapeHTML(f.reason)}</li>`)
+          .join("");
+        heroUploadResultBox.innerHTML = `
+          <div><strong>${escapeHTML(HERO_BUCKET_MISSING_MSG)}</strong></div>
+          <ul class="hero-upload-result__list">${failItems}</ul>
+        `;
+        showAlert(dashboardAlert, HERO_BUCKET_MISSING_MSG, "error", 8000);
+      } else {
+        heroUploadResultBox.className = "hero-upload-result is-error";
+        const summaryLine = uploadedCount > 0
+          ? `Uploaded ${uploadedCount} of ${total} slides. ${failures.length} failed:`
+          : `Failed to upload ${failures.length} ${failures.length === 1 ? "file" : "files"}:`;
+        const failItems = failures
+          .map(f => `<li><strong>${escapeHTML(f.name)}</strong>: ${escapeHTML(f.reason)}</li>`)
+          .join("");
+        heroUploadResultBox.innerHTML = `
+          <div><strong>${escapeHTML(summaryLine)}</strong></div>
+          <ul class="hero-upload-result__list">${failItems}</ul>
+        `;
+        showAlert(
+          dashboardAlert,
+          sawBucketMissing ? HERO_BUCKET_MISSING_MSG : `${summaryLine} ${failures[0].name} (${failures[0].reason})`,
+          "error",
+          7000
+        );
+      }
+    }
+  }
+
+  // Bind Drag-and-Drop and Click File Picker on #heroDropzone
+  if (heroDropzone && heroFilesInput) {
+    heroDropzone.addEventListener("click", (e) => {
+      if (isHeroBatchUploading) return;
+      if (e.target !== heroFilesInput) {
+        heroFilesInput.click();
+      }
+    });
+
+    heroDropzone.addEventListener("keydown", (e) => {
+      if (isHeroBatchUploading) return;
+      if (e.key === "Enter" || e.key === " ") {
+        e.preventDefault();
+        heroFilesInput.click();
+      }
+    });
+
+    heroFilesInput.addEventListener("change", (e) => {
+      const files = e.target.files;
+      if (files && files.length > 0) {
+        handleHeroBatchFiles(files);
+      }
+    });
+
+    ["dragenter", "dragover"].forEach((evtName) => {
+      heroDropzone.addEventListener(evtName, (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        if (!isHeroBatchUploading) {
+          heroDropzone.classList.add("is-dragover");
+        }
+      });
+    });
+
+    ["dragleave", "dragend"].forEach((evtName) => {
+      heroDropzone.addEventListener(evtName, (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        heroDropzone.classList.remove("is-dragover");
+      });
+    });
+
+    heroDropzone.addEventListener("drop", (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      heroDropzone.classList.remove("is-dragover");
+      if (isHeroBatchUploading) return;
+      const droppedFiles = e.dataTransfer && e.dataTransfer.files;
+      if (droppedFiles && droppedFiles.length > 0) {
+        handleHeroBatchFiles(droppedFiles);
+      }
+    });
   }
 
   if (heroVisibleInput && heroVisibleLabel) {
@@ -1678,132 +1968,19 @@
     });
   }
 
-  function updateHeroDesktopPreview(metaText = "") {
-    if (!heroDesktopPreviewWrap || !heroDesktopPreviewImg) return;
-    if (currentHeroDesktopPreviewUrl) {
-      heroDesktopPreviewImg.src = currentHeroDesktopPreviewUrl;
-      heroDesktopPreviewWrap.hidden = false;
-      if (heroDesktopPreviewMeta) heroDesktopPreviewMeta.textContent = metaText;
-    } else if (currentHeroDesktopUrl) {
-      heroDesktopPreviewImg.src = currentHeroDesktopUrl;
-      heroDesktopPreviewWrap.hidden = false;
-      if (heroDesktopPreviewMeta) heroDesktopPreviewMeta.textContent = metaText || "Current desktop banner";
-    } else {
-      heroDesktopPreviewImg.src = "";
-      heroDesktopPreviewWrap.hidden = true;
-      if (heroDesktopPreviewMeta) heroDesktopPreviewMeta.textContent = "";
-    }
-  }
-
-  function updateHeroMobilePreview(metaText = "") {
-    if (!heroMobilePreviewWrap || !heroMobilePreviewImg) return;
-    if (currentHeroMobilePreviewUrl) {
-      heroMobilePreviewImg.src = currentHeroMobilePreviewUrl;
-      heroMobilePreviewWrap.hidden = false;
-      if (heroMobilePreviewMeta) heroMobilePreviewMeta.textContent = metaText;
-    } else if (currentHeroMobileUrl) {
-      heroMobilePreviewImg.src = currentHeroMobileUrl;
-      heroMobilePreviewWrap.hidden = false;
-      if (heroMobilePreviewMeta) heroMobilePreviewMeta.textContent = metaText || "Current mobile banner";
-    } else {
-      heroMobilePreviewImg.src = "";
-      heroMobilePreviewWrap.hidden = true;
-      if (heroMobilePreviewMeta) heroMobilePreviewMeta.textContent = "";
-    }
-  }
-
-  if (heroDesktopInput) {
-    heroDesktopInput.addEventListener("change", async (e) => {
-      const rawFile = (e.target.files || [])[0];
-      if (!rawFile) return;
-      try {
-        if (heroDesktopPreviewMeta) {
-          heroDesktopPreviewWrap.hidden = false;
-          heroDesktopPreviewMeta.textContent = "Resizing & compressing…";
-        }
-        const { file, width, height } = await resizeAndCompressHeroImage(rawFile, 1920, 0.85);
-        if (file.size > 10 * 1024 * 1024) {
-          throw new Error("Compressed desktop image exceeds the 10 MB limit.");
-        }
-        if (currentHeroDesktopPreviewUrl) {
-          URL.revokeObjectURL(currentHeroDesktopPreviewUrl);
-        }
-        currentHeroDesktopFile = file;
-        currentHeroDesktopPreviewUrl = URL.createObjectURL(file);
-        updateHeroDesktopPreview(`Ready: ${width} × ${height} px (${formatBytesKB(file.size)})`);
-      } catch (err) {
-        heroDesktopInput.value = "";
-        showAlert(dashboardAlert, err.message || "Could not process desktop image.", "error");
-        updateHeroDesktopPreview();
-      }
-    });
-  }
-
-  if (heroMobileInput) {
-    heroMobileInput.addEventListener("change", async (e) => {
-      const rawFile = (e.target.files || [])[0];
-      if (!rawFile) return;
-      try {
-        if (heroMobilePreviewMeta) {
-          heroMobilePreviewWrap.hidden = false;
-          heroMobilePreviewMeta.textContent = "Resizing & compressing…";
-        }
-        const { file, width, height } = await resizeAndCompressHeroImage(rawFile, 900, 0.85);
-        if (file.size > 10 * 1024 * 1024) {
-          throw new Error("Compressed mobile image exceeds the 10 MB limit.");
-        }
-        if (currentHeroMobilePreviewUrl) {
-          URL.revokeObjectURL(currentHeroMobilePreviewUrl);
-        }
-        currentHeroMobileFile = file;
-        currentHeroMobilePreviewUrl = URL.createObjectURL(file);
-        updateHeroMobilePreview(`Ready: ${width} × ${height} px (${formatBytesKB(file.size)})`);
-      } catch (err) {
-        heroMobileInput.value = "";
-        showAlert(dashboardAlert, err.message || "Could not process mobile image.", "error");
-        updateHeroMobilePreview();
-      }
-    });
-  }
-
-  if (removeHeroMobileBtn) {
-    removeHeroMobileBtn.addEventListener("click", () => {
-      if (currentHeroMobilePreviewUrl) {
-        URL.revokeObjectURL(currentHeroMobilePreviewUrl);
-      }
-      currentHeroMobileFile = null;
-      currentHeroMobilePreviewUrl = null;
-      currentHeroMobileUrl = null;
-      if (heroMobileInput) heroMobileInput.value = "";
-      updateHeroMobilePreview();
-    });
-  }
-
   function resetHeroForm() {
     if (!heroSlideForm) return;
     heroSlideForm.reset();
+    heroSlideForm.hidden = true;
     if (heroSlideIdInput) heroSlideIdInput.value = "";
-
-    if (currentHeroDesktopPreviewUrl) URL.revokeObjectURL(currentHeroDesktopPreviewUrl);
-    if (currentHeroMobilePreviewUrl) URL.revokeObjectURL(currentHeroMobilePreviewUrl);
-
-    currentHeroDesktopUrl = null;
-    currentHeroDesktopFile = null;
-    currentHeroDesktopPreviewUrl = null;
-    currentHeroMobileUrl = null;
-    currentHeroMobileFile = null;
-    currentHeroMobilePreviewUrl = null;
-
-    if (heroDesktopInput) heroDesktopInput.value = "";
-    if (heroMobileInput) heroMobileInput.value = "";
+    if (heroEditPreviewWrap) heroEditPreviewWrap.hidden = true;
+    if (heroEditPreviewImg) heroEditPreviewImg.src = "";
+    if (heroEditPreviewMeta) heroEditPreviewMeta.textContent = "";
     if (heroVisibleInput) heroVisibleInput.checked = true;
     if (heroVisibleLabel) heroVisibleLabel.textContent = "Visible";
 
-    updateHeroDesktopPreview();
-    updateHeroMobilePreview();
-
-    if (heroFormTitle) heroFormTitle.textContent = "Add Slide";
-    if (heroSubmitBtn) heroSubmitBtn.textContent = "Add Slide";
+    if (heroFormTitle) heroFormTitle.textContent = "Upload Banner Slides";
+    if (heroSubmitBtn) heroSubmitBtn.textContent = "Save Slide Changes";
     if (cancelHeroEditBtn) cancelHeroEditBtn.hidden = true;
   }
 
@@ -1813,21 +1990,25 @@
 
   function startEditHeroSlide(slide) {
     resetHeroForm();
-    if (!slide) return;
+    if (!slide || !heroSlideForm) return;
 
+    heroSlideForm.hidden = false;
     if (heroSlideIdInput) heroSlideIdInput.value = slide.id;
     if (heroLinkInput) heroLinkInput.value = slide.link_url || "";
     if (heroAltInput) heroAltInput.value = slide.alt_text || "";
     if (heroVisibleInput) heroVisibleInput.checked = slide.is_visible !== false;
     if (heroVisibleLabel) heroVisibleLabel.textContent = slide.is_visible !== false ? "Visible" : "Hidden";
 
-    currentHeroDesktopUrl = slide.image_url || null;
-    currentHeroMobileUrl = slide.mobile_image_url || null;
-    updateHeroDesktopPreview();
-    updateHeroMobilePreview();
+    if (heroEditPreviewWrap && heroEditPreviewImg && slide.image_url) {
+      heroEditPreviewImg.src = slide.image_url;
+      heroEditPreviewWrap.hidden = false;
+      if (heroEditPreviewMeta) {
+        heroEditPreviewMeta.textContent = `Editing slide (${slide.alt_text || "Banner"})`;
+      }
+    }
 
     if (heroFormTitle) heroFormTitle.textContent = "Edit Slide";
-    if (heroSubmitBtn) heroSubmitBtn.textContent = "Update Slide";
+    if (heroSubmitBtn) heroSubmitBtn.textContent = "Save Slide Changes";
     if (cancelHeroEditBtn) cancelHeroEditBtn.hidden = false;
 
     heroSlideForm.scrollIntoView({ behavior: "smooth", block: "start" });
@@ -1856,7 +2037,7 @@
   function renderHeroSlidesList() {
     if (!heroSlidesListEl) return;
     if (allHeroSlides.length === 0) {
-      heroSlidesListEl.innerHTML = `<div class="admin-empty">No hero slides yet. Add your first banner slide on the left — until then, the homepage displays the default arch hero.</div>`;
+      heroSlidesListEl.innerHTML = `<div class="admin-empty">No hero slides yet. Upload your banner images on the left — until then, the homepage displays the default arch hero.</div>`;
       return;
     }
 
@@ -1871,14 +2052,9 @@
       item.className = "hero-slide-item";
       item.innerHTML = `
         <div class="hero-slide-item__thumbs">
-          <div class="hero-slide-item__thumb" title="Desktop banner">
+          <div class="hero-slide-item__thumb" title="Banner thumbnail">
             <img src="${escapeHTML(slide.image_url)}" alt="${escapeHTML(altText || `Slide ${idx + 1}`)}">
           </div>
-          ${slide.mobile_image_url ? `
-            <div class="hero-slide-item__mobile-thumb" title="Mobile banner">
-              <img src="${escapeHTML(slide.mobile_image_url)}" alt="${escapeHTML(altText || `Slide ${idx + 1} mobile`)}">
-            </div>
-          ` : ""}
         </div>
 
         <div class="hero-slide-item__body">
@@ -1889,7 +2065,6 @@
           }
           <div class="hero-slide-item__meta">
             <span>Slide #${idx + 1}</span>
-            ${slide.mobile_image_url ? `<span class="admin-pill">Mobile + Desktop</span>` : `<span class="admin-pill">Desktop Only</span>`}
           </div>
         </div>
 
@@ -1983,7 +2158,7 @@
       return;
     }
 
-    // Best-effort storage file cleanup
+    // Best-effort storage file cleanup (removes main image and any legacy mobile image if present)
     await removeHeroFilesBestEffort([slide.image_url, slide.mobile_image_url].filter(Boolean));
 
     if (heroSlideIdInput && heroSlideIdInput.value === slide.id) {
@@ -1999,85 +2174,36 @@
       if (!sb) return;
 
       const editingId = (heroSlideIdInput && heroSlideIdInput.value) ? heroSlideIdInput.value : null;
-      const existingSlide = editingId ? allHeroSlides.find(s => s.id === editingId) : null;
+      if (!editingId) return;
+
       const link_url = (heroLinkInput.value || "").trim() || null;
       const alt_text = (heroAltInput.value || "").trim();
       const is_visible = Boolean(heroVisibleInput ? heroVisibleInput.checked : true);
 
-      if (!currentHeroDesktopFile && !currentHeroDesktopUrl) {
-        showAlert(dashboardAlert, "Please select a desktop banner image.", "error");
-        if (heroDesktopInput) heroDesktopInput.focus();
-        return;
-      }
-
       heroSubmitBtn.disabled = true;
-      heroSubmitBtn.textContent = "Uploading & Saving…";
+      heroSubmitBtn.textContent = "Saving…";
 
       try {
-        let finalDesktopUrl = currentHeroDesktopUrl;
-        let finalMobileUrl = currentHeroMobileUrl;
-        const filesToCleanup = [];
+        // Update only link_url, alt_text, and is_visible — keep image_url and any existing mobile_image_url intact
+        const { error } = await sb
+          .from("hero_slides")
+          .update({
+            link_url,
+            alt_text,
+            is_visible
+          })
+          .eq("id", editingId);
 
-        if (currentHeroDesktopFile) {
-          finalDesktopUrl = await uploadImageToBucket(BUCKETS.hero, currentHeroDesktopFile);
-          if (existingSlide && existingSlide.image_url && existingSlide.image_url !== finalDesktopUrl) {
-            filesToCleanup.push(existingSlide.image_url);
-          }
-        }
+        if (error) throw error;
 
-        if (currentHeroMobileFile) {
-          finalMobileUrl = await uploadImageToBucket(BUCKETS.hero, currentHeroMobileFile);
-          if (existingSlide && existingSlide.mobile_image_url && existingSlide.mobile_image_url !== finalMobileUrl) {
-            filesToCleanup.push(existingSlide.mobile_image_url);
-          }
-        } else if (existingSlide && existingSlide.mobile_image_url && !currentHeroMobileUrl) {
-          // User removed the mobile image while editing
-          filesToCleanup.push(existingSlide.mobile_image_url);
-        }
-
-        if (editingId) {
-          const { error } = await sb
-            .from("hero_slides")
-            .update({
-              image_url: finalDesktopUrl,
-              mobile_image_url: finalMobileUrl,
-              link_url,
-              alt_text,
-              is_visible
-            })
-            .eq("id", editingId);
-
-          if (error) throw error;
-          if (filesToCleanup.length > 0) {
-            await removeHeroFilesBestEffort(filesToCleanup);
-          }
-          showAlert(dashboardAlert, "Updated hero slide successfully.", "success");
-        } else {
-          const maxSort = allHeroSlides.reduce((max, s) => Math.max(max, Number(s.sort_order) || 0), 0);
-          const { error } = await sb
-            .from("hero_slides")
-            .insert([
-              {
-                image_url: finalDesktopUrl,
-                mobile_image_url: finalMobileUrl,
-                link_url,
-                alt_text,
-                sort_order: maxSort + 1,
-                is_visible
-              }
-            ]);
-
-          if (error) throw error;
-          showAlert(dashboardAlert, "Added new hero slide.", "success");
-        }
-
+        showAlert(dashboardAlert, "Updated hero slide successfully.", "success");
         resetHeroForm();
         fetchHeroSlides();
       } catch (err) {
-        showAlert(dashboardAlert, err.message || "Failed to save hero slide.", "error");
+        showAlert(dashboardAlert, err.message || "Failed to update hero slide.", "error");
       } finally {
         heroSubmitBtn.disabled = false;
-        heroSubmitBtn.textContent = (heroSlideIdInput && heroSlideIdInput.value) ? "Update Slide" : "Add Slide";
+        heroSubmitBtn.textContent = "Save Slide Changes";
       }
     });
   }
