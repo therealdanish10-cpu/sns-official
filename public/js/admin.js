@@ -7,10 +7,14 @@
   "use strict";
 
   const sb = window.supabaseClient;
-  const BUCKETS = (window.SNS_SUPABASE && window.SNS_SUPABASE.buckets) || {
-    products: "product-images",
-    reviews: "review-photos"
-  };
+  const BUCKETS = Object.assign(
+    {
+      products: "product-images",
+      reviews: "review-photos",
+      hero: "hero-images"
+    },
+    (window.SNS_SUPABASE && window.SNS_SUPABASE.buckets) || {}
+  );
 
   /* -------------------------------------------------------------------------
    * DOM Elements
@@ -31,14 +35,38 @@
   const tabBtns = document.querySelectorAll(".admin-tab[data-tab]");
   const tabPanels = {
     products: document.getElementById("tab-products"),
+    hero: document.getElementById("tab-hero"),
     menu: document.getElementById("tab-menu"),
     reviews: document.getElementById("tab-reviews"),
     pending: document.getElementById("tab-pending")
   };
   const productsCountBadge = document.getElementById("productsCountBadge");
+  const heroCountBadge = document.getElementById("heroCountBadge");
   const menuCountBadge = document.getElementById("menuCountBadge");
   const approvedCountBadge = document.getElementById("approvedCountBadge");
   const pendingCountBadge = document.getElementById("pendingCountBadge");
+
+  // Hero Tab DOM
+  const heroSlideForm = document.getElementById("heroSlideForm");
+  const heroFormTitle = document.getElementById("heroFormTitle");
+  const cancelHeroEditBtn = document.getElementById("cancelHeroEditBtn");
+  const heroSlideIdInput = document.getElementById("heroSlideId");
+  const heroDesktopInput = document.getElementById("heroDesktopInput");
+  const heroDesktopPreviewWrap = document.getElementById("heroDesktopPreviewWrap");
+  const heroDesktopPreviewImg = document.getElementById("heroDesktopPreviewImg");
+  const heroDesktopPreviewMeta = document.getElementById("heroDesktopPreviewMeta");
+  const heroMobileInput = document.getElementById("heroMobileInput");
+  const heroMobilePreviewWrap = document.getElementById("heroMobilePreviewWrap");
+  const heroMobilePreviewImg = document.getElementById("heroMobilePreviewImg");
+  const heroMobilePreviewMeta = document.getElementById("heroMobilePreviewMeta");
+  const removeHeroMobileBtn = document.getElementById("removeHeroMobileBtn");
+  const heroLinkInput = document.getElementById("heroLinkInput");
+  const heroAltInput = document.getElementById("heroAltInput");
+  const heroVisibleInput = document.getElementById("heroVisibleInput");
+  const heroVisibleLabel = document.getElementById("heroVisibleLabel");
+  const heroSubmitBtn = document.getElementById("heroSubmitBtn");
+  const refreshHeroBtn = document.getElementById("refreshHeroBtn");
+  const heroSlidesListEl = document.getElementById("heroSlidesList");
 
   // Products Tab DOM
   const productForm = document.getElementById("productForm");
@@ -108,8 +136,17 @@
    * Local State
    * ----------------------------------------------------------------------- */
   let allProducts = [];
+  let allHeroSlides = [];
   let allMenuItems = [];
   let allReviews = [];
+
+  // Hero tab state
+  let currentHeroDesktopUrl = null;
+  let currentHeroDesktopFile = null;
+  let currentHeroDesktopPreviewUrl = null;
+  let currentHeroMobileUrl = null;
+  let currentHeroMobileFile = null;
+  let currentHeroMobilePreviewUrl = null;
 
   // Menu tab state
   let activeMenuSection = "women";
@@ -319,6 +356,7 @@
 
   function loadAllAdminData() {
     fetchProducts();
+    fetchHeroSlides();
     fetchMenuItems();
     fetchReviews();
   }
@@ -1515,6 +1553,538 @@
 
   if (refreshReviewsBtn) refreshReviewsBtn.addEventListener("click", fetchReviews);
   if (refreshPendingBtn) refreshPendingBtn.addEventListener("click", fetchReviews);
+
+  /* -------------------------------------------------------------------------
+   * 6. Hero Banner Slides Management (Resize, Compress, Reorder, CRUD)
+   * ----------------------------------------------------------------------- */
+  function formatBytesKB(bytes) {
+    if (!bytes || isNaN(bytes)) return "";
+    const kb = Math.round(bytes / 1024);
+    return kb >= 1024 ? `${(kb / 1024).toFixed(1)} MB` : `${kb} KB`;
+  }
+
+  // Resize image in the browser (desktop max 1920px wide, mobile max 900px wide)
+  // and compress to ~85% quality as WebP (or JPEG fallback).
+  function resizeAndCompressHeroImage(file, maxWidth, quality = 0.85) {
+    return new Promise((resolve, reject) => {
+      if (!file || !file.type || !file.type.startsWith("image/")) {
+        reject(new Error("Please select a valid image file (JPG, PNG, or WebP)."));
+        return;
+      }
+
+      const objectUrl = URL.createObjectURL(file);
+      const img = new Image();
+
+      img.onload = function () {
+        URL.revokeObjectURL(objectUrl);
+
+        const srcW = img.naturalWidth || img.width;
+        const srcH = img.naturalHeight || img.height;
+        if (!srcW || !srcH) {
+          reject(new Error("Could not read image dimensions."));
+          return;
+        }
+
+        let targetW = srcW;
+        let targetH = srcH;
+        if (srcW > maxWidth) {
+          targetW = maxWidth;
+          targetH = Math.max(1, Math.round(srcH * (maxWidth / srcW)));
+        }
+
+        const canvas = document.createElement("canvas");
+        canvas.width = targetW;
+        canvas.height = targetH;
+
+        const ctx = canvas.getContext("2d");
+        if (!ctx) {
+          reject(new Error("Browser canvas context is unavailable."));
+          return;
+        }
+
+        ctx.imageSmoothingEnabled = true;
+        ctx.imageSmoothingQuality = "high";
+        ctx.drawImage(img, 0, 0, targetW, targetH);
+
+        const encodeAs = (mimeType, ext) => {
+          canvas.toBlob(
+            (blob) => {
+              if (!blob) {
+                reject(new Error("Failed to compress image."));
+                return;
+              }
+              // If WebP was requested but browser fell back to image/png, retry as JPEG
+              if (mimeType === "image/webp" && blob.type !== "image/webp") {
+                encodeAs("image/jpeg", "jpg");
+                return;
+              }
+              const baseName = (file.name || "banner").replace(/\.[^.]+$/, "");
+              const outFile = new File([blob], `${baseName}.${ext}`, {
+                type: blob.type || mimeType,
+                lastModified: Date.now()
+              });
+              resolve({
+                file: outFile,
+                width: targetW,
+                height: targetH
+              });
+            },
+            mimeType,
+            quality
+          );
+        };
+
+        encodeAs("image/webp", "webp");
+      };
+
+      img.onerror = function () {
+        URL.revokeObjectURL(objectUrl);
+        reject(new Error("Could not decode the selected image file."));
+      };
+
+      img.src = objectUrl;
+    });
+  }
+
+  function extractStoragePathFromPublicUrl(publicUrl, bucketName) {
+    if (!publicUrl || !bucketName) return null;
+    try {
+      const marker = `/storage/v1/object/public/${bucketName}/`;
+      const idx = String(publicUrl).indexOf(marker);
+      if (idx === -1) return null;
+      const rawPath = String(publicUrl).slice(idx + marker.length).split("?")[0];
+      return decodeURIComponent(rawPath) || null;
+    } catch (_e) {
+      return null;
+    }
+  }
+
+  async function removeHeroFilesBestEffort(urls) {
+    if (!sb || !Array.isArray(urls)) return;
+    const paths = urls
+      .map(u => extractStoragePathFromPublicUrl(u, BUCKETS.hero))
+      .filter(Boolean);
+    if (paths.length === 0) return;
+    try {
+      await sb.storage.from(BUCKETS.hero).remove(paths);
+    } catch (err) {
+      console.warn("Best-effort hero storage cleanup skipped:", err);
+    }
+  }
+
+  if (heroVisibleInput && heroVisibleLabel) {
+    heroVisibleInput.addEventListener("change", () => {
+      heroVisibleLabel.textContent = heroVisibleInput.checked ? "Visible" : "Hidden";
+    });
+  }
+
+  function updateHeroDesktopPreview(metaText = "") {
+    if (!heroDesktopPreviewWrap || !heroDesktopPreviewImg) return;
+    if (currentHeroDesktopPreviewUrl) {
+      heroDesktopPreviewImg.src = currentHeroDesktopPreviewUrl;
+      heroDesktopPreviewWrap.hidden = false;
+      if (heroDesktopPreviewMeta) heroDesktopPreviewMeta.textContent = metaText;
+    } else if (currentHeroDesktopUrl) {
+      heroDesktopPreviewImg.src = currentHeroDesktopUrl;
+      heroDesktopPreviewWrap.hidden = false;
+      if (heroDesktopPreviewMeta) heroDesktopPreviewMeta.textContent = metaText || "Current desktop banner";
+    } else {
+      heroDesktopPreviewImg.src = "";
+      heroDesktopPreviewWrap.hidden = true;
+      if (heroDesktopPreviewMeta) heroDesktopPreviewMeta.textContent = "";
+    }
+  }
+
+  function updateHeroMobilePreview(metaText = "") {
+    if (!heroMobilePreviewWrap || !heroMobilePreviewImg) return;
+    if (currentHeroMobilePreviewUrl) {
+      heroMobilePreviewImg.src = currentHeroMobilePreviewUrl;
+      heroMobilePreviewWrap.hidden = false;
+      if (heroMobilePreviewMeta) heroMobilePreviewMeta.textContent = metaText;
+    } else if (currentHeroMobileUrl) {
+      heroMobilePreviewImg.src = currentHeroMobileUrl;
+      heroMobilePreviewWrap.hidden = false;
+      if (heroMobilePreviewMeta) heroMobilePreviewMeta.textContent = metaText || "Current mobile banner";
+    } else {
+      heroMobilePreviewImg.src = "";
+      heroMobilePreviewWrap.hidden = true;
+      if (heroMobilePreviewMeta) heroMobilePreviewMeta.textContent = "";
+    }
+  }
+
+  if (heroDesktopInput) {
+    heroDesktopInput.addEventListener("change", async (e) => {
+      const rawFile = (e.target.files || [])[0];
+      if (!rawFile) return;
+      try {
+        if (heroDesktopPreviewMeta) {
+          heroDesktopPreviewWrap.hidden = false;
+          heroDesktopPreviewMeta.textContent = "Resizing & compressing…";
+        }
+        const { file, width, height } = await resizeAndCompressHeroImage(rawFile, 1920, 0.85);
+        if (file.size > 10 * 1024 * 1024) {
+          throw new Error("Compressed desktop image exceeds the 10 MB limit.");
+        }
+        if (currentHeroDesktopPreviewUrl) {
+          URL.revokeObjectURL(currentHeroDesktopPreviewUrl);
+        }
+        currentHeroDesktopFile = file;
+        currentHeroDesktopPreviewUrl = URL.createObjectURL(file);
+        updateHeroDesktopPreview(`Ready: ${width} × ${height} px (${formatBytesKB(file.size)})`);
+      } catch (err) {
+        heroDesktopInput.value = "";
+        showAlert(dashboardAlert, err.message || "Could not process desktop image.", "error");
+        updateHeroDesktopPreview();
+      }
+    });
+  }
+
+  if (heroMobileInput) {
+    heroMobileInput.addEventListener("change", async (e) => {
+      const rawFile = (e.target.files || [])[0];
+      if (!rawFile) return;
+      try {
+        if (heroMobilePreviewMeta) {
+          heroMobilePreviewWrap.hidden = false;
+          heroMobilePreviewMeta.textContent = "Resizing & compressing…";
+        }
+        const { file, width, height } = await resizeAndCompressHeroImage(rawFile, 900, 0.85);
+        if (file.size > 10 * 1024 * 1024) {
+          throw new Error("Compressed mobile image exceeds the 10 MB limit.");
+        }
+        if (currentHeroMobilePreviewUrl) {
+          URL.revokeObjectURL(currentHeroMobilePreviewUrl);
+        }
+        currentHeroMobileFile = file;
+        currentHeroMobilePreviewUrl = URL.createObjectURL(file);
+        updateHeroMobilePreview(`Ready: ${width} × ${height} px (${formatBytesKB(file.size)})`);
+      } catch (err) {
+        heroMobileInput.value = "";
+        showAlert(dashboardAlert, err.message || "Could not process mobile image.", "error");
+        updateHeroMobilePreview();
+      }
+    });
+  }
+
+  if (removeHeroMobileBtn) {
+    removeHeroMobileBtn.addEventListener("click", () => {
+      if (currentHeroMobilePreviewUrl) {
+        URL.revokeObjectURL(currentHeroMobilePreviewUrl);
+      }
+      currentHeroMobileFile = null;
+      currentHeroMobilePreviewUrl = null;
+      currentHeroMobileUrl = null;
+      if (heroMobileInput) heroMobileInput.value = "";
+      updateHeroMobilePreview();
+    });
+  }
+
+  function resetHeroForm() {
+    if (!heroSlideForm) return;
+    heroSlideForm.reset();
+    if (heroSlideIdInput) heroSlideIdInput.value = "";
+
+    if (currentHeroDesktopPreviewUrl) URL.revokeObjectURL(currentHeroDesktopPreviewUrl);
+    if (currentHeroMobilePreviewUrl) URL.revokeObjectURL(currentHeroMobilePreviewUrl);
+
+    currentHeroDesktopUrl = null;
+    currentHeroDesktopFile = null;
+    currentHeroDesktopPreviewUrl = null;
+    currentHeroMobileUrl = null;
+    currentHeroMobileFile = null;
+    currentHeroMobilePreviewUrl = null;
+
+    if (heroDesktopInput) heroDesktopInput.value = "";
+    if (heroMobileInput) heroMobileInput.value = "";
+    if (heroVisibleInput) heroVisibleInput.checked = true;
+    if (heroVisibleLabel) heroVisibleLabel.textContent = "Visible";
+
+    updateHeroDesktopPreview();
+    updateHeroMobilePreview();
+
+    if (heroFormTitle) heroFormTitle.textContent = "Add Slide";
+    if (heroSubmitBtn) heroSubmitBtn.textContent = "Add Slide";
+    if (cancelHeroEditBtn) cancelHeroEditBtn.hidden = true;
+  }
+
+  if (cancelHeroEditBtn) {
+    cancelHeroEditBtn.addEventListener("click", resetHeroForm);
+  }
+
+  function startEditHeroSlide(slide) {
+    resetHeroForm();
+    if (!slide) return;
+
+    if (heroSlideIdInput) heroSlideIdInput.value = slide.id;
+    if (heroLinkInput) heroLinkInput.value = slide.link_url || "";
+    if (heroAltInput) heroAltInput.value = slide.alt_text || "";
+    if (heroVisibleInput) heroVisibleInput.checked = slide.is_visible !== false;
+    if (heroVisibleLabel) heroVisibleLabel.textContent = slide.is_visible !== false ? "Visible" : "Hidden";
+
+    currentHeroDesktopUrl = slide.image_url || null;
+    currentHeroMobileUrl = slide.mobile_image_url || null;
+    updateHeroDesktopPreview();
+    updateHeroMobilePreview();
+
+    if (heroFormTitle) heroFormTitle.textContent = "Edit Slide";
+    if (heroSubmitBtn) heroSubmitBtn.textContent = "Update Slide";
+    if (cancelHeroEditBtn) cancelHeroEditBtn.hidden = false;
+
+    heroSlideForm.scrollIntoView({ behavior: "smooth", block: "start" });
+  }
+
+  async function fetchHeroSlides() {
+    if (!sb || !heroSlidesListEl) return;
+    heroSlidesListEl.innerHTML = `<div class="admin-loading">Loading hero slides…</div>`;
+
+    const { data, error } = await sb
+      .from("hero_slides")
+      .select("*")
+      .order("sort_order", { ascending: true })
+      .order("created_at", { ascending: true });
+
+    if (error) {
+      heroSlidesListEl.innerHTML = `<div class="admin-empty">Could not load hero_slides (${escapeHTML(error.message)}). Please run <code>supabase/hero-slides-migration.sql</code> in the Supabase SQL Editor.</div>`;
+      return;
+    }
+
+    allHeroSlides = data || [];
+    if (heroCountBadge) heroCountBadge.textContent = allHeroSlides.length;
+    renderHeroSlidesList();
+  }
+
+  function renderHeroSlidesList() {
+    if (!heroSlidesListEl) return;
+    if (allHeroSlides.length === 0) {
+      heroSlidesListEl.innerHTML = `<div class="admin-empty">No hero slides yet. Add your first banner slide on the left — until then, the homepage displays the default arch hero.</div>`;
+      return;
+    }
+
+    heroSlidesListEl.innerHTML = "";
+    allHeroSlides.forEach((slide, idx) => {
+      const isVisible = slide.is_visible !== false;
+      const switchId = `hero-vis-${slide.id}`;
+      const altText = (slide.alt_text || "").trim();
+      const linkUrl = (slide.link_url || "").trim();
+
+      const item = document.createElement("div");
+      item.className = "hero-slide-item";
+      item.innerHTML = `
+        <div class="hero-slide-item__thumbs">
+          <div class="hero-slide-item__thumb" title="Desktop banner">
+            <img src="${escapeHTML(slide.image_url)}" alt="${escapeHTML(altText || `Slide ${idx + 1}`)}">
+          </div>
+          ${slide.mobile_image_url ? `
+            <div class="hero-slide-item__mobile-thumb" title="Mobile banner">
+              <img src="${escapeHTML(slide.mobile_image_url)}" alt="${escapeHTML(altText || `Slide ${idx + 1} mobile`)}">
+            </div>
+          ` : ""}
+        </div>
+
+        <div class="hero-slide-item__body">
+          <strong class="hero-slide-item__alt">${altText ? escapeHTML(altText) : '<span class="muted">No alt text</span>'}</strong>
+          ${linkUrl
+            ? `<span class="hero-slide-item__link">Link: ${escapeHTML(linkUrl)}</span>`
+            : `<span class="muted" style="font-size:0.75rem;">No link (static slide)</span>`
+          }
+          <div class="hero-slide-item__meta">
+            <span>Slide #${idx + 1}</span>
+            ${slide.mobile_image_url ? `<span class="admin-pill">Mobile + Desktop</span>` : `<span class="admin-pill">Desktop Only</span>`}
+          </div>
+        </div>
+
+        <div class="hero-slide-item__controls">
+          <label class="admin-switch" for="${switchId}">
+            <input type="checkbox" id="${switchId}" class="admin-switch__input slide-vis-input" ${isVisible ? "checked" : ""}>
+            <span class="admin-switch__track" aria-hidden="true">
+              <span class="admin-switch__knob"></span>
+            </span>
+            <span class="admin-switch__text slide-vis-label">${isVisible ? "Visible" : "Hidden"}</span>
+          </label>
+
+          <div class="hero-slide-item__btns">
+            <button type="button" class="admin-action-btn slide-up-btn" title="Move up" ${idx === 0 ? "disabled" : ""}>&uarr;</button>
+            <button type="button" class="admin-action-btn slide-down-btn" title="Move down" ${idx === allHeroSlides.length - 1 ? "disabled" : ""}>&darr;</button>
+            <button type="button" class="admin-action-btn slide-edit-btn">Edit</button>
+            <button type="button" class="admin-action-btn admin-action-btn--danger slide-del-btn">Delete</button>
+          </div>
+        </div>
+      `;
+
+      const visInput = item.querySelector(".slide-vis-input");
+      const visLabel = item.querySelector(".slide-vis-label");
+      visInput.addEventListener("change", () => {
+        visLabel.textContent = visInput.checked ? "Visible" : "Hidden";
+        handleToggleHeroSlideVisibility(slide, visInput.checked);
+      });
+
+      item.querySelector(".slide-up-btn").addEventListener("click", () => handleReorderHeroSlide(slide, -1));
+      item.querySelector(".slide-down-btn").addEventListener("click", () => handleReorderHeroSlide(slide, 1));
+      item.querySelector(".slide-edit-btn").addEventListener("click", () => startEditHeroSlide(slide));
+      item.querySelector(".slide-del-btn").addEventListener("click", () => handleDeleteHeroSlide(slide));
+
+      heroSlidesListEl.appendChild(item);
+    });
+  }
+
+  async function handleToggleHeroSlideVisibility(slide, isVisible) {
+    const { error } = await sb
+      .from("hero_slides")
+      .update({ is_visible: isVisible })
+      .eq("id", slide.id);
+
+    if (error) {
+      showAlert(dashboardAlert, `Failed to update slide visibility: ${error.message}`, "error");
+      fetchHeroSlides();
+      return;
+    }
+
+    slide.is_visible = isVisible;
+    showAlert(
+      dashboardAlert,
+      `Slide is now ${isVisible ? "visible" : "hidden"} on the homepage.`,
+      "success",
+      2500
+    );
+  }
+
+  async function handleReorderHeroSlide(slide, direction) {
+    const idx = allHeroSlides.findIndex(s => s.id === slide.id);
+    const targetIdx = idx + direction;
+    if (idx < 0 || targetIdx < 0 || targetIdx >= allHeroSlides.length) return;
+
+    const reordered = [...allHeroSlides];
+    const temp = reordered[idx];
+    reordered[idx] = reordered[targetIdx];
+    reordered[targetIdx] = temp;
+
+    try {
+      await Promise.all(
+        reordered.map((node, index) =>
+          sb.from("hero_slides").update({ sort_order: index + 1 }).eq("id", node.id)
+        )
+      );
+      showAlert(dashboardAlert, "Updated slide order.", "success", 2500);
+      fetchHeroSlides();
+    } catch (err) {
+      showAlert(dashboardAlert, err.message || "Failed to reorder hero slides.", "error");
+    }
+  }
+
+  async function handleDeleteHeroSlide(slide) {
+    const label = (slide.alt_text || "").trim() || "this hero slide";
+    if (!window.confirm(`Are you sure you want to delete "${label}"? This cannot be undone.`)) {
+      return;
+    }
+
+    const { error } = await sb.from("hero_slides").delete().eq("id", slide.id);
+    if (error) {
+      showAlert(dashboardAlert, `Failed to delete slide: ${error.message}`, "error");
+      return;
+    }
+
+    // Best-effort storage file cleanup
+    await removeHeroFilesBestEffort([slide.image_url, slide.mobile_image_url].filter(Boolean));
+
+    if (heroSlideIdInput && heroSlideIdInput.value === slide.id) {
+      resetHeroForm();
+    }
+    showAlert(dashboardAlert, "Deleted hero slide.", "success");
+    fetchHeroSlides();
+  }
+
+  if (heroSlideForm) {
+    heroSlideForm.addEventListener("submit", async function (e) {
+      e.preventDefault();
+      if (!sb) return;
+
+      const editingId = (heroSlideIdInput && heroSlideIdInput.value) ? heroSlideIdInput.value : null;
+      const existingSlide = editingId ? allHeroSlides.find(s => s.id === editingId) : null;
+      const link_url = (heroLinkInput.value || "").trim() || null;
+      const alt_text = (heroAltInput.value || "").trim();
+      const is_visible = Boolean(heroVisibleInput ? heroVisibleInput.checked : true);
+
+      if (!currentHeroDesktopFile && !currentHeroDesktopUrl) {
+        showAlert(dashboardAlert, "Please select a desktop banner image.", "error");
+        if (heroDesktopInput) heroDesktopInput.focus();
+        return;
+      }
+
+      heroSubmitBtn.disabled = true;
+      heroSubmitBtn.textContent = "Uploading & Saving…";
+
+      try {
+        let finalDesktopUrl = currentHeroDesktopUrl;
+        let finalMobileUrl = currentHeroMobileUrl;
+        const filesToCleanup = [];
+
+        if (currentHeroDesktopFile) {
+          finalDesktopUrl = await uploadImageToBucket(BUCKETS.hero, currentHeroDesktopFile);
+          if (existingSlide && existingSlide.image_url && existingSlide.image_url !== finalDesktopUrl) {
+            filesToCleanup.push(existingSlide.image_url);
+          }
+        }
+
+        if (currentHeroMobileFile) {
+          finalMobileUrl = await uploadImageToBucket(BUCKETS.hero, currentHeroMobileFile);
+          if (existingSlide && existingSlide.mobile_image_url && existingSlide.mobile_image_url !== finalMobileUrl) {
+            filesToCleanup.push(existingSlide.mobile_image_url);
+          }
+        } else if (existingSlide && existingSlide.mobile_image_url && !currentHeroMobileUrl) {
+          // User removed the mobile image while editing
+          filesToCleanup.push(existingSlide.mobile_image_url);
+        }
+
+        if (editingId) {
+          const { error } = await sb
+            .from("hero_slides")
+            .update({
+              image_url: finalDesktopUrl,
+              mobile_image_url: finalMobileUrl,
+              link_url,
+              alt_text,
+              is_visible
+            })
+            .eq("id", editingId);
+
+          if (error) throw error;
+          if (filesToCleanup.length > 0) {
+            await removeHeroFilesBestEffort(filesToCleanup);
+          }
+          showAlert(dashboardAlert, "Updated hero slide successfully.", "success");
+        } else {
+          const maxSort = allHeroSlides.reduce((max, s) => Math.max(max, Number(s.sort_order) || 0), 0);
+          const { error } = await sb
+            .from("hero_slides")
+            .insert([
+              {
+                image_url: finalDesktopUrl,
+                mobile_image_url: finalMobileUrl,
+                link_url,
+                alt_text,
+                sort_order: maxSort + 1,
+                is_visible
+              }
+            ]);
+
+          if (error) throw error;
+          showAlert(dashboardAlert, "Added new hero slide.", "success");
+        }
+
+        resetHeroForm();
+        fetchHeroSlides();
+      } catch (err) {
+        showAlert(dashboardAlert, err.message || "Failed to save hero slide.", "error");
+      } finally {
+        heroSubmitBtn.disabled = false;
+        heroSubmitBtn.textContent = (heroSlideIdInput && heroSlideIdInput.value) ? "Update Slide" : "Add Slide";
+      }
+    });
+  }
+
+  if (refreshHeroBtn) {
+    refreshHeroBtn.addEventListener("click", fetchHeroSlides);
+  }
 
   /* -------------------------------------------------------------------------
    * Initialize Admin Portal

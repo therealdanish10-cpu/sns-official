@@ -701,17 +701,83 @@ p { margin: 0; }
   color: var(--gold);
 }
 
-/* 06. Hero (Light, no video) ---------------------------------------------- */
-/* Soft vertical gradient from cream #FAF6EE at the top to white #FFFFFF at the bottom */
+/* 06. Hero (Sliding Banner Carousel + Light Arch Fallback) ---------------- */
+/* Default state: full-width edge-to-edge banner directly under the solid dark navbar.
+   Reserves space with cream #FAF6EE background and aspect-ratio while slides load. */
 .hero {
   position: relative;
+  margin-top: var(--nav-h);
+  padding: 0;
+  background: var(--bg-alt);
+  overflow: hidden;
+  isolation: isolate;
+  display: block;
+}
+
+.hero-banner {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  background: var(--bg-alt);
+  overflow: hidden;
+  user-select: none;
+  -webkit-user-select: none;
+  touch-action: pan-y;
+}
+.hero-banner[hidden] {
+  display: none !important;
+}
+
+/* Mobile optional portrait image ratio (~4:5) when provided */
+.hero-banner.has-mobile-image {
+  aspect-ratio: 4 / 5;
+}
+
+.hero-banner__track {
+  display: flex;
+  width: 100%;
+  height: 100%;
+  will-change: transform;
+}
+
+.hero-banner__slide {
+  flex: 0 0 100%;
+  width: 100%;
+  height: 100%;
+  position: relative;
+  overflow: hidden;
+}
+
+.hero-banner__link,
+.hero-banner__media {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.hero-banner__slide picture,
+.hero-banner__img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+/* Arch Fallback Hero (shown when no visible slides exist or Supabase query fails) */
+.hero.is-arch-fallback {
+  margin-top: 0;
   display: flex;
   align-items: center;
   justify-content: center;
   padding: calc(var(--nav-h) + 1.75rem) 0 2.5rem;
   background: linear-gradient(180deg, var(--bg-alt) 0%, var(--bg) 100%);
-  overflow: hidden;
-  isolation: isolate;
+}
+
+.hero-arch-fallback {
+  width: 100%;
+}
+.hero-arch-fallback[hidden] {
+  display: none !important;
 }
 
 .hero__container {
@@ -956,6 +1022,25 @@ p { margin: 0; }
 .section__head .section__diamond {
   margin-bottom: 1.1rem;
 }
+
+/* Ornamental divider (~160px wide): thin gold line + center gold flourish + thin gold line */
+.section__ornament {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 160px;
+  max-width: 100%;
+  height: 18px;
+  margin-inline: auto;
+  margin-bottom: 1.15rem;
+  color: var(--gold);
+}
+.section__ornament svg {
+  width: 100%;
+  height: auto;
+  display: block;
+}
+
 .section__lead {
   color: var(--muted);
   max-width: 540px;
@@ -1368,12 +1453,14 @@ p { margin: 0; }
 }
 
 /* 10. New Arrivals & Category rows ---------------------------------------- */
-/* Mobile only: horizontal swipe with scroll-snap. Becomes a grid >= 768px. */
-.featured-track {
+/* Mobile only: horizontal swipeable row (~1.6 cards visible so next card peeks in, no dots).
+   Becomes a multi-column grid >= 768px. */
+.featured-track,
+.product-grid--row {
   display: grid;
   grid-auto-flow: column;
-  grid-auto-columns: 80%;
-  gap: 1rem;
+  grid-auto-columns: 60%;
+  gap: 0.9rem;
   overflow-x: auto;
   scroll-snap-type: x mandatory;
   scroll-padding-inline: var(--gutter);
@@ -1382,10 +1469,47 @@ p { margin: 0; }
   scrollbar-width: none;
   -webkit-overflow-scrolling: touch;
 }
-.featured-track::-webkit-scrollbar { display: none; }
-.featured-track > * { scroll-snap-align: start; }
+.featured-track::-webkit-scrollbar,
+.product-grid--row::-webkit-scrollbar { display: none; }
+.featured-track > *,
+.product-grid--row > * { scroll-snap-align: start; }
 
-/* Carousel dots (New Arrivals + Reviews) */
+/* Compact card body inside mobile horizontal rows so 60% width fits Stitched/Unstitched cleanly even at 320px */
+@media (max-width: 767px) {
+  .featured-track .product-card__body,
+  .product-grid--row .product-card__body {
+    padding: 0.9rem 0.75rem 1rem;
+  }
+  .featured-track .product-card__name,
+  .product-grid--row .product-card__name {
+    font-size: 1.02rem;
+  }
+  .featured-track .stitch-toggle,
+  .product-grid--row .stitch-toggle {
+    gap: 0.3rem;
+  }
+  .featured-track .stitch-toggle__btn,
+  .product-grid--row .stitch-toggle__btn {
+    padding: 0 0.2rem;
+    font-size: 0.56rem;
+    letter-spacing: 0.04em;
+  }
+  .featured-track .size-btn,
+  .product-grid--row .size-btn {
+    min-width: 32px;
+    height: 30px;
+    padding: 0 0.35rem;
+    font-size: 0.68rem;
+  }
+  .featured-track .product-card__actions .btn,
+  .product-grid--row .product-card__actions .btn {
+    font-size: 0.66rem;
+    letter-spacing: 0.14em;
+    padding-inline: 0.5rem;
+  }
+}
+
+/* Carousel dots (Reviews) */
 .dots {
   display: flex;
   justify-content: center;
@@ -1524,7 +1648,8 @@ p { margin: 0; }
 }
 .about__copy .eyebrow { margin-bottom: 0.75rem; }
 .about__copy .section__title { margin-bottom: 1rem; }
-.about__copy .section__diamond { margin-bottom: 1.25rem; }
+.about__copy .section__diamond,
+.about__copy .section__ornament { margin-bottom: 1.25rem; }
 .about__copy p { color: var(--muted); margin-bottom: 1.1rem; }
 .about__copy p:first-of-type { color: var(--text); }
 
@@ -2456,7 +2581,7 @@ p { margin: 0; }
   .hero__btn {
     min-width: 185px;
   }
-  .product-grid { grid-template-columns: repeat(2, 1fr); }
+  .product-grid:not(.product-grid--row) { grid-template-columns: repeat(2, 1fr); }
   .contact-grid { grid-template-columns: repeat(2, 1fr); }
   .contact-grid > :last-child { grid-column: 1 / -1; }
   .stat__value { font-size: 1.35rem; }
@@ -2478,7 +2603,13 @@ p { margin: 0; }
 
   .nav__logo img { height: 40px; }
 
-  .hero {
+  .hero-banner,
+  .hero-banner.has-mobile-image {
+    aspect-ratio: 1920 / 700;
+    max-height: 70vh;
+  }
+
+  .hero.is-arch-fallback {
     min-height: max(88vh, 560px);
     padding: calc(var(--nav-h) + 2.5rem) 0 3rem;
   }
@@ -2505,8 +2636,9 @@ p { margin: 0; }
     gap: 1.5rem;
   }
 
-  /* New Arrivals: grid instead of carousel; dots hidden */
-  .featured-track {
+  /* New Arrivals & Category rows: grid instead of mobile horizontal carousel */
+  .featured-track,
+  .product-grid--row {
     grid-auto-flow: row;
     grid-template-columns: repeat(2, 1fr);
     grid-auto-columns: auto;

@@ -1584,6 +1584,354 @@ _Thank you! I would like to proceed with payment and order confirmation via What
     }
   }
 
+  const SECTION_ORNAMENT_SVG = `<svg viewBox="0 0 160 18" fill="none" xmlns="http://www.w3.org/2000/svg"><line x1="2" y1="9" x2="58" y2="9" stroke="currentColor" stroke-width="1" stroke-opacity="0.65"/><path d="M64 9 C69 3.5, 73.5 3.5, 76 9 C73.5 14.5, 69 14.5, 64 9 Z" stroke="currentColor" stroke-width="1.1" fill="none"/><polygon points="80,2.5 84.5,9 80,15.5 75.5,9" fill="currentColor"/><path d="M96 9 C91 3.5, 86.5 3.5, 84 9 C86.5 14.5, 91 14.5, 96 9 Z" stroke="currentColor" stroke-width="1.1" fill="none"/><line x1="102" y1="9" x2="158" y2="9" stroke="currentColor" stroke-width="1" stroke-opacity="0.65"/></svg>`;
+
+  // --- HERO SLIDING BANNER CAROUSEL & ARCH FALLBACK ---
+  let heroCarouselCleanup = null;
+
+  function cleanupHeroCarousel() {
+    if (typeof heroCarouselCleanup === "function") {
+      heroCarouselCleanup();
+      heroCarouselCleanup = null;
+    }
+  }
+
+  function showHeroArchFallback() {
+    cleanupHeroCarousel();
+    const heroSection = document.getElementById("heroSection");
+    const heroBanner = document.getElementById("heroBanner");
+    const heroArchFallback = document.getElementById("heroArchFallback");
+    if (!heroSection || !heroArchFallback) return;
+
+    heroSection.classList.add("is-arch-fallback");
+
+    if (heroBanner) {
+      heroBanner.hidden = true;
+      const bannerH1 = document.getElementById("heroBannerH1");
+      if (bannerH1 && bannerH1.parentNode) {
+        bannerH1.parentNode.removeChild(bannerH1);
+      }
+    }
+
+    // Ensure the arch hero has the single visible <h1> ("Stitch n Style")
+    const archHeading = document.getElementById("heroArchHeading");
+    if (archHeading && archHeading.tagName.toLowerCase() !== "h1") {
+      const h1 = document.createElement("h1");
+      h1.className = archHeading.className || "hero__title";
+      h1.id = "heroArchHeading";
+      h1.textContent = archHeading.textContent || "Stitch n Style";
+      archHeading.parentNode.replaceChild(h1, archHeading);
+    }
+
+    heroArchFallback.hidden = false;
+  }
+
+  function ensureHeroBannerH1(heroBanner) {
+    if (!heroBanner) return;
+    // Demote arch heading if it was previously promoted to h1 so page has strictly one h1
+    const archHeading = document.getElementById("heroArchHeading");
+    if (archHeading && archHeading.tagName.toLowerCase() === "h1") {
+      const p = document.createElement("p");
+      p.className = archHeading.className || "hero__title";
+      p.id = "heroArchHeading";
+      p.textContent = archHeading.textContent || "Stitch n Style";
+      archHeading.parentNode.replaceChild(p, archHeading);
+    }
+
+    let bannerH1 = document.getElementById("heroBannerH1");
+    if (!bannerH1) {
+      bannerH1 = document.createElement("h1");
+      bannerH1.className = "visually-hidden";
+      bannerH1.id = "heroBannerH1";
+      bannerH1.textContent = "SNS Official - Stitch n Style, premium ladies wear";
+      heroBanner.insertBefore(bannerH1, heroBanner.firstChild);
+    }
+  }
+
+  function preloadFirstHeroSlide(slide) {
+    if (!slide || !slide.image_url || !document.head) return;
+    const existing = document.getElementById("heroFirstSlidePreload");
+    if (existing && existing.parentNode) {
+      existing.parentNode.removeChild(existing);
+    }
+    const link = document.createElement("link");
+    link.id = "heroFirstSlidePreload";
+    link.rel = "preload";
+    link.as = "image";
+    link.href = slide.image_url;
+    document.head.appendChild(link);
+  }
+
+  function createHeroSlideElement(slide, isEager) {
+    const slideEl = document.createElement("div");
+    slideEl.className = "hero-banner__slide";
+
+    const altText = String(slide.alt_text || "SNS Official - Stitch n Style").trim();
+    const imgUrl = String(slide.image_url || "").trim();
+    const mobileUrl = slide.mobile_image_url ? String(slide.mobile_image_url).trim() : "";
+    const linkUrl = slide.link_url ? String(slide.link_url).trim() : "";
+
+    const loadingAttr = isEager ? 'loading="eager" fetchpriority="high"' : 'loading="lazy"';
+    const mediaHTML = mobileUrl
+      ? `<picture>
+           <source media="(max-width: 767px)" srcset="${escapeHTML(mobileUrl)}">
+           <img class="hero-banner__img" src="${escapeHTML(imgUrl)}" alt="${escapeHTML(altText)}" width="1920" height="700" ${loadingAttr} decoding="async">
+         </picture>`
+      : `<img class="hero-banner__img" src="${escapeHTML(imgUrl)}" alt="${escapeHTML(altText)}" width="1920" height="700" ${loadingAttr} decoding="async">`;
+
+    if (linkUrl) {
+      const a = document.createElement("a");
+      a.className = "hero-banner__link";
+      a.href = linkUrl;
+      if (/^https?:\/\//i.test(linkUrl) && linkUrl.indexOf(window.location.host) === -1) {
+        a.target = "_blank";
+        a.rel = "noopener noreferrer";
+      }
+      a.innerHTML = mediaHTML;
+      slideEl.appendChild(a);
+    } else {
+      const div = document.createElement("div");
+      div.className = "hero-banner__media";
+      div.innerHTML = mediaHTML;
+      slideEl.appendChild(div);
+    }
+
+    return slideEl;
+  }
+
+  function initHeroBannerCarousel(slides) {
+    cleanupHeroCarousel();
+    const heroSection = document.getElementById("heroSection");
+    const heroBanner = document.getElementById("heroBanner");
+    const heroBannerTrack = document.getElementById("heroBannerTrack");
+    const heroArchFallback = document.getElementById("heroArchFallback");
+
+    if (!heroSection || !heroBanner || !heroBannerTrack) return;
+
+    const validSlides = (Array.isArray(slides) ? slides : []).filter(function (s) {
+      return s && s.is_visible !== false && String(s.image_url || "").trim().length > 0;
+    });
+
+    if (validSlides.length === 0) {
+      showHeroArchFallback();
+      return;
+    }
+
+    heroSection.classList.remove("is-arch-fallback");
+    if (heroArchFallback) heroArchFallback.hidden = true;
+    heroBanner.hidden = false;
+    ensureHeroBannerH1(heroBanner);
+
+    const hasAnyMobileImage = validSlides.some(function (s) {
+      return Boolean(s.mobile_image_url && String(s.mobile_image_url).trim());
+    });
+    heroBanner.classList.toggle("has-mobile-image", hasAnyMobileImage);
+
+    preloadFirstHeroSlide(validSlides[0]);
+    heroBannerTrack.innerHTML = "";
+
+    // Single visible slide: show statically with no sliding
+    if (validSlides.length === 1) {
+      heroBannerTrack.style.transition = "none";
+      heroBannerTrack.style.transform = "translate3d(0%, 0, 0)";
+      heroBannerTrack.appendChild(createHeroSlideElement(validSlides[0], true));
+      return;
+    }
+
+    // Multiple slides: build infinite loop track [cloneLast, slide0, slide1, ..., slideN-1, cloneFirst]
+    const total = validSlides.length;
+    const firstClone = createHeroSlideElement(validSlides[0], false);
+    firstClone.setAttribute("aria-hidden", "true");
+    firstClone.querySelectorAll("a").forEach(function (a) { a.setAttribute("tabindex", "-1"); });
+
+    const lastClone = createHeroSlideElement(validSlides[total - 1], false);
+    lastClone.setAttribute("aria-hidden", "true");
+    lastClone.querySelectorAll("a").forEach(function (a) { a.setAttribute("tabindex", "-1"); });
+
+    heroBannerTrack.appendChild(lastClone);
+    validSlides.forEach(function (slide, idx) {
+      heroBannerTrack.appendChild(createHeroSlideElement(slide, idx === 0));
+    });
+    heroBannerTrack.appendChild(firstClone);
+
+    let trackIndex = 1; // 1 corresponds to validSlides[0]
+    let isTransitioning = false;
+    let isHovered = false;
+    let autoTimer = null;
+    let safetyTimer = null;
+
+    const reducedMotionQuery = window.matchMedia
+      ? window.matchMedia("(prefers-reduced-motion: reduce)")
+      : { matches: false };
+
+    function setTrackPosition(index, animate) {
+      const useAnimation = animate && !reducedMotionQuery.matches;
+      heroBannerTrack.style.transition = useAnimation ? "transform 0.9s ease" : "none";
+      heroBannerTrack.style.transform = `translate3d(-${index * 100}%, 0, 0)`;
+    }
+
+    // Start at slide 0 (trackIndex = 1) without transition
+    setTrackPosition(trackIndex, false);
+
+    function normalizeInfiniteLoopPosition() {
+      if (safetyTimer) {
+        clearTimeout(safetyTimer);
+        safetyTimer = null;
+      }
+      isTransitioning = false;
+      if (trackIndex >= total + 1) {
+        trackIndex = 1;
+        setTrackPosition(trackIndex, false);
+        void heroBannerTrack.offsetWidth;
+      } else if (trackIndex <= 0) {
+        trackIndex = total;
+        setTrackPosition(trackIndex, false);
+        void heroBannerTrack.offsetWidth;
+      }
+    }
+
+    function goToOffset(delta) {
+      if (isTransitioning) return;
+      trackIndex += delta;
+
+      if (reducedMotionQuery.matches) {
+        if (trackIndex >= total + 1) trackIndex = 1;
+        if (trackIndex <= 0) trackIndex = total;
+        setTrackPosition(trackIndex, false);
+        return;
+      }
+
+      isTransitioning = true;
+      setTrackPosition(trackIndex, true);
+      if (safetyTimer) clearTimeout(safetyTimer);
+      safetyTimer = setTimeout(normalizeInfiniteLoopPosition, 960);
+    }
+
+    function onTransitionEnd(e) {
+      if (e.target !== heroBannerTrack) return;
+      normalizeInfiniteLoopPosition();
+    }
+    heroBannerTrack.addEventListener("transitionend", onTransitionEnd);
+
+    function shouldAutoAdvance() {
+      return !isHovered && !document.hidden && !reducedMotionQuery.matches;
+    }
+
+    function stopAutoAdvance() {
+      if (autoTimer) {
+        clearInterval(autoTimer);
+        autoTimer = null;
+      }
+    }
+
+    function startAutoAdvance() {
+      stopAutoAdvance();
+      if (!shouldAutoAdvance()) return;
+      autoTimer = setInterval(function () {
+        if (shouldAutoAdvance()) {
+          goToOffset(1);
+        }
+      }, 5000);
+    }
+
+    function onMouseEnter() {
+      isHovered = true;
+      stopAutoAdvance();
+    }
+
+    function onMouseLeave() {
+      isHovered = false;
+      startAutoAdvance();
+    }
+
+    function onVisibilityChange() {
+      if (document.hidden) {
+        stopAutoAdvance();
+      } else {
+        normalizeInfiniteLoopPosition();
+        startAutoAdvance();
+      }
+    }
+
+    // Touch swipe left / right on mobile & tablet
+    let touchStartX = 0;
+    let touchStartY = 0;
+    let touchTracking = false;
+
+    function onTouchStart(e) {
+      if (!e.changedTouches || !e.changedTouches[0]) return;
+      touchStartX = e.changedTouches[0].clientX;
+      touchStartY = e.changedTouches[0].clientY;
+      touchTracking = true;
+      stopAutoAdvance();
+    }
+
+    function onTouchEnd(e) {
+      if (!touchTracking || !e.changedTouches || !e.changedTouches[0]) return;
+      touchTracking = false;
+      const dx = e.changedTouches[0].clientX - touchStartX;
+      const dy = e.changedTouches[0].clientY - touchStartY;
+
+      if (Math.abs(dx) > 40 && Math.abs(dx) > Math.abs(dy)) {
+        if (dx < 0) {
+          goToOffset(1);
+        } else {
+          goToOffset(-1);
+        }
+      }
+      startAutoAdvance();
+    }
+
+    heroBanner.addEventListener("mouseenter", onMouseEnter);
+    heroBanner.addEventListener("mouseleave", onMouseLeave);
+    heroBanner.addEventListener("touchstart", onTouchStart, { passive: true });
+    heroBanner.addEventListener("touchend", onTouchEnd, { passive: true });
+    document.addEventListener("visibilitychange", onVisibilityChange);
+
+    startAutoAdvance();
+
+    heroCarouselCleanup = function () {
+      stopAutoAdvance();
+      if (safetyTimer) clearTimeout(safetyTimer);
+      heroBannerTrack.removeEventListener("transitionend", onTransitionEnd);
+      heroBanner.removeEventListener("mouseenter", onMouseEnter);
+      heroBanner.removeEventListener("mouseleave", onMouseLeave);
+      heroBanner.removeEventListener("touchstart", onTouchStart);
+      heroBanner.removeEventListener("touchend", onTouchEnd);
+      document.removeEventListener("visibilitychange", onVisibilityChange);
+    };
+  }
+
+  async function loadHeroSlidesFromSupabase() {
+    const heroSection = document.getElementById("heroSection");
+    if (!heroSection) return;
+
+    const sb = window.supabaseClient;
+    if (!sb) {
+      showHeroArchFallback();
+      return;
+    }
+
+    try {
+      const { data, error } = await sb
+        .from("hero_slides")
+        .select("*")
+        .eq("is_visible", true)
+        .order("sort_order", { ascending: true })
+        .order("created_at", { ascending: true });
+
+      if (error || !Array.isArray(data) || data.length === 0) {
+        showHeroArchFallback();
+        return;
+      }
+
+      initHeroBannerCarousel(data);
+    } catch (err) {
+      console.warn("Could not load hero_slides from Supabase; showing arch hero fallback:", err);
+      showHeroArchFallback();
+    }
+  }
+
   // --- HOMEPAGE INITIALIZER ---
   function initHomePage() {
     const allProducts = Array.isArray(window.PRODUCTS) ? window.PRODUCTS : [];
@@ -1642,7 +1990,7 @@ _Thank you! I would like to proceed with payment and order confirmation via What
       }
     }
 
-    // 2. New Arrivals: 8 newest products (Desktop 4-col grid, Mobile swipeable carousel with dots)
+    // 2. New Arrivals: 8 newest products (Desktop: 2 rows of 4, Mobile: horizontal swipeable row with no dots)
     const featuredTrack = document.getElementById("featuredTrack");
     if (featuredTrack) {
       const newestItems = allProducts
@@ -1667,58 +2015,96 @@ _Thank you! I would like to proceed with payment and order confirmation via What
           bindProductCardEvents(cardEl, product);
         });
       }
-
-      // Mobile carousel dots for New Arrivals
-      setupCarousel("#featuredTrack", "#featuredDots");
     }
 
-    // 3. Dynamic Category Rows (Saree, Dupatta, Short, Maxi, and Brides if any products have section = brides)
+    // 3. Dynamic Category Sections:
+    //    Order categories by menu_items (Women top-level items first, then Brides),
+    //    then any remaining categories from products alphabetically.
+    //    Up to 8 products per category (2 rows of 4 on desktop; horizontal swipeable row on mobile, no dots).
     const categoryRowsContainer = document.getElementById("categoryRowsContainer");
     if (categoryRowsContainer) {
       categoryRowsContainer.innerHTML = "";
 
-      const rowDefs = [
-        {
-          key: "saree",
-          title: "Saree",
-          eyebrow: "Timeless Drapes",
-          link: "shop.html?section=women&category=Saree",
-          items: allProducts.filter(p => String(p.section || "women").toLowerCase() !== "brides" && matchesCategory(p.category, "saree"))
-        },
-        {
-          key: "dupatta",
-          title: "Dupatta",
-          eyebrow: "Artisanal Veils",
-          link: "shop.html?section=women&category=Dupatta",
-          items: allProducts.filter(p => String(p.section || "women").toLowerCase() !== "brides" && matchesCategory(p.category, "dupatta"))
-        },
-        {
-          key: "short",
-          title: "Short",
-          eyebrow: "Tailored Silhouettes",
-          link: "shop.html?section=women&category=Short",
-          items: allProducts.filter(p => String(p.section || "women").toLowerCase() !== "brides" && matchesCategory(p.category, "short"))
-        },
-        {
-          key: "maxi",
-          title: "Maxi",
-          eyebrow: "Regal Ensembles",
-          link: "shop.html?section=women&category=Maxi",
-          items: allProducts.filter(p => String(p.section || "women").toLowerCase() !== "brides" && matchesCategory(p.category, "maxi"))
-        },
-        {
-          key: "brides",
-          title: "Brides",
-          eyebrow: "Bridal Couture",
-          link: "shop.html?section=brides",
-          items: allProducts.filter(p => String(p.section || "").toLowerCase() === "brides")
+      const assignedProductIds = new Set();
+      const seenCategoryKeys = new Set();
+      const orderedCategoryDefs = [];
+
+      function addCategorySectionDef(secKey, catLabel, customUrl) {
+        const cleanLabel = String(catLabel || "").trim();
+        if (!cleanLabel) return;
+        const lowerLabel = cleanLabel.toLowerCase();
+        // Skip "New Arrivals" link item since New Arrivals has its own dedicated section above
+        if (lowerLabel === "new arrivals" || (customUrl && String(customUrl).indexOf("sort=newest") !== -1)) {
+          return;
         }
-      ];
+        const compositeKey = `${secKey}:${lowerLabel}`;
+        if (seenCategoryKeys.has(compositeKey)) return;
 
-      const activeRows = rowDefs.filter(r => r.items.length > 0);
+        const matchingItems = allProducts.filter(function (p) {
+          const pSec = String(p.section || "women").toLowerCase() === "brides" ? "brides" : "women";
+          return pSec === secKey && matchesCategory(p.category, cleanLabel);
+        });
 
-      activeRows.forEach(function (row, rowIdx) {
-        // Alternate white (.section) and cream (.section--alt) backgrounds
+        seenCategoryKeys.add(compositeKey);
+        if (matchingItems.length === 0) return;
+
+        matchingItems.forEach(function (p) { assignedProductIds.add(p.id); });
+
+        const slug = cleanLabel.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "") || "cat";
+        orderedCategoryDefs.push({
+          key: `${secKey}-${slug}`,
+          title: cleanLabel,
+          link: buildMenuItemUrl(secKey, cleanLabel, customUrl, null),
+          items: matchingItems
+        });
+      }
+
+      // a) Menu order: Women top-level items first, then Brides top-level items
+      const womenMenu = (window.MENU_TREE && Array.isArray(window.MENU_TREE.women)) ? window.MENU_TREE.women : [];
+      const bridesMenu = (window.MENU_TREE && Array.isArray(window.MENU_TREE.brides)) ? window.MENU_TREE.brides : [];
+
+      womenMenu.forEach(function (mItem) {
+        addCategorySectionDef("women", mItem.label, mItem.custom_url);
+      });
+      bridesMenu.forEach(function (mItem) {
+        addCategorySectionDef("brides", mItem.label, mItem.custom_url);
+      });
+
+      // b) Any remaining categories present in products that were not matched by menu_items, sorted alphabetically
+      const remainingMap = new Map();
+      allProducts.forEach(function (p) {
+        if (assignedProductIds.has(p.id)) return;
+        const pSec = String(p.section || "women").toLowerCase() === "brides" ? "brides" : "women";
+        const rawLabel = String(p.categoryLabel || p.category || "Collection").trim();
+        const compositeKey = `${pSec}:${rawLabel.toLowerCase()}`;
+        if (!remainingMap.has(compositeKey)) {
+          remainingMap.set(compositeKey, {
+            secKey: pSec,
+            title: rawLabel,
+            items: []
+          });
+        }
+        remainingMap.get(compositeKey).items.push(p);
+      });
+
+      const remainingList = Array.from(remainingMap.values()).sort(function (a, b) {
+        if (a.secKey !== b.secKey) return a.secKey === "women" ? -1 : 1;
+        return a.title.localeCompare(b.title);
+      });
+
+      remainingList.forEach(function (rem) {
+        const slug = rem.title.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "") || "cat";
+        orderedCategoryDefs.push({
+          key: `${rem.secKey}-${slug}`,
+          title: rem.title,
+          link: buildMenuItemUrl(rem.secKey, rem.title, null, null),
+          items: rem.items
+        });
+      });
+
+      // Render each category section with alternating white (#FFFFFF) and cream (#FAF6EE) backgrounds
+      orderedCategoryDefs.forEach(function (row, rowIdx) {
+        // #featured (New Arrivals) above is .section--alt (cream), so rowIdx 0 starts with white (.section)
         const isAlt = (rowIdx % 2 === 1);
         const sectionEl = document.createElement("section");
         sectionEl.className = "section" + (isAlt ? " section--alt" : "");
@@ -1727,9 +2113,8 @@ _Thank you! I would like to proceed with payment and order confirmation via What
         sectionEl.innerHTML = `
           <div class="container">
             <div class="section__head reveal">
-              <span class="eyebrow">${escapeHTML(row.eyebrow)}</span>
               <h2 class="section__title">${escapeHTML(row.title)}</h2>
-              <span class="section__diamond" aria-hidden="true"></span>
+              <span class="section__ornament" aria-hidden="true">${SECTION_ORNAMENT_SVG}</span>
             </div>
             <div class="product-grid product-grid--row"></div>
             <div class="section__cta reveal">
@@ -1739,8 +2124,8 @@ _Thank you! I would like to proceed with payment and order confirmation via What
         `;
 
         const gridEl = sectionEl.querySelector(".product-grid");
-        row.items.slice(0, 4).forEach(function (product, idx) {
-          const delay = (idx + 1) * 140;
+        row.items.slice(0, 8).forEach(function (product, idx) {
+          const delay = Math.min((idx % 4 + 1) * 140, 560);
           const cardHTML = createProductCardHTML(product, delay);
           const temp = document.createElement("div");
           temp.innerHTML = cardHTML;
@@ -1751,6 +2136,15 @@ _Thank you! I would like to proceed with payment and order confirmation via What
 
         categoryRowsContainer.appendChild(sectionEl);
       });
+
+      // Keep subsequent sections (#reviews, #about, #contact) alternating cleanly after the last category row
+      const reviewsSec = document.getElementById("reviews");
+      const aboutSec = document.getElementById("about");
+      const contactSec = document.getElementById("contact");
+      const nextIsAlt = (orderedCategoryDefs.length % 2 === 1);
+      if (reviewsSec) reviewsSec.classList.toggle("section--alt", nextIsAlt);
+      if (aboutSec) aboutSec.classList.toggle("section--alt", !nextIsAlt);
+      if (contactSec) contactSec.classList.toggle("section--alt", nextIsAlt);
     }
 
     initScrollReveals();
@@ -2325,8 +2719,9 @@ _Thank you! I would like to proceed with payment and order confirmation via What
     initShopPage();
     initScrollReveals();
 
-    // Load menu and products from Supabase (with automatic fallback)
+    // Load hero slides, menu, and products from Supabase (with automatic fallback)
     await Promise.all([
+      loadHeroSlidesFromSupabase(),
       loadMenuFromSupabase(),
       loadProductsFromSupabase()
     ]);
@@ -2345,7 +2740,9 @@ _Thank you! I would like to proceed with payment and order confirmation via What
   window.SNS = {
     openCart: openCart,
     closeCart: closeCart,
-    openCheckout: openCheckout
+    openCheckout: openCheckout,
+    renderHeroSlides: initHeroBannerCarousel,
+    showHeroArchFallback: showHeroArchFallback
   };
 
 })();

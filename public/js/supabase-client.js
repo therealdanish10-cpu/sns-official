@@ -37,7 +37,8 @@
     anonKey: SUPABASE_ANON_KEY,
     buckets: {
       products: "product-images",
-      reviews: "review-photos"
+      reviews: "review-photos",
+      hero: "hero-images"
     }
   };
 })();

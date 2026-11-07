@@ -153,67 +153,77 @@
 
   <main>
     <!-- =======================================================================
-         a) Hero Section (Light cream-to-white gradient, gold arch doorway frame,
-            faint SNS monogram watermark, and centered editorial typography)
+         a) Hero Section: Full-width Sliding Banner Carousel (managed via Admin)
+            with cream #FAF6EE aspect-ratio reservation on load, and the Arch
+            Hero kept in place as fallback when there are no visible slides.
          ======================================================================= -->
-    <section class="hero" aria-label="Hero">
-      <div class="container hero__container">
-        <div class="hero__frame">
-          <!-- Decorative gold arch, faint monogram watermark, and subtle sparkle accents -->
-          <div class="hero__decor" aria-hidden="true">
-            <svg class="hero__arch" viewBox="0 0 680 620" fill="none" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="none">
-              <path class="hero__arch-path" d="M 16 604 L 16 240 C 16 96 160 14 340 14 C 520 14 664 96 664 240 L 664 604 Z" stroke="#D4AF37" stroke-opacity="0.4" stroke-width="1.35" vector-effect="non-scaling-stroke" pathLength="1"/>
-              <path class="hero__arch-path hero__arch-path--inner" d="M 28 592 L 28 242 C 28 108 166 26 340 26 C 514 26 652 108 652 242 L 652 592 Z" stroke="#D4AF37" stroke-opacity="0.18" stroke-width="1" vector-effect="non-scaling-stroke" pathLength="1"/>
-            </svg>
+    <section class="hero" id="heroSection" aria-label="Hero">
+      <!-- 1. Sliding Banner Carousel (reserves space on load so there is no layout jump or flash of the old hero) -->
+      <div class="hero-banner" id="heroBanner">
+        <h1 class="visually-hidden" id="heroBannerH1">SNS Official - Stitch n Style, premium ladies wear</h1>
+        <div class="hero-banner__track" id="heroBannerTrack"></div>
+      </div>
 
-            <img src="images/logo-mark.png" alt="" class="hero__watermark" width="320" height="142" decoding="async">
+      <!-- 2. Fallback Arch Hero (shown only when 0 visible slides exist or Supabase query fails) -->
+      <div class="hero-arch-fallback" id="heroArchFallback" hidden>
+        <div class="container hero__container">
+          <div class="hero__frame">
+            <!-- Decorative gold arch, faint monogram watermark, and subtle sparkle accents -->
+            <div class="hero__decor" aria-hidden="true">
+              <svg class="hero__arch" viewBox="0 0 680 620" fill="none" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="none">
+                <path class="hero__arch-path" d="M 16 604 L 16 240 C 16 96 160 14 340 14 C 520 14 664 96 664 240 L 664 604 Z" stroke="#D4AF37" stroke-opacity="0.4" stroke-width="1.35" vector-effect="non-scaling-stroke" pathLength="1"/>
+                <path class="hero__arch-path hero__arch-path--inner" d="M 28 592 L 28 242 C 28 108 166 26 340 26 C 514 26 652 108 652 242 L 652 592 Z" stroke="#D4AF37" stroke-opacity="0.18" stroke-width="1" vector-effect="non-scaling-stroke" pathLength="1"/>
+              </svg>
 
-            <svg class="hero__sparkle hero__sparkle--tl" width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <path d="M8 0L9.8 6.2L16 8L9.8 9.8L8 16L6.2 9.8L0 8L6.2 6.2L8 0Z" fill="#D4AF37" fill-opacity="0.45"/>
-            </svg>
-            <svg class="hero__sparkle hero__sparkle--tr" width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <path d="M8 0L9.8 6.2L16 8L9.8 9.8L8 16L6.2 9.8L0 8L6.2 6.2L8 0Z" fill="#D4AF37" fill-opacity="0.45"/>
-            </svg>
-            <svg class="hero__sparkle hero__sparkle--ml" width="10" height="10" viewBox="0 0 12 12" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <path d="M6 0L12 6L6 12L0 6L6 0Z" fill="#D4AF37" fill-opacity="0.38"/>
-            </svg>
-            <svg class="hero__sparkle hero__sparkle--mr" width="10" height="10" viewBox="0 0 12 12" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <path d="M6 0L12 6L6 12L0 6L6 0Z" fill="#D4AF37" fill-opacity="0.38"/>
-            </svg>
-            <svg class="hero__sparkle hero__sparkle--top" width="10" height="10" viewBox="0 0 12 12" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <path d="M6 0L12 6L6 12L0 6L6 0Z" fill="#D4AF37" fill-opacity="0.45"/>
-            </svg>
-          </div>
+              <img src="images/logo-mark.png" alt="" class="hero__watermark" width="320" height="142" decoding="async">
 
-          <div class="hero__content">
-            <!-- a) Small gold line-art ornamental flourish (~80px wide, symmetrical) -->
-            <svg class="hero__flourish" width="80" height="18" viewBox="0 0 80 18" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-              <path d="M40 4L43.5 9L40 14L36.5 9L40 4Z" stroke="#D4AF37" stroke-width="1" stroke-linejoin="round"/>
-              <path d="M36.5 9C31 9 28 4.5 22 4.5C17.5 4.5 15 7 15 9.5C15 11.5 17 12.8 19 12C20.5 11.4 20.5 9.5 19 9" stroke="#D4AF37" stroke-width="1" stroke-linecap="round"/>
-              <path d="M43.5 9C49 9 52 4.5 58 4.5C62.5 4.5 65 7 65 9.5C65 11.5 63 12.8 61 12C59.5 11.4 59.5 9.5 61 9" stroke="#D4AF37" stroke-width="1" stroke-linecap="round"/>
-              <path d="M36.5 9C32 9 29 13.5 24 13.5C21 13.5 19.5 12 19.5 10.5" stroke="#D4AF37" stroke-width="0.9" stroke-linecap="round"/>
-              <path d="M43.5 9C48 9 51 13.5 56 13.5C59 13.5 60.5 12 60.5 10.5" stroke="#D4AF37" stroke-width="0.9" stroke-linecap="round"/>
-              <path d="M15 9H2" stroke="#D4AF37" stroke-width="0.9" stroke-linecap="round"/>
-              <path d="M65 9H78" stroke="#D4AF37" stroke-width="0.9" stroke-linecap="round"/>
-              <circle cx="40" cy="9" r="1" fill="#D4AF37"/>
-            </svg>
+              <svg class="hero__sparkle hero__sparkle--tl" width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M8 0L9.8 6.2L16 8L9.8 9.8L8 16L6.2 9.8L0 8L6.2 6.2L8 0Z" fill="#D4AF37" fill-opacity="0.45"/>
+              </svg>
+              <svg class="hero__sparkle hero__sparkle--tr" width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M8 0L9.8 6.2L16 8L9.8 9.8L8 16L6.2 9.8L0 8L6.2 6.2L8 0Z" fill="#D4AF37" fill-opacity="0.45"/>
+              </svg>
+              <svg class="hero__sparkle hero__sparkle--ml" width="10" height="10" viewBox="0 0 12 12" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M6 0L12 6L6 12L0 6L6 0Z" fill="#D4AF37" fill-opacity="0.38"/>
+              </svg>
+              <svg class="hero__sparkle hero__sparkle--mr" width="10" height="10" viewBox="0 0 12 12" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M6 0L12 6L6 12L0 6L6 0Z" fill="#D4AF37" fill-opacity="0.38"/>
+              </svg>
+              <svg class="hero__sparkle hero__sparkle--top" width="10" height="10" viewBox="0 0 12 12" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M6 0L12 6L6 12L0 6L6 0Z" fill="#D4AF37" fill-opacity="0.45"/>
+              </svg>
+            </div>
 
-            <!-- b) Headline in bold Playfair Display, #1A1A1A -->
-            <h1 class="hero__title">Stitch n Style</h1>
+            <div class="hero__content">
+              <!-- a) Small gold line-art ornamental flourish (~80px wide, symmetrical) -->
+              <svg class="hero__flourish" width="80" height="18" viewBox="0 0 80 18" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                <path d="M40 4L43.5 9L40 14L36.5 9L40 4Z" stroke="#D4AF37" stroke-width="1" stroke-linejoin="round"/>
+                <path d="M36.5 9C31 9 28 4.5 22 4.5C17.5 4.5 15 7 15 9.5C15 11.5 17 12.8 19 12C20.5 11.4 20.5 9.5 19 9" stroke="#D4AF37" stroke-width="1" stroke-linecap="round"/>
+                <path d="M43.5 9C49 9 52 4.5 58 4.5C62.5 4.5 65 7 65 9.5C65 11.5 63 12.8 61 12C59.5 11.4 59.5 9.5 61 9" stroke="#D4AF37" stroke-width="1" stroke-linecap="round"/>
+                <path d="M36.5 9C32 9 29 13.5 24 13.5C21 13.5 19.5 12 19.5 10.5" stroke="#D4AF37" stroke-width="0.9" stroke-linecap="round"/>
+                <path d="M43.5 9C48 9 51 13.5 56 13.5C59 13.5 60.5 12 60.5 10.5" stroke="#D4AF37" stroke-width="0.9" stroke-linecap="round"/>
+                <path d="M15 9H2" stroke="#D4AF37" stroke-width="0.9" stroke-linecap="round"/>
+                <path d="M65 9H78" stroke="#D4AF37" stroke-width="0.9" stroke-linecap="round"/>
+                <circle cx="40" cy="9" r="1" fill="#D4AF37"/>
+              </svg>
 
-            <!-- c) Small uppercase subtitle in Poppins, deep gold #8A6A14 -->
-            <p class="hero__subtitle">PREMIUM LADIES WEAR</p>
+              <!-- b) Headline in bold Playfair Display, #1A1A1A (promoted to <h1> when arch fallback is shown) -->
+              <div class="hero__title" id="heroArchHeading">Stitch n Style</div>
 
-            <!-- d) Tiny gold diamond divider (~8px rotated square) -->
-            <span class="hero__diamond" aria-hidden="true"></span>
+              <!-- c) Small uppercase subtitle in Poppins, deep gold #8A6A14 -->
+              <p class="hero__subtitle">PREMIUM LADIES WEAR</p>
 
-            <!-- e) Calligraphic script tagline in Great Vibes, #1A1A1A, wrapped in curly quotes -->
-            <p class="hero__tagline">&ldquo;Elegance stitched for every occasion&rdquo;</p>
+              <!-- d) Tiny gold diamond divider (~8px rotated square) -->
+              <span class="hero__diamond" aria-hidden="true"></span>
 
-            <!-- f) Primary SHOP NOW & Secondary NEW ARRIVALS buttons -->
-            <div class="hero__actions">
-              <a href="shop.html" class="btn btn--primary hero__btn">SHOP NOW</a>
-              <a href="shop.html?sort=newest" class="btn btn--outline hero__btn">NEW ARRIVALS</a>
+              <!-- e) Calligraphic script tagline in Great Vibes, #1A1A1A, wrapped in curly quotes -->
+              <p class="hero__tagline">&ldquo;Elegance stitched for every occasion&rdquo;</p>
+
+              <!-- f) Primary SHOP NOW & Secondary NEW ARRIVALS buttons -->
+              <div class="hero__actions">
+                <a href="shop.html" class="btn btn--primary hero__btn">SHOP NOW</a>
+                <a href="shop.html?sort=newest" class="btn btn--outline hero__btn">NEW ARRIVALS</a>
+              </div>
             </div>
           </div>
         </div>
@@ -228,7 +238,17 @@
         <div class="section__head reveal">
           <span class="eyebrow">Curated Collections</span>
           <h2 class="section__title">Collections</h2>
-          <span class="section__diamond" aria-hidden="true"></span>
+          <span class="section__ornament" aria-hidden="true">
+            <svg width="160" height="18" viewBox="0 0 160 18" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <line x1="2" y1="9" x2="54" y2="9" stroke="#D4AF37" stroke-width="1" stroke-linecap="round"/>
+              <circle cx="58" cy="9" r="1.3" fill="#D4AF37"/>
+              <path d="M62 9C66 9 68 4.5 72.5 4.5C75.5 4.5 77 6.5 77 9C77 11.5 75.5 13.5 72.5 13.5C68 13.5 66 9 62 9Z" stroke="#D4AF37" stroke-width="1" stroke-linejoin="round"/>
+              <path d="M80 3.5L83.8 9L80 14.5L76.2 9L80 3.5Z" fill="#D4AF37"/>
+              <path d="M98 9C94 9 92 4.5 87.5 4.5C84.5 4.5 83 6.5 83 9C83 11.5 84.5 13.5 87.5 13.5C92 13.5 94 9 98 9Z" stroke="#D4AF37" stroke-width="1" stroke-linejoin="round"/>
+              <circle cx="102" cy="9" r="1.3" fill="#D4AF37"/>
+              <line x1="106" y1="9" x2="158" y2="9" stroke="#D4AF37" stroke-width="1" stroke-linecap="round"/>
+            </svg>
+          </span>
           <p class="section__lead">Discover our signature craftsmanship across four timeless silhouettes.</p>
         </div>
 
@@ -293,22 +313,29 @@
     </section>
 
     <!-- =======================================================================
-         c) New Arrivals (8 newest products; Desktop 4-col grid, Mobile carousel)
+         c) New Arrivals (8 newest products; Desktop 4-col grid, Mobile swipeable row)
          ======================================================================= -->
     <section class="section section--alt" id="featured">
       <div class="container">
         <div class="section__head reveal">
           <span class="eyebrow">Latest Creations</span>
           <h2 class="section__title">New Arrivals</h2>
-          <span class="section__diamond" aria-hidden="true"></span>
+          <span class="section__ornament" aria-hidden="true">
+            <svg width="160" height="18" viewBox="0 0 160 18" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <line x1="2" y1="9" x2="54" y2="9" stroke="#D4AF37" stroke-width="1" stroke-linecap="round"/>
+              <circle cx="58" cy="9" r="1.3" fill="#D4AF37"/>
+              <path d="M62 9C66 9 68 4.5 72.5 4.5C75.5 4.5 77 6.5 77 9C77 11.5 75.5 13.5 72.5 13.5C68 13.5 66 9 62 9Z" stroke="#D4AF37" stroke-width="1" stroke-linejoin="round"/>
+              <path d="M80 3.5L83.8 9L80 14.5L76.2 9L80 3.5Z" fill="#D4AF37"/>
+              <path d="M98 9C94 9 92 4.5 87.5 4.5C84.5 4.5 83 6.5 83 9C83 11.5 84.5 13.5 87.5 13.5C92 13.5 94 9 98 9Z" stroke="#D4AF37" stroke-width="1" stroke-linejoin="round"/>
+              <circle cx="102" cy="9" r="1.3" fill="#D4AF37"/>
+              <line x1="106" y1="9" x2="158" y2="9" stroke="#D4AF37" stroke-width="1" stroke-linecap="round"/>
+            </svg>
+          </span>
           <p class="section__lead">A glimpse into our newest gold zari embroideries and royal fabrics.</p>
         </div>
 
         <!-- Populated dynamically via main.js (8 newest products) -->
         <div class="featured-track" id="featuredTrack"></div>
-
-        <!-- Mobile-only Carousel Dots -->
-        <div class="dots featured-dots" id="featuredDots" aria-hidden="true"></div>
 
         <div class="section__cta reveal">
           <a href="shop.html?sort=newest" class="btn btn--outline">View All</a>
@@ -317,8 +344,8 @@
     </section>
 
     <!-- =======================================================================
-         d) Category Rows (Saree, Dupatta, Short, Maxi, and Brides if any)
-            Built dynamically from Supabase / fallback products in main.js
+         d) Category Sections (Ordered by menu_items: Women top-level first,
+            then Brides, then any remaining categories alphabetically; up to 8 products each)
          ======================================================================= -->
     <div id="categoryRowsContainer"></div>
 
@@ -330,7 +357,17 @@
         <div class="section__head reveal">
           <span class="eyebrow">Customer Testimonials</span>
           <h2 class="section__title">Cherished by Our Patrons</h2>
-          <span class="section__diamond" aria-hidden="true"></span>
+          <span class="section__ornament" aria-hidden="true">
+            <svg width="160" height="18" viewBox="0 0 160 18" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <line x1="2" y1="9" x2="54" y2="9" stroke="#D4AF37" stroke-width="1" stroke-linecap="round"/>
+              <circle cx="58" cy="9" r="1.3" fill="#D4AF37"/>
+              <path d="M62 9C66 9 68 4.5 72.5 4.5C75.5 4.5 77 6.5 77 9C77 11.5 75.5 13.5 72.5 13.5C68 13.5 66 9 62 9Z" stroke="#D4AF37" stroke-width="1" stroke-linejoin="round"/>
+              <path d="M80 3.5L83.8 9L80 14.5L76.2 9L80 3.5Z" fill="#D4AF37"/>
+              <path d="M98 9C94 9 92 4.5 87.5 4.5C84.5 4.5 83 6.5 83 9C83 11.5 84.5 13.5 87.5 13.5C92 13.5 94 9 98 9Z" stroke="#D4AF37" stroke-width="1" stroke-linejoin="round"/>
+              <circle cx="102" cy="9" r="1.3" fill="#D4AF37"/>
+              <line x1="106" y1="9" x2="158" y2="9" stroke="#D4AF37" stroke-width="1" stroke-linecap="round"/>
+            </svg>
+          </span>
           <p class="section__lead">Real experiences from women who chose Stitch n Style for their grand moments.</p>
         </div>
 
@@ -449,7 +486,17 @@
           <div class="about__copy reveal">
             <span class="eyebrow">The Heritage of Stitch n Style</span>
             <h2 class="section__title">Crafted for Royal Grace</h2>
-            <span class="section__diamond" aria-hidden="true"></span>
+            <span class="section__ornament" aria-hidden="true">
+              <svg width="160" height="18" viewBox="0 0 160 18" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <line x1="2" y1="9" x2="54" y2="9" stroke="#D4AF37" stroke-width="1" stroke-linecap="round"/>
+                <circle cx="58" cy="9" r="1.3" fill="#D4AF37"/>
+                <path d="M62 9C66 9 68 4.5 72.5 4.5C75.5 4.5 77 6.5 77 9C77 11.5 75.5 13.5 72.5 13.5C68 13.5 66 9 62 9Z" stroke="#D4AF37" stroke-width="1" stroke-linejoin="round"/>
+                <path d="M80 3.5L83.8 9L80 14.5L76.2 9L80 3.5Z" fill="#D4AF37"/>
+                <path d="M98 9C94 9 92 4.5 87.5 4.5C84.5 4.5 83 6.5 83 9C83 11.5 84.5 13.5 87.5 13.5C92 13.5 94 9 98 9Z" stroke="#D4AF37" stroke-width="1" stroke-linejoin="round"/>
+                <circle cx="102" cy="9" r="1.3" fill="#D4AF37"/>
+                <line x1="106" y1="9" x2="158" y2="9" stroke="#D4AF37" stroke-width="1" stroke-linecap="round"/>
+              </svg>
+            </span>
             <p>At SNS Official, we believe that true elegance lies in the details. Founded on the timeless tradition of master craftsmanship, our creations harmoniously blend traditional Eastern artistry with contemporary regal aesthetics.</p>
             <p>From the rich fall of micro-velvet sarees to the delicate movement of hand-embellished chiffon maxis, every garment is meticulously tailored to celebrate womanhood on life's most unforgettable occasions.</p>
 
@@ -480,7 +527,17 @@
         <div class="section__head reveal">
           <span class="eyebrow">Connect With Us</span>
           <h2 class="section__title">We Are Here to Assist You</h2>
-          <span class="section__diamond" aria-hidden="true"></span>
+          <span class="section__ornament" aria-hidden="true">
+            <svg width="160" height="18" viewBox="0 0 160 18" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <line x1="2" y1="9" x2="54" y2="9" stroke="#D4AF37" stroke-width="1" stroke-linecap="round"/>
+              <circle cx="58" cy="9" r="1.3" fill="#D4AF37"/>
+              <path d="M62 9C66 9 68 4.5 72.5 4.5C75.5 4.5 77 6.5 77 9C77 11.5 75.5 13.5 72.5 13.5C68 13.5 66 9 62 9Z" stroke="#D4AF37" stroke-width="1" stroke-linejoin="round"/>
+              <path d="M80 3.5L83.8 9L80 14.5L76.2 9L80 3.5Z" fill="#D4AF37"/>
+              <path d="M98 9C94 9 92 4.5 87.5 4.5C84.5 4.5 83 6.5 83 9C83 11.5 84.5 13.5 87.5 13.5C92 13.5 94 9 98 9Z" stroke="#D4AF37" stroke-width="1" stroke-linejoin="round"/>
+              <circle cx="102" cy="9" r="1.3" fill="#D4AF37"/>
+              <line x1="106" y1="9" x2="158" y2="9" stroke="#D4AF37" stroke-width="1" stroke-linecap="round"/>
+            </svg>
+          </span>
           <p class="section__lead">Have inquiries regarding custom sizing, orders, or fabric details? Speak directly with our team.</p>
         </div>
 
