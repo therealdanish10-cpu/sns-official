@@ -96,8 +96,9 @@
     });
   }
 
-  // Smart navbar scroll behavior:
-  // - Always solid dark (#0A0A0A) at all scroll positions
+  // Smart navbar scroll & transparency behavior:
+  // - Transparent ONLY on index.html when #heroBanner has loaded visible slides, scrollY < 80px, and no drawer/modal is open
+  // - Solid dark (#0A0A0A) everywhere else (other pages, arch fallback, placeholder loading, scrollY >= 80px, or when drawer/modal is open)
   // - Always visible near top (< 80px)
   // - Slides up (-100%) on scroll down, slides back in on scroll up
   // - Auto-hides after 1.5s of scroll inactivity when visible away from top
@@ -109,6 +110,7 @@
   let lastScrollY = Math.max(0, window.scrollY);
   let navTicking = false;
   let navIdleTimer = null;
+  let isHeroBannerActive = false;
 
   function isNavLockedOpen() {
     const cartEl = document.getElementById("cartDrawer");
@@ -119,6 +121,23 @@
       (cartEl && cartEl.classList.contains("is-open")) ||
       (checkoutEl && checkoutEl.classList.contains("is-open"))
     );
+  }
+
+  function canNavBeTransparent() {
+    if (!navbar || !isHeroBannerActive) return false;
+    const heroSection = document.getElementById("heroSection");
+    const heroBanner = document.getElementById("heroBanner");
+    if (!heroSection || !heroBanner) return false;
+    if (heroBanner.hidden || heroSection.classList.contains("is-arch-fallback")) return false;
+    const currentScrollY = Math.max(0, window.scrollY);
+    if (currentScrollY >= TOP_THRESHOLD) return false;
+    if (isNavLockedOpen()) return false;
+    return true;
+  }
+
+  function syncNavbarTransparency() {
+    if (!navbar) return;
+    navbar.classList.toggle("is-transparent", canNavBeTransparent());
   }
 
   function clearNavIdleTimer() {
@@ -145,6 +164,8 @@
 
     const currentScrollY = Math.max(0, window.scrollY);
     const delta = currentScrollY - lastScrollY;
+
+    syncNavbarTransparency();
 
     // Never hide while side menu drawer, cart drawer, or checkout form is open
     if (isNavLockedOpen()) {
@@ -189,9 +210,10 @@
   }, { passive: true });
   updateNavbarOnScroll();
 
-  // Keep navbar visible whenever side menu drawer, cart drawer, or checkout modal is open
+  // Keep navbar visible and solid dark whenever side menu drawer, cart drawer, or checkout modal is open
   if ("MutationObserver" in window && navbar) {
     const overlayObserver = new MutationObserver(function () {
+      syncNavbarTransparency();
       if (isNavLockedOpen()) {
         navbar.classList.remove("is-hidden");
         clearNavIdleTimer();
@@ -224,6 +246,7 @@
       navbar.classList.remove("is-hidden");
       clearNavIdleTimer();
     }
+    syncNavbarTransparency();
     setTimeout(function () {
       if (sideMenuDrawer) sideMenuDrawer.focus();
     }, 30);
@@ -241,6 +264,7 @@
       sideMenuOpenBtn.setAttribute("aria-expanded", "false");
     }
     document.body.classList.remove("menu-open", "is-locked");
+    syncNavbarTransparency();
     if (returnFocus !== false && sideMenuOpenBtn) {
       sideMenuOpenBtn.focus();
     }
@@ -925,6 +949,7 @@
     cartDrawer.setAttribute("aria-hidden", "false");
     if (cartBackdrop) cartBackdrop.classList.add("is-visible");
     document.body.classList.add("is-locked");
+    syncNavbarTransparency();
   }
 
   function closeCart() {
@@ -933,6 +958,7 @@
     cartDrawer.setAttribute("aria-hidden", "true");
     if (cartBackdrop) cartBackdrop.classList.remove("is-visible");
     document.body.classList.remove("is-locked");
+    syncNavbarTransparency();
   }
 
   cartToggleBtns.forEach(btn => btn.addEventListener("click", openCart));
@@ -1087,6 +1113,7 @@
     checkoutModal.classList.add("is-open");
     checkoutModal.setAttribute("aria-hidden", "false");
     document.body.classList.add("is-locked");
+    syncNavbarTransparency();
   }
 
   function closeCheckout() {
@@ -1094,6 +1121,7 @@
     checkoutModal.classList.remove("is-open");
     checkoutModal.setAttribute("aria-hidden", "true");
     document.body.classList.remove("is-locked");
+    syncNavbarTransparency();
   }
 
   if (checkoutOpenBtn) checkoutOpenBtn.addEventListener("click", openCheckout);
@@ -1598,6 +1626,8 @@ _Thank you! I would like to proceed with payment and order confirmation via What
 
   function showHeroArchFallback() {
     cleanupHeroCarousel();
+    isHeroBannerActive = false;
+    syncNavbarTransparency();
     const heroSection = document.getElementById("heroSection");
     const heroBanner = document.getElementById("heroBanner");
     const heroArchFallback = document.getElementById("heroArchFallback");
@@ -1629,6 +1659,7 @@ _Thank you! I would like to proceed with payment and order confirmation via What
     }
 
     heroArchFallback.hidden = false;
+    syncNavbarTransparency();
   }
 
   function ensureHeroBannerH1(heroBanner) {
@@ -1726,7 +1757,9 @@ _Thank you! I would like to proceed with payment and order confirmation via What
     heroSection.classList.remove("is-arch-fallback");
     if (heroArchFallback) heroArchFallback.hidden = true;
     heroBanner.hidden = false;
+    isHeroBannerActive = true;
     ensureHeroBannerH1(heroBanner);
+    syncNavbarTransparency();
 
     const hasAnyMobileImage = validSlides.some(function (s) {
       return Boolean(s.mobile_image_url && String(s.mobile_image_url).trim());

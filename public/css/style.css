@@ -312,19 +312,30 @@ p { margin: 0; }
 .field.has-error .field__error { display: block; }
 
 /* 05. Navbar & side menu drawer (dark) ------------------------------------ */
-/* Solid dark (#0A0A0A) at all scroll positions. No border, no shadow, no hairline — ever. */
+/* Solid dark (#0A0A0A) by default; transparent only over homepage hero banner at top (< 80px). No border, no shadow, no hairline — ever. */
 .nav {
   position: fixed;
   inset: 0 0 auto 0;
   z-index: 100;
   height: var(--nav-h);
-  background: var(--dark-bg);
+  background-color: var(--dark-bg);
   color: var(--dark-text);
   border: 0;
   box-shadow: none;
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
   transform: translateY(0);
-  transition: transform 0.4s ease;
+  transition: transform 0.4s ease, background-color 0.4s ease;
   will-change: transform;
+}
+
+/* Transparent navbar over the homepage hero banner carousel at the top */
+.nav.is-transparent {
+  background-color: transparent;
+  border: 0;
+  box-shadow: none;
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
 }
 
 /* Slide navbar up and out of view when scrolling down or idle away from top */
@@ -702,11 +713,11 @@ p { margin: 0; }
 }
 
 /* 06. Hero (Sliding Banner Carousel + Light Arch Fallback) ---------------- */
-/* Default state: full-width edge-to-edge banner directly under the solid dark navbar.
-   Reserves space on load so there is no layout jump or flash of the old hero. */
+/* Starts at the very top of the page behind the navbar on the homepage banner state.
+   Height includes --nav-h so the visible photo area below the nav stays the same size. */
 .hero {
   position: relative;
-  margin-top: var(--nav-h);
+  margin-top: 0;
   padding: 0;
   background: var(--bg-alt);
   overflow: hidden;
@@ -717,8 +728,8 @@ p { margin: 0; }
 .hero-banner {
   position: relative;
   width: 100%;
-  min-height: 480px;
-  height: clamp(480px, 68vh, 560px);
+  min-height: calc(480px + var(--nav-h));
+  height: calc(clamp(480px, 68vh, 560px) + var(--nav-h));
   background: var(--dark-bg);
   overflow: hidden;
   user-select: none;
@@ -760,6 +771,20 @@ p { margin: 0; }
   object-position: center center;
 }
 
+/* Soft dark gradient at the top of the banner (~140px tall) above photos and below the nav */
+.hero-banner__top-gradient {
+  position: absolute;
+  inset: 0 0 auto 0;
+  height: 140px;
+  z-index: 1;
+  pointer-events: none;
+  background: linear-gradient(
+    180deg,
+    rgba(10, 10, 10, 0.55) 0%,
+    rgba(10, 10, 10, 0) 100%
+  );
+}
+
 /* Fixed readability gradient over slides (never blocks slide link clicks) */
 .hero-banner__gradient {
   position: absolute;
@@ -774,7 +799,7 @@ p { margin: 0; }
   );
 }
 
-/* Fixed text overlay aligned to page container left edge (bottom-left on mobile, vertically centered on desktop) */
+/* Fixed text overlay aligned to page container left edge (bottom-left on mobile, vertically centered below nav on desktop) */
 .hero-banner__overlay {
   position: absolute;
   inset: 0;
@@ -782,6 +807,7 @@ p { margin: 0; }
   pointer-events: none;
   display: flex;
   align-items: flex-end;
+  padding-top: var(--nav-h);
 }
 
 .hero-banner__container {
@@ -2749,9 +2775,9 @@ p { margin: 0; }
 
   .hero-banner,
   .hero-banner.has-mobile-image {
-    height: clamp(460px, 42vw, 70vh);
-    min-height: 460px;
-    max-height: 70vh;
+    height: calc(clamp(460px, 42vw, 70vh) + var(--nav-h));
+    min-height: calc(460px + var(--nav-h));
+    max-height: calc(70vh + var(--nav-h));
     aspect-ratio: auto;
   }
 
@@ -2772,6 +2798,7 @@ p { margin: 0; }
 
   .hero-banner__overlay {
     align-items: center;
+    padding-top: var(--nav-h);
   }
 
   .hero-banner__container {
