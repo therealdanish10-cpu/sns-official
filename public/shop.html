@@ -59,47 +59,64 @@
 <body>
 
   <!-- =========================================================================
-       Navbar (Solid dark #0A0A0A at all scroll positions, no border/shadow/lines)
+       Site Header: Announcement Bar (#141414) + Navbar (Solid dark #0A0A0A)
        ========================================================================= -->
-  <header class="nav" role="banner">
-    <div class="container nav__inner">
-      <!-- Left: Hamburger Menu Button & Monogram Logo (~40px, reloads page on click) -->
-      <div class="nav__left">
-        <button type="button" class="icon-btn nav__menu-btn" id="sideMenuOpenBtn" aria-label="Open navigation menu" aria-expanded="false" aria-controls="sideMenuDrawer">
-          <span class="burger" aria-hidden="true">
-            <span></span>
-            <span></span>
-            <span></span>
-          </span>
-        </button>
-
-        <a href="index.html" class="nav__logo" aria-label="SNS Official Home">
-          <img src="images/logo-mark.png" alt="SNS Official logo" width="90" height="40">
-        </a>
-      </div>
-
-      <!-- Desktop Navigation Links -->
-      <nav class="nav__links" aria-label="Main Navigation">
-        <a href="index.html" class="nav__link">Home</a>
-        <a href="shop.html" class="nav__link is-active">Shop</a>
-        <a href="index.html#about" class="nav__link">About</a>
-        <a href="index.html#reviews" class="nav__link">Reviews</a>
-        <a href="index.html#contact" class="nav__link">Contact</a>
-      </nav>
-
-      <!-- Actions: Cart Button -->
-      <div class="nav__actions">
-        <button type="button" class="icon-btn cart-toggle" aria-label="View shopping bag">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
-            <path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/>
-            <line x1="3" y1="6" x2="21" y2="6"/>
-            <path d="M16 10a4 4 0 0 1-8 0"/>
-          </svg>
-          <span class="cart-count is-empty" aria-label="Items in bag">0</span>
-        </button>
+  <div class="site-header" id="siteHeader">
+    <div class="announce-bar" id="announceBar" role="region" aria-label="Store Announcement">
+      <div class="container announce-bar__inner" id="announceBarContent">
+        <span class="announce-bar__text announce-bar__text--desktop">
+          <span data-announce-desktop-left>PREMIUM LADIES WEAR FOR EVERY OCCASION</span>
+          <span class="announce-bar__diamond" aria-hidden="true"></span>
+          <span data-announce-desktop-right>ORDER EASILY ON WHATSAPP</span>
+        </span>
+        <span class="announce-bar__text announce-bar__text--mobile">
+          <span data-announce-mobile-left>PREMIUM LADIES WEAR</span>
+          <span class="announce-bar__diamond" aria-hidden="true"></span>
+          <span data-announce-mobile-right>ORDER ON WHATSAPP</span>
+        </span>
       </div>
     </div>
-  </header>
+
+    <header class="nav" role="banner">
+      <div class="container nav__inner">
+        <!-- Left: Hamburger Menu Button & Monogram Logo (~40px, reloads page on click) -->
+        <div class="nav__left">
+          <button type="button" class="icon-btn nav__menu-btn" id="sideMenuOpenBtn" aria-label="Open navigation menu" aria-expanded="false" aria-controls="sideMenuDrawer">
+            <span class="burger" aria-hidden="true">
+              <span></span>
+              <span></span>
+              <span></span>
+            </span>
+          </button>
+
+          <a href="index.html" class="nav__logo" aria-label="SNS Official Home">
+            <img src="images/logo-mark.png" alt="SNS Official logo" width="90" height="40">
+          </a>
+        </div>
+
+        <!-- Desktop Navigation Links -->
+        <nav class="nav__links" aria-label="Main Navigation">
+          <a href="index.html" class="nav__link">Home</a>
+          <a href="shop.html" class="nav__link is-active">Shop</a>
+          <a href="index.html#about" class="nav__link">About</a>
+          <a href="index.html#reviews" class="nav__link">Reviews</a>
+          <a href="index.html#contact" class="nav__link">Contact</a>
+        </nav>
+
+        <!-- Actions: Cart Button -->
+        <div class="nav__actions">
+          <button type="button" class="icon-btn cart-toggle" aria-label="View shopping bag">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+              <path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/>
+              <line x1="3" y1="6" x2="21" y2="6"/>
+              <path d="M16 10a4 4 0 0 1-8 0"/>
+            </svg>
+            <span class="cart-count is-empty" aria-label="Items in bag">0</span>
+          </button>
+        </div>
+      </div>
+    </header>
+  </div>
 
   <!-- Slide-in Luxury Side Menu Drawer (All screen sizes; replaces mobile overlay) -->
   <div class="side-menu-backdrop backdrop" id="sideMenuBackdrop" aria-hidden="true"></div>

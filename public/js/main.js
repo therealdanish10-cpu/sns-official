@@ -28,6 +28,14 @@
   const WHATSAPP_NUMBER = "923085220513"; // +92 308 5220513
   const INSTAGRAM_URL = "#"; // Change Instagram profile URL in this one place
 
+  // Change Announcement Bar text in this one place (applied to index.html and shop.html)
+  const ANNOUNCEMENT_BAR = {
+    desktopLeft: "PREMIUM LADIES WEAR FOR EVERY OCCASION",
+    desktopRight: "ORDER EASILY ON WHATSAPP",
+    mobileLeft: "PREMIUM LADIES WEAR",
+    mobileRight: "ORDER ON WHATSAPP"
+  };
+
   let cart = [];
   try {
     const saved = localStorage.getItem(STORAGE_KEY);
@@ -52,8 +60,23 @@
   /* -------------------------------------------------------------------------
    * 2. Navigation & Slide-in Luxury Side Menu Drawer
    * ----------------------------------------------------------------------- */
+  const siteHeader = document.getElementById("siteHeader");
   const navbar = document.querySelector(".nav");
   const navLogo = document.querySelector(".nav__logo");
+
+  function initAnnouncementBar() {
+    const bar = document.getElementById("announceBar");
+    if (!bar) return;
+    const dLeft = bar.querySelector("[data-announce-desktop-left]");
+    const dRight = bar.querySelector("[data-announce-desktop-right]");
+    const mLeft = bar.querySelector("[data-announce-mobile-left]");
+    const mRight = bar.querySelector("[data-announce-mobile-right]");
+    if (dLeft) dLeft.textContent = ANNOUNCEMENT_BAR.desktopLeft;
+    if (dRight) dRight.textContent = ANNOUNCEMENT_BAR.desktopRight;
+    if (mLeft) mLeft.textContent = ANNOUNCEMENT_BAR.mobileLeft;
+    if (mRight) mRight.textContent = ANNOUNCEMENT_BAR.mobileRight;
+  }
+  initAnnouncementBar();
 
   const sideMenuOpenBtn = document.getElementById("sideMenuOpenBtn");
   const sideMenuDrawer = document.getElementById("sideMenuDrawer");
@@ -140,6 +163,16 @@
     navbar.classList.toggle("is-transparent", canNavBeTransparent());
   }
 
+  function setHeaderHidden(isHidden) {
+    if (siteHeader) siteHeader.classList.toggle("is-hidden", Boolean(isHidden));
+    if (navbar) navbar.classList.toggle("is-hidden", Boolean(isHidden));
+  }
+
+  function isHeaderHidden() {
+    if (siteHeader) return siteHeader.classList.contains("is-hidden");
+    return navbar ? navbar.classList.contains("is-hidden") : false;
+  }
+
   function clearNavIdleTimer() {
     if (navIdleTimer) {
       clearTimeout(navIdleTimer);
@@ -153,7 +186,7 @@
       if (!navbar) return;
       const currentY = Math.max(0, window.scrollY);
       if (currentY >= TOP_THRESHOLD && !isNavLockedOpen()) {
-        navbar.classList.add("is-hidden");
+        setHeaderHidden(true);
       }
     }, IDLE_HIDE_DELAY);
   }
@@ -169,7 +202,7 @@
 
     // Never hide while side menu drawer, cart drawer, or checkout form is open
     if (isNavLockedOpen()) {
-      navbar.classList.remove("is-hidden");
+      setHeaderHidden(false);
       clearNavIdleTimer();
       lastScrollY = currentScrollY;
       return;
@@ -177,7 +210,7 @@
 
     // Always visible at the very top of the page (< 80px)
     if (currentScrollY < TOP_THRESHOLD) {
-      navbar.classList.remove("is-hidden");
+      setHeaderHidden(false);
       clearNavIdleTimer();
       lastScrollY = currentScrollY;
       return;
@@ -186,18 +219,18 @@
     // Apply scroll-delta threshold (~5px) to prevent flicker
     if (Math.abs(delta) >= SCROLL_DELTA) {
       if (delta > 0) {
-        // Scrolling DOWN: slide navbar up and out of view
-        navbar.classList.add("is-hidden");
+        // Scrolling DOWN: slide header unit (announcement bar + navbar) up and out of view
+        setHeaderHidden(true);
         clearNavIdleTimer();
       } else {
-        // Scrolling UP: slide navbar back into view immediately
-        navbar.classList.remove("is-hidden");
+        // Scrolling UP: slide header unit back into view immediately
+        setHeaderHidden(false);
       }
       lastScrollY = currentScrollY;
     }
 
     // When visible and not at the top, hide again after 1.5s of no scroll activity
-    if (!navbar.classList.contains("is-hidden")) {
+    if (!isHeaderHidden()) {
       scheduleNavIdleHide();
     }
   }
@@ -215,9 +248,9 @@
     const overlayObserver = new MutationObserver(function () {
       syncNavbarTransparency();
       if (isNavLockedOpen()) {
-        navbar.classList.remove("is-hidden");
+        setHeaderHidden(false);
         clearNavIdleTimer();
-      } else if (window.scrollY >= TOP_THRESHOLD && !navbar.classList.contains("is-hidden")) {
+      } else if (window.scrollY >= TOP_THRESHOLD && !isHeaderHidden()) {
         scheduleNavIdleHide();
       }
     });
@@ -243,7 +276,7 @@
     }
     document.body.classList.add("menu-open", "is-locked");
     if (navbar) {
-      navbar.classList.remove("is-hidden");
+      setHeaderHidden(false);
       clearNavIdleTimer();
     }
     syncNavbarTransparency();

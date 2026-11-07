@@ -70,47 +70,64 @@
 <body>
 
   <!-- =========================================================================
-       Navbar (Solid dark #0A0A0A at all scroll positions, no borders)
+       Site Header: Announcement Bar (#141414) + Navbar (#0A0A0A / Transparent over hero banner)
        ========================================================================= -->
-  <header class="nav" role="banner">
-    <div class="container nav__inner">
-      <!-- Left: Hamburger Menu Button & Monogram Logo (~40px, reloads page on click) -->
-      <div class="nav__left">
-        <button type="button" class="icon-btn nav__menu-btn" id="sideMenuOpenBtn" aria-label="Open navigation menu" aria-expanded="false" aria-controls="sideMenuDrawer">
-          <span class="burger" aria-hidden="true">
-            <span></span>
-            <span></span>
-            <span></span>
-          </span>
-        </button>
-
-        <a href="index.html" class="nav__logo" aria-label="SNS Official Home">
-          <img src="images/logo-mark.png" alt="SNS Official logo" width="90" height="40">
-        </a>
-      </div>
-
-      <!-- Desktop Navigation Links -->
-      <nav class="nav__links" aria-label="Main Navigation">
-        <a href="index.html" class="nav__link is-active">Home</a>
-        <a href="shop.html" class="nav__link">Shop</a>
-        <a href="#about" class="nav__link">About</a>
-        <a href="#reviews" class="nav__link">Reviews</a>
-        <a href="#contact" class="nav__link">Contact</a>
-      </nav>
-
-      <!-- Actions: Cart Button -->
-      <div class="nav__actions">
-        <button type="button" class="icon-btn cart-toggle" aria-label="View shopping bag">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
-            <path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/>
-            <line x1="3" y1="6" x2="21" y2="6"/>
-            <path d="M16 10a4 4 0 0 1-8 0"/>
-          </svg>
-          <span class="cart-count is-empty" aria-label="Items in bag">0</span>
-        </button>
+  <div class="site-header" id="siteHeader">
+    <div class="announce-bar" id="announceBar" role="region" aria-label="Store Announcement">
+      <div class="container announce-bar__inner" id="announceBarContent">
+        <span class="announce-bar__text announce-bar__text--desktop">
+          <span data-announce-desktop-left>PREMIUM LADIES WEAR FOR EVERY OCCASION</span>
+          <span class="announce-bar__diamond" aria-hidden="true"></span>
+          <span data-announce-desktop-right>ORDER EASILY ON WHATSAPP</span>
+        </span>
+        <span class="announce-bar__text announce-bar__text--mobile">
+          <span data-announce-mobile-left>PREMIUM LADIES WEAR</span>
+          <span class="announce-bar__diamond" aria-hidden="true"></span>
+          <span data-announce-mobile-right>ORDER ON WHATSAPP</span>
+        </span>
       </div>
     </div>
-  </header>
+
+    <header class="nav" role="banner">
+      <div class="container nav__inner">
+        <!-- Left: Hamburger Menu Button & Monogram Logo (~40px, reloads page on click) -->
+        <div class="nav__left">
+          <button type="button" class="icon-btn nav__menu-btn" id="sideMenuOpenBtn" aria-label="Open navigation menu" aria-expanded="false" aria-controls="sideMenuDrawer">
+            <span class="burger" aria-hidden="true">
+              <span></span>
+              <span></span>
+              <span></span>
+            </span>
+          </button>
+
+          <a href="index.html" class="nav__logo" aria-label="SNS Official Home">
+            <img src="images/logo-mark.png" alt="SNS Official logo" width="90" height="40">
+          </a>
+        </div>
+
+        <!-- Desktop Navigation Links -->
+        <nav class="nav__links" aria-label="Main Navigation">
+          <a href="index.html" class="nav__link is-active">Home</a>
+          <a href="shop.html" class="nav__link">Shop</a>
+          <a href="#about" class="nav__link">About</a>
+          <a href="#reviews" class="nav__link">Reviews</a>
+          <a href="#contact" class="nav__link">Contact</a>
+        </nav>
+
+        <!-- Actions: Cart Button -->
+        <div class="nav__actions">
+          <button type="button" class="icon-btn cart-toggle" aria-label="View shopping bag">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+              <path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/>
+              <line x1="3" y1="6" x2="21" y2="6"/>
+              <path d="M16 10a4 4 0 0 1-8 0"/>
+            </svg>
+            <span class="cart-count is-empty" aria-label="Items in bag">0</span>
+          </button>
+        </div>
+      </div>
+    </header>
+  </div>
 
   <!-- Slide-in Luxury Side Menu Drawer (Dark #0A0A0A on all screen sizes) -->
   <div class="side-menu-backdrop backdrop" id="sideMenuBackdrop" aria-hidden="true"></div>
@@ -167,7 +184,28 @@
           <div class="container hero-banner__container">
             <div class="hero-banner__content">
               <p class="hero-banner__subtitle">PREMIUM LADIES WEAR</p>
-              <span class="hero-banner__diamond" aria-hidden="true"></span>
+              <span class="hero-banner__diamond" aria-hidden="true">
+                <svg class="hero-ornament hero-ornament--left" width="128" height="18" viewBox="0 0 128 18" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <defs>
+                    <linearGradient id="heroBannerGoldGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                      <stop offset="0%" stop-color="#9C7A1E"/>
+                      <stop offset="50%" stop-color="#D4AF37"/>
+                      <stop offset="100%" stop-color="#F1D77A"/>
+                    </linearGradient>
+                    <linearGradient id="heroBannerLineGrad" gradientUnits="userSpaceOnUse" x1="18" y1="9" x2="128" y2="9">
+                      <stop offset="0%" stop-color="#9C7A1E" stop-opacity="1"/>
+                      <stop offset="35%" stop-color="#D4AF37" stop-opacity="0.95"/>
+                      <stop offset="70%" stop-color="#F1D77A" stop-opacity="0.6"/>
+                      <stop offset="100%" stop-color="#F1D77A" stop-opacity="0"/>
+                    </linearGradient>
+                  </defs>
+                  <polygon points="9,1 17,9 9,17 1,9" fill="none" stroke="url(#heroBannerGoldGrad)" stroke-width="1" stroke-opacity="0.55"/>
+                  <polygon points="9,4.5 13.5,9 9,13.5 4.5,9" fill="url(#heroBannerGoldGrad)"/>
+                  <path d="M18 9 H81.5 M86.5 9 H128" stroke="url(#heroBannerLineGrad)" stroke-width="1" stroke-linecap="round"/>
+                  <polygon points="84,6.5 86.5,9 84,11.5 81.5,9" fill="none" stroke="url(#heroBannerGoldGrad)" stroke-width="1" stroke-opacity="0.85"/>
+                  <path class="hero-ornament__shimmer" d="M18 9 H81.5 M86.5 9 H128" stroke="#F1D77A" stroke-width="1.35" stroke-linecap="round"/>
+                </svg>
+              </span>
               <h1 class="hero-banner__title" id="heroBannerH1">Stitch n Style</h1>
               <p class="hero-banner__tagline">&ldquo;Elegance stitched for every occasion&rdquo;</p>
               <div class="hero-banner__actions">
@@ -228,8 +266,38 @@
               <!-- c) Small uppercase subtitle in Poppins, deep gold #8A6A14 -->
               <p class="hero__subtitle">PREMIUM LADIES WEAR</p>
 
-              <!-- d) Tiny gold diamond divider (~8px rotated square) -->
-              <span class="hero__diamond" aria-hidden="true"></span>
+              <!-- d) Centered symmetrical gold diamond & fading lines ornament -->
+              <span class="hero__diamond" aria-hidden="true">
+                <svg class="hero-ornament hero-ornament--center" width="240" height="18" viewBox="0 0 240 18" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <defs>
+                    <linearGradient id="archHeroGoldGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                      <stop offset="0%" stop-color="#9C7A1E"/>
+                      <stop offset="50%" stop-color="#D4AF37"/>
+                      <stop offset="100%" stop-color="#F1D77A"/>
+                    </linearGradient>
+                    <linearGradient id="archHeroLineLeftGrad" gradientUnits="userSpaceOnUse" x1="111" y1="9" x2="1" y2="9">
+                      <stop offset="0%" stop-color="#9C7A1E" stop-opacity="1"/>
+                      <stop offset="35%" stop-color="#D4AF37" stop-opacity="0.95"/>
+                      <stop offset="70%" stop-color="#F1D77A" stop-opacity="0.6"/>
+                      <stop offset="100%" stop-color="#F1D77A" stop-opacity="0"/>
+                    </linearGradient>
+                    <linearGradient id="archHeroLineRightGrad" gradientUnits="userSpaceOnUse" x1="129" y1="9" x2="239" y2="9">
+                      <stop offset="0%" stop-color="#9C7A1E" stop-opacity="1"/>
+                      <stop offset="35%" stop-color="#D4AF37" stop-opacity="0.95"/>
+                      <stop offset="70%" stop-color="#F1D77A" stop-opacity="0.6"/>
+                      <stop offset="100%" stop-color="#F1D77A" stop-opacity="0"/>
+                    </linearGradient>
+                  </defs>
+                  <path d="M111 9 H47.5 M42.5 9 H1" stroke="url(#archHeroLineLeftGrad)" stroke-width="1" stroke-linecap="round"/>
+                  <polygon points="45,6.5 47.5,9 45,11.5 42.5,9" fill="none" stroke="url(#archHeroGoldGrad)" stroke-width="1" stroke-opacity="0.85"/>
+                  <path class="hero-ornament__shimmer hero-ornament__shimmer--left" d="M1 9 H42.5 M47.5 9 H111" stroke="#F1D77A" stroke-width="1.35" stroke-linecap="round"/>
+                  <polygon points="120,1 128,9 120,17 112,9" fill="none" stroke="url(#archHeroGoldGrad)" stroke-width="1" stroke-opacity="0.55"/>
+                  <polygon points="120,4.5 124.5,9 120,13.5 115.5,9" fill="url(#archHeroGoldGrad)"/>
+                  <path d="M129 9 H192.5 M197.5 9 H239" stroke="url(#archHeroLineRightGrad)" stroke-width="1" stroke-linecap="round"/>
+                  <polygon points="195,6.5 197.5,9 195,11.5 192.5,9" fill="none" stroke="url(#archHeroGoldGrad)" stroke-width="1" stroke-opacity="0.85"/>
+                  <path class="hero-ornament__shimmer" d="M129 9 H192.5 M197.5 9 H239" stroke="#F1D77A" stroke-width="1.35" stroke-linecap="round"/>
+                </svg>
+              </span>
 
               <!-- e) Calligraphic script tagline in Great Vibes, #1A1A1A, wrapped in curly quotes -->
               <p class="hero__tagline">&ldquo;Elegance stitched for every occasion&rdquo;</p>

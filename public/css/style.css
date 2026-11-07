@@ -65,6 +65,7 @@
   /* Layout */
   --container: 1200px;
   --gutter: 1.25rem;
+  --announce-h: 32px;
   --nav-h: 64px;
   --radius: 14px;
   --radius-sm: 8px;
@@ -83,7 +84,7 @@
 
 html {
   scroll-behavior: smooth;
-  scroll-padding-top: var(--nav-h);
+  scroll-padding-top: calc(var(--nav-h) + var(--announce-h));
   -webkit-text-size-adjust: 100%;
 }
 
@@ -312,6 +313,96 @@ p { margin: 0; }
 .field.has-error .field__error { display: block; }
 
 /* 05. Navbar & side menu drawer (dark) ------------------------------------ */
+/* Single fixed header unit wrapping the announcement bar (#141414) and navbar (#0A0A0A / transparent). */
+.site-header {
+  position: fixed;
+  inset: 0 0 auto 0;
+  z-index: 100;
+  transform: translateY(0);
+  transition: transform 0.4s ease;
+  will-change: transform;
+}
+
+.site-header.is-hidden {
+  transform: translateY(-100%);
+}
+
+/* Announcement Bar (index.html & shop.html only) */
+.announce-bar {
+  width: 100%;
+  height: var(--announce-h);
+  background-color: #141414;
+  color: var(--dark-text);
+  border: 0;
+  box-shadow: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  user-select: none;
+  pointer-events: none;
+}
+
+.announce-bar__inner {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+  padding-inline: 0.5rem;
+  text-align: center;
+}
+
+.announce-bar__text {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.45rem;
+  font-family: var(--font-sans);
+  font-size: 9.5px;
+  font-weight: 400;
+  letter-spacing: 0.14em;
+  line-height: 1;
+  text-transform: uppercase;
+  color: var(--dark-text);
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+@media (min-width: 360px) {
+  .announce-bar__text {
+    font-size: 10px;
+    letter-spacing: 0.18em;
+    gap: 0.55rem;
+  }
+}
+
+.announce-bar__text--desktop {
+  display: none;
+}
+
+.announce-bar__text--mobile {
+  display: inline-flex;
+}
+
+@media (min-width: 600px) {
+  .announce-bar__text--desktop {
+    display: inline-flex;
+  }
+  .announce-bar__text--mobile {
+    display: none;
+  }
+}
+
+.announce-bar__diamond {
+  display: inline-block;
+  width: 5px;
+  height: 5px;
+  background-color: var(--gold);
+  transform: rotate(45deg);
+  flex-shrink: 0;
+}
+
 /* Solid dark (#0A0A0A) by default; transparent only over homepage hero banner at top (< 80px). No border, no shadow, no hairline — ever. */
 .nav {
   position: fixed;
@@ -329,6 +420,12 @@ p { margin: 0; }
   will-change: transform;
 }
 
+.site-header .nav {
+  position: relative;
+  inset: auto;
+  transform: none;
+}
+
 /* Transparent navbar over the homepage hero banner carousel at the top */
 .nav.is-transparent {
   background-color: transparent;
@@ -341,6 +438,9 @@ p { margin: 0; }
 /* Slide navbar up and out of view when scrolling down or idle away from top */
 .nav.is-hidden {
   transform: translateY(-100%);
+}
+.site-header .nav.is-hidden {
+  transform: none;
 }
 
 .nav__inner {
@@ -714,7 +814,7 @@ p { margin: 0; }
 
 /* 06. Hero (Sliding Banner Carousel + Light Arch Fallback) ---------------- */
 /* Starts at the very top of the page behind the navbar on the homepage banner state.
-   Height includes --nav-h so the visible photo area below the nav stays the same size. */
+   Height includes --nav-h + --announce-h so the visible photo area below the header stays the same size. */
 .hero {
   position: relative;
   margin-top: 0;
@@ -728,8 +828,8 @@ p { margin: 0; }
 .hero-banner {
   position: relative;
   width: 100%;
-  min-height: calc(480px + var(--nav-h));
-  height: calc(clamp(480px, 68vh, 560px) + var(--nav-h));
+  min-height: calc(480px + var(--nav-h) + var(--announce-h));
+  height: calc(clamp(480px, 68vh, 560px) + var(--nav-h) + var(--announce-h));
   background: var(--dark-bg);
   overflow: hidden;
   user-select: none;
@@ -774,7 +874,7 @@ p { margin: 0; }
 /* Soft dark gradient at the top of the banner (~140px tall) above photos and below the nav */
 .hero-banner__top-gradient {
   position: absolute;
-  inset: 0 0 auto 0;
+  inset: var(--announce-h) 0 auto 0;
   height: 140px;
   z-index: 1;
   pointer-events: none;
@@ -799,7 +899,7 @@ p { margin: 0; }
   );
 }
 
-/* Fixed text overlay aligned to page container left edge (bottom-left on mobile, vertically centered below nav on desktop) */
+/* Fixed text overlay aligned to page container left edge (bottom-left on mobile, vertically centered below header on desktop) */
 .hero-banner__overlay {
   position: absolute;
   inset: 0;
@@ -807,7 +907,7 @@ p { margin: 0; }
   pointer-events: none;
   display: flex;
   align-items: flex-end;
-  padding-top: var(--nav-h);
+  padding-top: calc(var(--nav-h) + var(--announce-h));
 }
 
 .hero-banner__container {
@@ -840,17 +940,35 @@ p { margin: 0; }
   display: inline-flex;
   align-items: center;
   justify-content: flex-start;
-  width: 12px;
-  height: 12px;
+  width: 128px;
+  height: 18px;
   margin-bottom: 0.7rem;
 }
-.hero-banner__diamond::before {
-  content: "";
+
+.hero-ornament {
   display: block;
-  width: 8px;
-  height: 8px;
-  background-color: var(--gold);
-  transform: rotate(45deg);
+  overflow: visible;
+}
+
+.hero-ornament__shimmer {
+  stroke-dasharray: 26 140;
+  stroke-dashoffset: 140;
+  opacity: 0;
+  animation: heroOrnamentShimmer 5s ease-in-out infinite;
+}
+
+@keyframes heroOrnamentShimmer {
+  0%, 12% {
+    stroke-dashoffset: 135;
+    opacity: 0;
+  }
+  45% {
+    opacity: 0.45;
+  }
+  82%, 100% {
+    stroke-dashoffset: -35;
+    opacity: 0;
+  }
 }
 
 .hero-banner__title {
@@ -938,7 +1056,7 @@ p { margin: 0; }
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: calc(var(--nav-h) + 1.75rem) 0 2.5rem;
+  padding: calc(var(--nav-h) + var(--announce-h) + 1.75rem) 0 2.5rem;
   background: linear-gradient(180deg, var(--bg-alt) 0%, var(--bg) 100%);
 }
 
@@ -1092,8 +1210,17 @@ p { margin: 0; }
   margin-bottom: 1.2rem;
 }
 
-/* d) Small gold diamond divider (~8px rotated square) */
-.hero__diamond,
+/* d) Centered symmetrical gold diamond ornament (arch fallback hero) & small diamond divider (page headers) */
+.hero__diamond {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: min(240px, 100%);
+  height: 18px;
+  margin-inline: auto;
+  margin-bottom: 1.25rem;
+}
+
 .section__diamond {
   display: inline-flex;
   align-items: center;
@@ -1103,7 +1230,6 @@ p { margin: 0; }
   margin-inline: auto;
   margin-bottom: 1.25rem;
 }
-.hero__diamond::before,
 .section__diamond::before {
   content: "";
   display: block;
@@ -1956,7 +2082,7 @@ p { margin: 0; }
 
 /* 15. Shop page ----------------------------------------------------------- */
 .shop-main {
-  padding-top: var(--nav-h);
+  padding-top: calc(var(--nav-h) + var(--announce-h));
 }
 
 .page-header {
@@ -2703,6 +2829,8 @@ p { margin: 0; }
 /* Respect reduced-motion preferences: everything visible, no movement */
 @media (prefers-reduced-motion: reduce) {
   html { scroll-behavior: auto; }
+  .site-header,
+  .site-header.is-hidden,
   .nav,
   .nav.is-hidden,
   .side-menu,
@@ -2713,6 +2841,10 @@ p { margin: 0; }
   .wa-float__btn,
   .wa-float__label {
     transition: none !important;
+  }
+  .hero-ornament__shimmer {
+    animation: none !important;
+    opacity: 0 !important;
   }
   .wa-float__pulse {
     display: none !important;
@@ -2767,17 +2899,24 @@ p { margin: 0; }
 @media (min-width: 768px) {
   :root {
     --gutter: 2rem;
+    --announce-h: 36px;
     --nav-h: 76px;
     --section-pad: 7rem;
+  }
+
+  .announce-bar__text {
+    font-size: 11px;
+    letter-spacing: 0.18em;
+    gap: 0.65rem;
   }
 
   .nav__logo img { height: 40px; }
 
   .hero-banner,
   .hero-banner.has-mobile-image {
-    height: calc(clamp(460px, 42vw, 70vh) + var(--nav-h));
-    min-height: calc(460px + var(--nav-h));
-    max-height: calc(70vh + var(--nav-h));
+    height: calc(clamp(460px, 42vw, 70vh) + var(--nav-h) + var(--announce-h));
+    min-height: calc(460px + var(--nav-h) + var(--announce-h));
+    max-height: calc(70vh + var(--nav-h) + var(--announce-h));
     aspect-ratio: auto;
   }
 
@@ -2798,7 +2937,7 @@ p { margin: 0; }
 
   .hero-banner__overlay {
     align-items: center;
-    padding-top: var(--nav-h);
+    padding-top: calc(var(--nav-h) + var(--announce-h));
   }
 
   .hero-banner__container {
@@ -2837,7 +2976,7 @@ p { margin: 0; }
 
   .hero.is-arch-fallback {
     min-height: max(88vh, 560px);
-    padding: calc(var(--nav-h) + 2.5rem) 0 3rem;
+    padding: calc(var(--nav-h) + var(--announce-h) + 2.5rem) 0 3rem;
   }
   .hero__content {
     padding: 5.75rem 2.5rem 4.75rem;
@@ -2934,7 +3073,7 @@ p { margin: 0; }
   }
   .filters {
     position: sticky;
-    top: calc(var(--nav-h) + 1.5rem);
+    top: calc(var(--nav-h) + var(--announce-h) + 1.5rem);
     inset: auto;
     z-index: 1;
     width: auto;
